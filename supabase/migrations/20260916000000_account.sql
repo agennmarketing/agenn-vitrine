@@ -11,6 +11,8 @@ begin
 end;
 $$;
 
+revoke execute on function public.set_updated_at() from public, anon, authenticated;
+
 -- Planos: todos os limites vivem aqui (spec seção 3)
 create table public.plans (
   id text primary key,
@@ -58,6 +60,8 @@ begin
   return new;
 end;
 $$;
+
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
 
 create trigger on_auth_user_created
   after insert on auth.users
