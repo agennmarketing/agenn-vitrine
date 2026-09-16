@@ -1,7 +1,7 @@
 # Agenn Vitrine — Design
 
 **Data:** 2026-09-16
-**Status:** Aprovado no brainstorming, aguardando revisão final da spec
+**Status:** Aprovado
 
 ## 1. Visão geral
 
@@ -43,7 +43,7 @@ SaaS para criar **vitrines digitais** (catálogos e cardápios) com fotos **e v�
 
 ### 2.1 Domínios e roteamento
 
-O domínio raiz é configurado pela variável `ROOT_DOMAIN`.
+O domínio raiz é configurado pela variável `ROOT_DOMAIN`. No lançamento, `ROOT_DOMAIN = agenn.com.br`. Depois haverá migração para `agennvitrine.com.br` (seção 2.2).
 
 | Endereço | Conteúdo |
 |---|---|
@@ -58,6 +58,29 @@ O domínio raiz é configurado pela variável `ROOT_DOMAIN`.
   - único no sistema
   - não pode estar na lista de nomes reservados (`www`, `app`, `painel`, `api`, `admin`, `suporte`, `blog`, `ajuda`, `status`, `mail`, `static`, `cdn`, entre outros)
 - Trocar o subdomínio libera o antigo na hora, e o link antigo para de funcionar. O painel avisa antes de confirmar.
+
+### 2.2 Migração futura de domínio
+
+Os links e QR Codes já divulgados pelos donos precisam continuar funcionando depois da troca de `agenn.com.br` para `agennvitrine.com.br`.
+
+**Desde o início:**
+- Nenhum domínio fixo no código. Todo link absoluto (Open Graph, QR Code, e-mails, URLs de retorno do Stripe) é montado a partir de `ROOT_DOMAIN`.
+- `LEGACY_DOMAINS` é uma lista de domínios antigos, vazia no lançamento.
+
+**Na migração:**
+1. `agennvitrine.com.br` e `*.agennvitrine.com.br` são adicionados à Vercel, e `ROOT_DOMAIN` passa a ser o novo domínio.
+2. `agenn.com.br` entra em `LEGACY_DOMAINS` e continua apontando para a Vercel, com curinga. O middleware responde com **redirecionamento 301**, preservando subdomínio, caminho e query:
+   - `burgerdoze.agenn.com.br/?item=104` → `burgerdoze.agennvitrine.com.br/?item=104`
+3. Configurações externas atualizadas:
+   - URLs de redirecionamento do Supabase Auth e do Google OAuth
+   - endpoints de webhook do Stripe e do Bunny
+   - referrers permitidos no Bunny (os dois domínios durante a transição)
+   - domínio de envio no Resend
+   - domínios do Turnstile
+4. Os QR Codes gerados depois disso usam o novo domínio. Os antigos seguem funcionando pelo redirecionamento.
+5. **Manter `agenn.com.br` registrado e apontado indefinidamente**, porque há links impressos no mundo real.
+
+**Sessões:** o login em `app.agenn.com.br` não passa para o novo domínio. Os donos precisam entrar novamente uma vez, e o painel avisa com antecedência.
 
 ## 3. Planos e limites
 
@@ -87,7 +110,9 @@ Todos os limites ficam na tabela `plans`. Mudar um número não exige alterar c�
 | Movimentado (30 mil) | ~R$ 120 |
 | Pior caso dentro da franquia (1 TB) | ~R$ 98 |
 
-Com o vídeo carregando só quando o item é aberto, o custo real tende a ser bem menor. O Anexo tributário deve ser confirmado com um contador.
+Com o vídeo carregando só quando o item é aberto, o custo real tende a ser bem menor.
+
+**Tributação:** a empresa é Microempresa (ME). ME é o porte; a alíquota depende do regime. No Simples Nacional, software/SaaS cai no **Anexo III (a partir de 6%)** se a folha de pagamento, incluindo pró-labore, for pelo menos 28% do faturamento (Fator R). Caso contrário, cai no **Anexo V (a partir de 15,5%)**. No Anexo V, os lucros ficam em ~R$ 112 (normal), ~R$ 105 (movimentado) e ~R$ 84 (pior caso). Nesse regime, rever o preço ou a franquia com o contador.
 
 **Franquia de vídeo:** ao passar de 1 TB no mês, os vídeos da conta passam a mostrar só a capa até o mês virar, e o dono é avisado no painel e por e-mail.
 
@@ -435,5 +460,5 @@ Cada fase tem seu próprio plano de implementação.
 
 ## 14. Decisões em aberto
 
-- **Domínio raiz** (`ROOT_DOMAIN`): ainda não definido. Não bloqueia o desenvolvimento, que usa uma variável de ambiente.
-- **Anexo do Simples Nacional:** confirmar com um contador (afeta a margem, não o sistema).
+- **Anexo do Simples Nacional (III ou V):** confirmar com o contador. Afeta a margem, não o sistema.
+- **Uso do `agenn.com.br`:** se esse domínio já tiver (ou vier a ter) outros serviços em subdomínios, eles precisam entrar na lista de subdomínios reservados antes do lançamento.
