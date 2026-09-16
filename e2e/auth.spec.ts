@@ -1,0 +1,53 @@
+import { expect, test } from '@playwright/test'
+import { createConfirmedUser, signIn, uniqueEmail, waitForAuthLink } from './helpers'
+
+test('cadastro com confirmação de e-mail leva ao painel', async ({ page }) => {
+  const email = uniqueEmail('cadastro')
+  await page.goto('/cadastro')
+  await page.getByLabel('Nome').fill('Maria Teste')
+  await page.getByLabel('E-mail').fill(email)
+  await page.getByLabel('Senha', { exact: true }).fill('senhaForte123')
+  await page.getByRole('button', { name: 'Criar conta' }).click()
+
+  await expect(page).toHaveURL(/\/confirmar-email\?email=/)
+  await expect(page.getByRole('heading', { name: 'Confirme seu e-mail' })).toBeVisible()
+
+  await page.goto(await waitForAuthLink(email, 'email'))
+  await expect(page).toHaveURL(/\/painel$/)
+  await expect(page.getByText('Maria Teste')).toBeVisible()
+})
+
+test('cadastro mostra erros de validação', async ({ page }) => {
+  await page.goto('/cadastro')
+  await page.getByLabel('Nome').fill('A')
+  await page.getByLabel('E-mail').fill('invalido')
+  await page.getByLabel('Senha', { exact: true }).fill('123')
+  await page.getByRole('button', { name: 'Criar conta' }).click()
+  await expect(page.getByText('Informe seu nome.')).toBeVisible()
+  await expect(page.getByText('Informe um e-mail válido.')).toBeVisible()
+  await expect(page.getByText('A senha precisa ter pelo menos 8 caracteres.')).toBeVisible()
+})
+
+test('login, sair e senha errada', async ({ page }) => {
+  const user = await createConfirmedUser('login')
+  await signIn(page, user.email, user.password)
+  await expect(page.getByText(user.name)).toBeVisible()
+
+  await page.getByRole('button', { name: 'Sair' }).click()
+  await expect(page).toHaveURL(/\/entrar$/)
+
+  await page.getByLabel('E-mail').fill(user.email)
+  await page.getByLabel('Senha', { exact: true }).fill('senhaErrada1')
+  await page.getByRole('button', { name: 'Entrar', exact: true }).click()
+  await expect(page.getByText('E-mail ou senha incorretos.')).toBeVisible()
+})
+
+test('login volta para o destino pedido', async ({ page }) => {
+  const user = await createConfirmedUser('destino')
+  await page.goto('/painel')
+  await expect(page).toHaveURL(/\/entrar\?next=%2Fpainel$/)
+  await page.getByLabel('E-mail').fill(user.email)
+  await page.getByLabel('Senha', { exact: true }).fill(user.password)
+  await page.getByRole('button', { name: 'Entrar', exact: true }).click()
+  await expect(page).toHaveURL(/\/painel$/)
+})
