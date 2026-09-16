@@ -69,5 +69,6 @@ test('recuperação de senha por e-mail', async ({ page }) => {
   await expect(page).toHaveURL(/\/painel$/)
 
   await page.getByRole('button', { name: 'Sair' }).click()
+  await expect(page).toHaveURL(/\/entrar$/)
   await signIn(page, user.email, 'novaSenha456')
 })

@@ -55,9 +55,11 @@ async function handleApp(request: NextRequest, resolution: HostResolution) {
 
   if (userId) {
     // getClaims() só decodifica o JWT local e não enxerga revogação (ex.: signOut em
-    // outra aba/requisição): confirmamos com o Auth server antes de tratar como logado,
-    // senão um cookie de sessão já revogada pode gerar loop de redirecionamento entre
-    // rota protegida e rota de visitante.
+    // outra aba/requisição): sem essa confirmação, um cookie de sessão já revogada
+    // continua "autenticado" aqui mas não no layout (que usa getUser()), e os dois
+    // discordam para sempre — loop de redirecionamento entre rota protegida e /entrar.
+    // Qualquer erro do Auth server aqui (rede, serviço fora do ar) também vira "não
+    // autenticado": fail-closed, sem lançar exceção no proxy.
     const { data: userData, error: userError } = await supabase.auth.getUser()
     if (userError || !userData.user) userId = null
   }
