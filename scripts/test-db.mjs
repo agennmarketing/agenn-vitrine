@@ -32,8 +32,24 @@ function getProjectId() {
   return match[1];
 }
 
-function runDocker(args) {
-  return execFileSync("docker", args, { encoding: "utf8" });
+// Roda um comando docker que é pré-requisito (preparar/copiar arquivos no
+// container). Se falhar, o problema quase sempre é "o container não existe
+// ou não está rodando" — imprime uma mensagem curta em português e sai,
+// sem stack trace do Node.
+function runDockerOrDie(args, container) {
+  try {
+    return execFileSync("docker", args, {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+  } catch (error) {
+    const detail = (error.stderr || error.message || "").toString().trim();
+    console.error(
+      `Não foi possível acessar o container ${container}. O Supabase local está rodando? Rode: npm run db:start`,
+    );
+    if (detail) console.error(detail);
+    process.exit(1);
+  }
 }
 
 function main() {
@@ -41,16 +57,22 @@ function main() {
   const container = `supabase_db_${projectId}`;
 
   // Limpa e recria o diretório de testes dentro do container.
-  runDocker([
-    "exec",
+  runDockerOrDie(
+    [
+      "exec",
+      container,
+      "sh",
+      "-c",
+      `rm -rf ${containerTestsDir} && mkdir -p ${containerTestsDir}`,
+    ],
     container,
-    "sh",
-    "-c",
-    `rm -rf ${containerTestsDir} && mkdir -p ${containerTestsDir}`,
-  ]);
+  );
 
   // Copia o conteúdo de supabase/tests/database/ para dentro do container.
-  runDocker(["cp", `${testsDir}/.`, `${container}:${containerTestsDir}/`]);
+  runDockerOrDie(
+    ["cp", `${testsDir}/.`, `${container}:${containerTestsDir}/`],
+    container,
+  );
 
   const files = readdirSync(testsDir)
     .filter((f) => f.endsWith(".test.sql"))
@@ -58,6 +80,7 @@ function main() {
 
   let totalOk = 0;
   let totalNotOk = 0;
+  let totalPlanned = 0;
   let anyFailure = false;
 
   for (const file of files) {
@@ -85,7 +108,7 @@ function main() {
           "-f",
           containerPath,
         ],
-        { encoding: "utf8" },
+        { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
       );
     } catch (error) {
       failed = true;
@@ -99,9 +122,14 @@ function main() {
     const lines = stdout.split("\n").map((l) => l.trim());
     const okCount = lines.filter((l) => /^ok\b/.test(l)).length;
     const notOkCount = lines.filter((l) => /^not ok\b/.test(l)).length;
+    const ranCount = okCount + notOkCount;
+    const planLine = lines.find((l) => /^1\.\.(\d+)$/.test(l));
+    const planned = planLine ? Number(planLine.match(/^1\.\.(\d+)$/)[1]) : null;
+    const sawLooksLikeYou = lines.some((l) => l.includes("# Looks like you"));
 
     totalOk += okCount;
     totalNotOk += notOkCount;
+    if (planned !== null) totalPlanned += planned;
 
     if (failed) {
       console.error(`FALHA: psql saiu com erro ao rodar ${file}`);
@@ -114,10 +142,28 @@ function main() {
       console.error(`FALHA: ${file} não imprimiu nenhuma linha "ok"`);
       anyFailure = true;
     }
+    if (planned === null) {
+      console.error(
+        `FALHA: ${file} não imprimiu a linha do plano (ex: "1..17")`,
+      );
+      anyFailure = true;
+    } else if (ranCount !== planned) {
+      console.error(
+        `FALHA: ${file} planejou ${planned} teste(s) mas rodou ${ranCount} (${okCount} ok, ${notOkCount} not ok) — provavelmente parou antes do fim`,
+      );
+      anyFailure = true;
+    }
+    if (sawLooksLikeYou) {
+      anyFailure = true;
+    }
+
+    console.log(
+      `${file}: planejado ${planned ?? "?"}, rodado ${ranCount} (${okCount} ok, ${notOkCount} not ok)`,
+    );
   }
 
   console.log(
-    `\npgTAP: ${files.length} arquivo(s), ${totalOk} ok, ${totalNotOk} not ok`,
+    `\npgTAP: ${files.length} arquivo(s), ${totalOk} ok, ${totalNotOk} not ok, ${totalPlanned} planejado(s)`,
   );
 
   process.exit(anyFailure ? 1 : 0);
