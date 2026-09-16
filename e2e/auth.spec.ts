@@ -51,3 +51,23 @@ test('login volta para o destino pedido', async ({ page }) => {
   await page.getByRole('button', { name: 'Entrar', exact: true }).click()
   await expect(page).toHaveURL(/\/painel$/)
 })
+
+test('recuperação de senha por e-mail', async ({ page }) => {
+  const user = await createConfirmedUser('recuperar')
+  await page.goto('/entrar')
+  await page.getByRole('link', { name: 'Esqueci minha senha' }).click()
+  await expect(page.getByRole('heading', { name: 'Esqueci minha senha' })).toBeVisible()
+  await page.getByLabel('E-mail').fill(user.email)
+  await page.getByRole('button', { name: 'Enviar link' }).click()
+  await expect(page.getByText('Se existir uma conta com este e-mail, enviamos um link para redefinir a senha.')).toBeVisible()
+
+  await page.goto(await waitForAuthLink(user.email, 'recovery'))
+  await expect(page).toHaveURL(/\/redefinir-senha$/)
+  await page.getByLabel('Nova senha', { exact: true }).fill('novaSenha456')
+  await page.getByLabel('Confirmar nova senha').fill('novaSenha456')
+  await page.getByRole('button', { name: 'Salvar nova senha' }).click()
+  await expect(page).toHaveURL(/\/painel$/)
+
+  await page.getByRole('button', { name: 'Sair' }).click()
+  await signIn(page, user.email, 'novaSenha456')
+})

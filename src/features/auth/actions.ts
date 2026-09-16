@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation'
 import { mapAuthError } from '@/lib/auth/auth-errors'
-import { forgotPasswordSchema, signInSchema, signUpSchema } from '@/lib/auth/schemas'
+import { forgotPasswordSchema, resetPasswordSchema, signInSchema, signUpSchema } from '@/lib/auth/schemas'
 import { fieldErrorsFromZod, type FormState } from '@/lib/forms/form-state'
 import { safeNextPath } from '@/lib/hosts/urls'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
@@ -63,6 +63,33 @@ export async function resendConfirmationAction(_prev: FormState, formData: FormD
   })
   if (error) return { error: mapAuthError(error.code) }
   return { success: 'Enviamos um novo link. Confira sua caixa de entrada e o spam.' }
+}
+
+export async function forgotPasswordAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  const fields = readFields(formData, ['email'])
+  const parsed = forgotPasswordSchema.safeParse(fields)
+  if (!parsed.success) return { fieldErrors: fieldErrorsFromZod(parsed.error), values: fields }
+
+  const supabase = await createSupabaseServerClient()
+  const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
+    captchaToken: readCaptcha(formData),
+  })
+  // Não revela se o e-mail existe. Só limite de envio e captcha viram erro.
+  if (error && ['over_email_send_rate_limit', 'over_request_rate_limit', 'captcha_failed'].includes(error.code ?? '')) {
+    return { error: mapAuthError(error.code), values: fields }
+  }
+  return { success: 'Se existir uma conta com este e-mail, enviamos um link para redefinir a senha.' }
+}
+
+export async function resetPasswordAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  const parsed = resetPasswordSchema.safeParse(readFields(formData, ['password', 'confirmPassword']))
+  if (!parsed.success) return { fieldErrors: fieldErrorsFromZod(parsed.error) }
+
+  const supabase = await createSupabaseServerClient()
+  const { error } = await supabase.auth.updateUser({ password: parsed.data.password })
+  if (error) return { error: mapAuthError(error.code) }
+
+  redirect('/painel')
 }
 
 export async function signOutAction(): Promise<void> {

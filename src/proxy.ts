@@ -51,7 +51,16 @@ async function handleApp(request: NextRequest, resolution: HostResolution) {
 
   const { data } = await supabase.auth.getClaims()
   const claims = data?.claims
-  const userId = typeof claims?.sub === 'string' ? claims.sub : null
+  let userId = typeof claims?.sub === 'string' ? claims.sub : null
+
+  if (userId) {
+    // getClaims() só decodifica o JWT local e não enxerga revogação (ex.: signOut em
+    // outra aba/requisição): confirmamos com o Auth server antes de tratar como logado,
+    // senão um cookie de sessão já revogada pode gerar loop de redirecionamento entre
+    // rota protegida e rota de visitante.
+    const { data: userData, error: userError } = await supabase.auth.getUser()
+    if (userError || !userData.user) userId = null
+  }
 
   let sessionCurrent = true
   if (userId) {
