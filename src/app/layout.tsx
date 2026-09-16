@@ -1,21 +1,24 @@
 import type { Metadata, Viewport } from 'next'
-import { Geist } from 'next/font/google'
+import { Figtree } from 'next/font/google'
 import './globals.css'
 
-const geist = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
+// Figtree: sans geométrica de terminais suaves, como o traço do logo; cobre bem os acentos do português.
+const figtree = Figtree({ variable: '--font-figtree', subsets: ['latin', 'latin-ext'], display: 'swap' })
 
 export const metadata: Metadata = {
   title: { default: 'Agenn Vitrine', template: '%s · Agenn Vitrine' },
   description: 'Catálogos e cardápios com vídeo, prontos para o WhatsApp.',
-  icons: { icon: '/brand/logo-icone.png' },
+  applicationName: 'Agenn Vitrine',
+  icons: { icon: '/brand/logo-icone.png', apple: '/brand/logo-icone.png' },
+  openGraph: { locale: 'pt_BR', siteName: 'Agenn Vitrine' },
 }
 
-export const viewport: Viewport = { themeColor: '#0b2a1c' }
+export const viewport: Viewport = { themeColor: '#0b2a1c', colorScheme: 'light' }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR">
-      <body className={geist.variable}>{children}</body>
+    <html lang="pt-BR" className={figtree.variable}>
+      <body>{children}</body>
     </html>
   )
 }

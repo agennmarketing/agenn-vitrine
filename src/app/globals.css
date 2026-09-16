@@ -1,27 +1,95 @@
 @import "tailwindcss";
 
+/*
+ * Agenn Vitrine: painel do lojista.
+ * Neutros puxados para o verde da marca (#0B2A1C), nunca cinza puro.
+ * A cor da marca fica para ações primárias, foco e seleção.
+ */
 @theme {
-  --color-canvas: #f6f6f3;
+  --color-canvas: #f3f5f1;
   --color-surface: #ffffff;
-  --color-ink: #141714;
-  --color-ink-muted: #5c625d;
-  --color-line: #e3e5e0;
+  --color-subtle: #eaeee8;
+  --color-ink: #0f1a14;
+  --color-ink-muted: #56615a;
+  --color-line: #dde2db;
+  --color-line-strong: #b3bcb5;
   --color-brand: #0b2a1c;
-  --color-brand-hover: #134230;
+  --color-brand-hover: #15432f;
+  --color-brand-active: #061a11;
   --color-brand-ink: #ffffff;
+  --color-brand-soft: #e3ede6;
   --color-danger: #b42318;
+  --color-danger-hover: #93190f;
   --color-danger-soft: #fdecea;
-  --color-success: #1a7f4b;
-  --color-success-soft: #e7f6ee;
+  --color-success: #166b40;
+  --color-success-soft: #e5f4eb;
+
   --radius-control: 0.625rem;
   --radius-card: 1rem;
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+
+  --shadow-control: 0 1px 2px rgb(11 42 28 / 0.06);
+
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --font-sans: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
 }
 
-html,
-body {
-  background: var(--color-canvas);
-  color: var(--color-ink);
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
+@layer base {
+  html {
+    color-scheme: light;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  html,
+  body {
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    min-height: 100dvh;
+    caret-color: var(--color-brand);
+    accent-color: var(--color-brand);
+    scrollbar-color: var(--color-line-strong) transparent;
+  }
+
+  ::selection {
+    background: var(--color-brand-soft);
+    color: var(--color-brand);
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  a {
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+  }
+
+  :where(a, summary):focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+    border-radius: 0.25rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
 }

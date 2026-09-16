@@ -1,10 +1,24 @@
 import type { InputHTMLAttributes } from 'react'
 
-export function Input({ invalid, className = '', ...props }: InputHTMLAttributes<HTMLInputElement> & { invalid?: boolean }) {
+export function Input({
+  invalid,
+  className = '',
+  'aria-describedby': describedBy,
+  ...props
+}: InputHTMLAttributes<HTMLInputElement> & { invalid?: boolean }) {
+  // Liga o campo à mensagem de erro que o Field renderiza em `${htmlFor}-error`.
+  const errorId = invalid && props.id ? `${props.id}-error` : undefined
+  const ariaDescribedBy = [describedBy, errorId].filter(Boolean).join(' ') || undefined
+
   return (
     <input
       aria-invalid={invalid || undefined}
-      className={`h-11 w-full rounded-control border bg-surface px-3 text-base text-ink placeholder:text-ink-muted focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand read-only:bg-canvas read-only:text-ink-muted ${invalid ? 'border-danger' : 'border-line'} ${className}`}
+      aria-describedby={ariaDescribedBy}
+      className={`h-11 w-full min-w-0 rounded-control border bg-surface px-3.5 text-base text-ink shadow-control transition-[border-color] duration-150 ease-out-quint placeholder:text-ink-muted focus-visible:outline-2 focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:bg-subtle disabled:text-ink-muted read-only:bg-canvas read-only:text-ink-muted read-only:shadow-none ${
+        invalid
+          ? 'border-danger focus-visible:outline-danger'
+          : 'border-line-strong hover:border-ink-muted focus-visible:border-brand focus-visible:outline-brand'
+      } ${className}`}
       {...props}
     />
   )
