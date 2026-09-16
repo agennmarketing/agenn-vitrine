@@ -21,4 +21,12 @@ describe('urls', () => {
     expect(safeNextPath('/\\mal.com')).toBe('/painel')
     expect(safeNextPath('', '/entrar')).toBe('/entrar')
   })
+
+  it('safeNextPath recusa caracteres de controle e espaços', () => {
+    expect(safeNextPath('/\t/mal.com')).toBe('/painel')
+    expect(safeNextPath('/\n/mal.com')).toBe('/painel')
+    expect(safeNextPath('/\r\n/mal.com')).toBe('/painel')
+    expect(safeNextPath('/ /mal.com')).toBe('/painel')
+    expect(safeNextPath('/painel/conta?aba=senha')).toBe('/painel/conta?aba=senha')
+  })
 })

@@ -13,7 +13,7 @@ export function buildVitrineUrl(subdomain: string, rootDomain: string): string {
 }
 
 export function safeNextPath(next: string | null | undefined, fallback = '/painel'): string {
-  if (!next || !next.startsWith('/') || next.startsWith('//') || next.startsWith('/\\')) {
+  if (!next || !next.startsWith('/') || next.startsWith('//') || next.startsWith('/\\') || /[\s]/.test(next)) {
     return fallback
   }
   return next
