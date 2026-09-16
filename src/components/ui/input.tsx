@@ -7,6 +7,7 @@ export function Input({
   ...props
 }: InputHTMLAttributes<HTMLInputElement> & { invalid?: boolean }) {
   // Liga o campo à mensagem de erro que o Field renderiza em `${htmlFor}-error`.
+  // `invalid` só deve ser true quando o Field que envolve o Input recebe `error` (é o Field que cria esse id).
   const errorId = invalid && props.id ? `${props.id}-error` : undefined
   const ariaDescribedBy = [describedBy, errorId].filter(Boolean).join(' ') || undefined
 

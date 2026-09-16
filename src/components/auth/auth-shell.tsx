@@ -17,12 +17,11 @@ export function AuthShell({
       {/* Painel da marca: só em telas largas, onde sobra espaço. */}
       <aside className="hidden w-[40%] max-w-xl flex-col justify-between bg-brand p-12 text-brand-ink lg:flex">
         <Image
-          src="/brand/logo-icone.png"
+          src="/brand/logo-icone-512.png"
           alt=""
           width={56}
           height={56}
           className="rounded-2xl ring-1 ring-white/15"
-          priority
         />
         <div className="max-w-sm">
           <p className="text-3xl font-semibold leading-tight tracking-[-0.02em]">Agenn Vitrine</p>
@@ -35,7 +34,7 @@ export function AuthShell({
       <main className="flex min-w-0 flex-1 items-center justify-center px-4 py-10 sm:px-6">
         <div className="w-full max-w-sm">
           <Image
-            src="/brand/logo-icone.png"
+            src="/brand/logo-icone-512.png"
             alt="Agenn Vitrine"
             width={48}
             height={48}

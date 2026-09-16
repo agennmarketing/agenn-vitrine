@@ -9,7 +9,6 @@ export const metadata: Metadata = {
   title: { default: 'Agenn Vitrine', template: '%s · Agenn Vitrine' },
   description: 'Catálogos e cardápios com vídeo, prontos para o WhatsApp.',
   applicationName: 'Agenn Vitrine',
-  icons: { icon: '/brand/logo-icone.png', apple: '/brand/logo-icone.png' },
   openGraph: { locale: 'pt_BR', siteName: 'Agenn Vitrine' },
 }
 
