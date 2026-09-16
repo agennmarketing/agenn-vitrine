@@ -11,6 +11,12 @@ test('subdomínio sem vitrine responde 404', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Vitrine não encontrada' })).toBeVisible()
 })
 
+test('host inválido responde 404 em português', async ({ page }) => {
+  const response = await page.goto('http://api.localhost:3000/')
+  expect(response?.status()).toBe(404)
+  await expect(page.getByRole('heading', { name: 'Página não encontrada' })).toBeVisible()
+})
+
 test('app sem login leva para entrar', async ({ page }) => {
   await page.goto('/')
   await expect(page).toHaveURL(/\/entrar$/)

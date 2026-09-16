@@ -41,6 +41,8 @@ async function handleApp(request: NextRequest, resolution: HostResolution) {
       },
       setAll(cookiesToSet) {
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+        // Recriado a cada chamada: se setAll rodar mais de uma vez (ex.: refresh seguido de
+        // signOut), os cookies da última chamada são os que valem no response final.
         sessionResponse = NextResponse.next({ request })
         cookiesToSet.forEach(({ name, value, options }) => sessionResponse.cookies.set(name, value, options))
       },
@@ -53,7 +55,17 @@ async function handleApp(request: NextRequest, resolution: HostResolution) {
 
   let sessionCurrent = true
   if (userId) {
-    const { data: profile } = await supabase.from('profiles').select('active_session_id').eq('id', userId).maybeSingle()
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('active_session_id')
+      .eq('id', userId)
+      .maybeSingle()
+    // Sessão única é proteção contra compartilhamento de conta, não uma fronteira de
+    // autenticação: se a consulta falhar, seguimos com a sessão como válida (fail-open),
+    // mas registramos o erro para investigação.
+    if (profileError) {
+      console.error('[proxy] falha ao consultar sessão ativa do perfil', profileError)
+    }
     const claimSessionId = typeof claims?.session_id === 'string' ? claims.session_id : undefined
     sessionCurrent = isSessionCurrent(claimSessionId, profile?.active_session_id)
   }
