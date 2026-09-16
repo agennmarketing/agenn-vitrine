@@ -655,6 +655,30 @@ Com o Docker Desktop aberto:
 
 ```bash
 npx supabase init
+```
+
+O Docker desta máquina tem ~3,7 GB de memória. Antes de subir, desligue em `supabase/config.toml` os serviços que a Fase 1 não usa, ajustando as chaves existentes:
+
+```toml
+[realtime]
+enabled = false
+
+[storage]
+enabled = false
+
+[edge_runtime]
+enabled = false
+
+[analytics]
+enabled = false
+
+[db.pooler]
+enabled = false
+```
+
+Mantenha ligados `[studio]` e `[inbucket]` (Mailpit, a caixa de e-mails de teste). Depois:
+
+```bash
 npx supabase start
 npx supabase status
 ```
