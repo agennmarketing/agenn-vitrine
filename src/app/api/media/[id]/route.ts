@@ -13,7 +13,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   // RLS: só encontra mídia do próprio dono.
   const { data: media } = await session.supabase
     .from('media')
-    .select('id, role, item_id, storage_paths, bunny_video_id, vitrines(subdomain)')
+    .select('id, role, item_id, storage_paths, bunny_video_id, vitrines!media_vitrine_id_fkey(subdomain)')
     .eq('id', id)
     .maybeSingle()
   if (!media) return new NextResponse(null, { status: 204 })

@@ -1621,7 +1621,7 @@ export async function POST(request: Request) {
     const admin = createSupabaseAdminClient()
     const { data: media } = await admin
       .from('media')
-      .select('id, owner_id, item_id, role, status, vitrines(subdomain)')
+      .select('id, owner_id, item_id, role, status, vitrines!media_vitrine_id_fkey(subdomain)')
       .eq('bunny_video_id', payload.data.VideoGuid)
       .maybeSingle()
     if (!media) return NextResponse.json({ ignored: true })
@@ -2465,7 +2465,7 @@ export async function POST(request: NextRequest) {
     // O vídeo precisa ser desta vitrine: outro host não soma consumo alheio.
     const { data: media } = await admin
       .from('media')
-      .select('id, vitrines!inner(subdomain)')
+      .select('id, vitrines!media_vitrine_id_fkey!inner(subdomain)')
       .eq('id', parsed.data.mediaId)
       .eq('kind', 'video')
       .eq('status', 'ready')
