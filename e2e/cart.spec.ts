@@ -96,6 +96,8 @@ test('sacola: complementos, quantidade, guarda no aparelho, formulário e mensag
   expect(snapshot.payload.items[0]).toMatchObject({ qty: 2, unit_price_cents: 2590, addons_unit_cents: 1100 })
   expect(JSON.stringify(snapshot.payload)).not.toContain('Ana')
 
+  // Espera a ida ao WhatsApp terminar antes de voltar para a vitrine.
+  await page.waitForURL(/^https:\/\/wa\.me\//)
   await page.goto(vitrineUrl(vitrine.subdomain))
   await expect(page.getByRole('button', { name: 'Abrir sacola' })).toHaveText('Sacola (0)')
 })
