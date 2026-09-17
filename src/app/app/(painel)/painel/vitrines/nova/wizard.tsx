@@ -58,6 +58,7 @@ export function VitrineWizard({ rootDomain }: { rootDomain: string }) {
           {[
             ['produtos', 'Produtos', 'Lojas e catálogos. Botão "Solicitar orçamento".'],
             ['servicos', 'Serviços', 'Profissionais e clínicas. Botão "Agendar".'],
+            ['comida', 'Comida', 'Hamburguerias, pizzarias e lanchonetes. Botão "Pedir" e sacola ligada.'],
           ].map(([value, label, hint]) => (
             <label key={value} className="flex items-start gap-3 rounded-control border border-line p-3">
               <input type="radio" name="type" value={value} defaultChecked={values.type === value} aria-label={label} />

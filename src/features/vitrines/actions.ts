@@ -9,7 +9,7 @@ import { storagePathList } from '@/lib/media/urls'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { revalidateVitrine } from '@/lib/vitrines/cache'
 import { mapDbError } from '@/lib/vitrines/db-errors'
-import { appearanceSchema, createVitrineSchema, messagesSchema, subdomainField, vitrineSettingsSchema } from '@/lib/vitrines/schemas'
+import { appearanceSchema, checkoutSettingsSchema, createVitrineSchema, subdomainField, vitrineSettingsSchema } from '@/lib/vitrines/schemas'
 import { DEFAULT_BUTTON_TEXT, SAMPLE_CATEGORIES } from '@/lib/vitrines/vitrine-types'
 
 const SUBDOMAIN_TAKEN = 'Este endereço já está em uso. Escolha outro.'
@@ -117,16 +117,37 @@ export async function deleteVitrineAction(vitrineId: string, _prev: FormState, f
   redirect('/painel')
 }
 
-export async function updateMessagesAction(vitrineId: string, _prev: FormState, formData: FormData): Promise<FormState> {
-  const fields = readFormFields(formData, ['defaultButtonText'])
-  const parsed = messagesSchema.safeParse(fields)
+const CHECKOUT_FIELDS = [
+  'cartEnabled', 'cartButtonText', 'defaultButtonText',
+  'nameMode', 'fulfillmentMode', 'paymentMode', 'scheduleMode', 'notesMode', 'paymentOptions',
+] as const
+
+export async function updateCheckoutAction(vitrineId: string, _prev: FormState, formData: FormData): Promise<FormState> {
+  const fields = readFormFields(formData, CHECKOUT_FIELDS)
+  const parsed = checkoutSettingsSchema.safeParse(fields)
   if (!parsed.success) return { fieldErrors: fieldErrorsFromZod(parsed.error), values: fields }
+  const input = parsed.data
+
   const { supabase, vitrine } = await loadOwnedVitrine(vitrineId)
-  const { error } = await supabase
+  const { error: vitrineError } = await supabase
     .from('vitrines')
-    .update({ default_button_text: parsed.data.defaultButtonText })
+    .update({ cart_enabled: input.cartEnabled, cart_button_text: input.cartButtonText, default_button_text: input.defaultButtonText })
     .eq('id', vitrineId)
+  if (vitrineError) return { error: mapDbError(vitrineError), values: fields }
+
+  const { error } = await supabase
+    .from('checkout_settings')
+    .update({
+      name_mode: input.nameMode,
+      fulfillment_mode: input.fulfillmentMode,
+      payment_mode: input.paymentMode,
+      schedule_mode: input.scheduleMode,
+      notes_mode: input.notesMode,
+      payment_options: input.paymentOptions,
+    })
+    .eq('vitrine_id', vitrineId)
   if (error) return { error: mapDbError(error), values: fields }
+
   revalidateVitrine(vitrine.subdomain)
   return { success: 'Mensagens salvas.', values: fields }
 }

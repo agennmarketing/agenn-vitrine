@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 
 const TABS = [
   ['itens', 'Itens'],
+  ['complementos', 'Complementos'],
   ['aparencia', 'Aparência'],
   ['whatsapp', 'WhatsApp'],
   ['mensagens', 'Sacola e mensagens'],
