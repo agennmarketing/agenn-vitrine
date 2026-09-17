@@ -1,0 +1,99 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+
+  db:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Supabase local
+        run: npx supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,realtime,storage-api,mailpit
+      - name: pgTAP
+        run: npx supabase test db
+      - name: Gerar tipos do banco
+        run: npx supabase gen types typescript --local > src/lib/supabase/database.types.ts
+      - uses: actions/upload-artifact@v4
+        with:
+          name: database-types
+          path: src/lib/supabase/database.types.ts
+      - name: Tipos commitados estão atualizados
+        run: git diff --exit-code -- src/lib/supabase/database.types.ts
+
+  e2e:
+    needs: [checks]
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      NEXT_PUBLIC_ROOT_DOMAIN: localhost:3000
+      LEGACY_DOMAINS: legado.localhost:3000
+      NEXT_PUBLIC_GOOGLE_AUTH_ENABLED: 'false'
+      NEXT_PUBLIC_MEDIA_BASE_URL: /api/dev-media
+      MEDIA_STORAGE_DRIVER: fake
+      RATE_LIMIT_SALT: ci-salt-somente-para-testes
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Supabase local
+        run: npx supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,realtime,storage-api
+      - run: node scripts/ci-env.mjs
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - run: npx playwright test
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report
+            test-results
+          retention-days: 7
+
+  migrate:
+    # Aplica no Supabase dev as migrações que entraram na master. Não espera os
+    # outros jobs: a Vercel publica a master em ~2 min e o código novo precisa das
+    # tabelas. As migrações já passaram pelo pgTAP no PR.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    concurrency: migrate-supabase-dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: supabase db push
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: npx supabase db push --db-url "$SUPABASE_DB_URL" --yes

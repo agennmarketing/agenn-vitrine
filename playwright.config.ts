@@ -16,7 +16,8 @@ export default defineConfig({
     { name: 'mobile', use: { ...devices['Pixel 7'] } },
   ],
   webServer: {
-    command: 'npm run dev',
+    // No CI o workflow já rodou `npm run build`; localmente segue o `next dev`.
+    command: process.env.CI ? 'npm run start' : 'npm run dev',
     url: 'http://localhost:3000/',
     reuseExistingServer: !process.env.CI,
     timeout: 300_000,
