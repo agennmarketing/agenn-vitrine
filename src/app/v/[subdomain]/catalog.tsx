@@ -5,12 +5,16 @@ import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import type { PublicImage, PublicItem, PublicVitrine } from '@/features/public/build-catalog'
 import { readableTextColor } from '@/lib/color/contrast'
 import { formatBRL } from '@/lib/money/money'
-import { formatPriceLabel, priceLabel } from '@/lib/pricing/price'
+import { addToCart, replaceLine, type CartLine } from '@/lib/cart/cart'
+import { cartSummary } from '@/lib/cart/reconcile'
+import { formatOrderTotal, formatPriceLabel, priceLabel } from '@/lib/pricing/price'
 import { BannerVideo } from './banner-video'
+import { useCart } from './cart-store'
 import { useItemParam } from './item-param'
 
 // Tela do item, galeria e envio só carregam quando um item é aberto.
 const ItemSheet = dynamic(() => import('./item-sheet'), { ssr: false })
+const CartSheet = dynamic(() => import('./cart-sheet'), { ssr: false })
 
 const DARK_THEME = {
   '--color-canvas': '#0e1411',
@@ -41,6 +45,17 @@ function initials(name: string) {
 
 export function Catalog({ vitrine, siteUrl }: { vitrine: PublicVitrine; siteUrl: string }) {
   const { itemCode, openItem, closeItem } = useItemParam()
+  const { lines, setLines } = useCart(vitrine.id)
+  const [cartOpen, setCartOpen] = useState(false)
+  const [editing, setEditing] = useState<CartLine | null>(null)
+  const itemsById = useMemo(
+    () => new Map(vitrine.categories.flatMap((category) => category.items).map((item) => [item.id, item])),
+    [vitrine.categories],
+  )
+  const summary = cartSummary(lines, itemsById)
+  const cartLabel = `Ver sacola · ${summary.count} ${summary.count === 1 ? 'item' : 'itens'}${
+    vitrine.showPrices ? ` · ${formatOrderTotal(summary.total)}` : ''
+  }`
   const [query, setQuery] = useState('')
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
 
@@ -98,6 +113,16 @@ export function Catalog({ vitrine, siteUrl }: { vitrine: PublicVitrine; siteUrl:
             <h1 className="truncate text-xl font-semibold">{vitrine.name}</h1>
             {vitrine.description ? <p className="line-clamp-2 text-sm text-ink-muted">{vitrine.description}</p> : null}
           </div>
+          {vitrine.cartEnabled ? (
+            <button
+              type="button"
+              aria-label="Abrir sacola"
+              onClick={() => setCartOpen(true)}
+              className="ml-auto shrink-0 rounded-full border border-line-strong px-3 py-2 text-sm"
+            >
+              Sacola ({summary.count})
+            </button>
+          ) : null}
         </div>
         <input
           type="search"
@@ -145,7 +170,7 @@ export function Catalog({ vitrine, siteUrl }: { vitrine: PublicVitrine; siteUrl:
         </nav>
       ) : null}
 
-      <main className="mx-auto flex max-w-5xl flex-col gap-8 px-4 py-6">
+      <main className={`mx-auto flex max-w-5xl flex-col gap-8 px-4 py-6 ${vitrine.cartEnabled ? 'pb-24' : ''}`}>
         {categories.length === 0 ? <p className="text-ink-muted">Nenhum item encontrado.</p> : null}
         {categories.map((category) => (
           <section
@@ -177,7 +202,65 @@ export function Catalog({ vitrine, siteUrl }: { vitrine: PublicVitrine; siteUrl:
         </footer>
       ) : null}
 
-      {itemCode && openItemData ? <ItemSheet vitrine={vitrine} item={openItemData} onClose={closeItem} /> : null}
+      {itemCode && openItemData ? (
+        <ItemSheet
+          vitrine={vitrine}
+          item={openItemData}
+          onClose={closeItem}
+          cart={
+            vitrine.cartEnabled
+              ? {
+                  onSubmit: (line) => {
+                    setLines(addToCart(lines, line))
+                    closeItem()
+                  },
+                }
+              : undefined
+          }
+        />
+      ) : null}
+
+      {editing && itemsById.get(editing.itemId) ? (
+        <ItemSheet
+          vitrine={vitrine}
+          item={itemsById.get(editing.itemId)!}
+          onClose={() => setEditing(null)}
+          cart={{
+            initial: editing,
+            onSubmit: (line) => {
+              setLines(replaceLine(lines, editing.key, line))
+              setEditing(null)
+              setCartOpen(true)
+            },
+          }}
+        />
+      ) : null}
+
+      {cartOpen ? (
+        <CartSheet
+          vitrine={vitrine}
+          lines={lines}
+          setLines={setLines}
+          items={itemsById}
+          onEdit={(line) => {
+            setCartOpen(false)
+            setEditing(line)
+          }}
+          onClose={() => setCartOpen(false)}
+        />
+      ) : null}
+
+      {vitrine.cartEnabled && summary.count > 0 && !cartOpen && !editing && !itemCode ? (
+        <div className="fixed inset-x-0 bottom-0 z-40 p-4">
+          <button
+            type="button"
+            onClick={() => setCartOpen(true)}
+            className="mx-auto block h-12 w-full max-w-md rounded-control bg-brand font-semibold text-brand-ink shadow-lg"
+          >
+            {cartLabel}
+          </button>
+        </div>
+      ) : null}
     </div>
   )
 }

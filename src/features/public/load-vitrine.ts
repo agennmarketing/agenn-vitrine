@@ -9,7 +9,7 @@ async function fetchCatalog(subdomain: string): Promise<PublicVitrine | null> {
   const admin = createSupabaseAdminClient()
   const { data: vitrine, error } = await admin
     .from('vitrines')
-    .select('id, owner_id, subdomain, type, name, description, theme, status, show_prices, show_media, default_button_text, brand_color, banner_enabled, logo_media_id, banner_media_id, primary_whatsapp_id')
+    .select('id, owner_id, subdomain, type, name, description, theme, status, show_prices, show_media, default_button_text, brand_color, banner_enabled, cart_enabled, cart_button_text, logo_media_id, banner_media_id, primary_whatsapp_id')
     .eq('subdomain', subdomain)
     .maybeSingle()
   if (error) throw error
@@ -20,7 +20,7 @@ async function fetchCatalog(subdomain: string): Promise<PublicVitrine | null> {
   const { data: overQuota, error: quotaError } = await admin.rpc('is_over_video_quota', { p_user_id: vitrine.owner_id })
   if (quotaError) throw quotaError
 
-  const [plan, contacts, categories, items, media] = await Promise.all([
+  const [plan, contacts, categories, items, media, checkout] = await Promise.all([
     admin.from('plans').select('max_items_per_vitrine, max_videos_per_vitrine, allow_branding, show_watermark').eq('id', planId).single(),
     admin.from('whatsapp_contacts').select('id, phone_e164').eq('vitrine_id', vitrine.id),
     admin.from('categories').select('id, name, position').eq('vitrine_id', vitrine.id),
@@ -32,8 +32,13 @@ async function fetchCatalog(subdomain: string): Promise<PublicVitrine | null> {
       .order('position')
       .order('created_at'),
     admin.from('media').select('id, item_id, role, kind, position, storage_paths, bunny_video_id, aspect').eq('vitrine_id', vitrine.id).eq('status', 'ready'),
+    admin
+      .from('checkout_settings')
+      .select('name_mode, fulfillment_mode, payment_mode, schedule_mode, notes_mode, payment_options')
+      .eq('vitrine_id', vitrine.id)
+      .maybeSingle(),
   ])
-  for (const result of [plan, contacts, categories, items, media]) if (result.error) throw result.error
+  for (const result of [plan, contacts, categories, items, media, checkout]) if (result.error) throw result.error
 
   const itemIds = (items.data ?? []).map((i) => i.id)
   const variations = itemIds.length
@@ -43,6 +48,16 @@ async function fetchCatalog(subdomain: string): Promise<PublicVitrine | null> {
         .in('item_id', itemIds)
     : { data: [], error: null }
   if (variations.error) throw variations.error
+
+  const addonLinks = itemIds.length
+    ? await admin
+        .from('item_addon_groups')
+        .select(
+          'item_id, position, addon_groups(id, name, kind, required, min_select, max_select, allow_repeat, flavor_price_rule, position, addon_options(id, name, price_cents, sold_out, position))',
+        )
+        .in('item_id', itemIds)
+    : { data: [], error: null }
+  if (addonLinks.error) throw addonLinks.error
 
   return buildPublicCatalog(
     {
@@ -54,6 +69,8 @@ async function fetchCatalog(subdomain: string): Promise<PublicVitrine | null> {
       items: (items.data ?? []) as CatalogRows['items'],
       variations: variations.data ?? [],
       media: media.data ?? [],
+      checkout: checkout.data ?? null,
+      addonLinks: (addonLinks.data ?? []) as unknown as CatalogRows['addonLinks'],
     },
     env.NEXT_PUBLIC_MEDIA_BASE_URL,
     env.NEXT_PUBLIC_VIDEO_CDN_BASE_URL,
