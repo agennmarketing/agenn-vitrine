@@ -13,7 +13,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   // RLS: só encontra mídia do próprio dono.
   const { data: media } = await session.supabase
     .from('media')
-    .select('id, role, item_id, storage_paths, vitrines(subdomain)')
+    .select('id, role, item_id, storage_paths, bunny_video_id, vitrines(subdomain)')
     .eq('id', id)
     .maybeSingle()
   if (!media) return new NextResponse(null, { status: 204 })
@@ -30,4 +30,13 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   const subdomain = (media.vitrines as { subdomain: string } | null)?.subdomain
   if (subdomain && (media.item_id || media.role === 'logo' || media.role === 'banner')) revalidateVitrine(subdomain)
   return new NextResponse(null, { status: 204 })
+}
+
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const session = await getApiUser()
+  if (!session) return NextResponse.json({ error: 'Sua sessão expirou. Entre novamente.' }, { status: 401 })
+  const { id } = await params
+  const { data: media } = await session.supabase.from('media').select('status').eq('id', id).maybeSingle()
+  if (!media) return NextResponse.json({ error: 'Mídia não encontrada.' }, { status: 404 })
+  return NextResponse.json({ status: media.status }, { headers: { 'Cache-Control': 'no-store' } })
 }
