@@ -78,6 +78,13 @@ function main() {
     .filter((f) => f.endsWith(".test.sql"))
     .sort();
 
+  if (files.length === 0) {
+    console.error(
+      `FALHA: nenhum arquivo *.test.sql encontrado em ${testsDir}. Sem testes, o banco não foi verificado.`,
+    );
+    process.exit(1);
+  }
+
   let totalOk = 0;
   let totalNotOk = 0;
   let totalPlanned = 0;
