@@ -1,5 +1,6 @@
 import 'server-only'
 import {
+  parseBillingEnv,
   parseCronSecret,
   parseEmailEnv,
   parseMediaStorageEnv,
@@ -19,3 +20,4 @@ export const getVideoStreamEnv = () => parseVideoStreamEnv(process.env)
 export const getWebhookSecret = () => parseWebhookSecret(process.env)
 export const getCronSecret = () => parseCronSecret(process.env)
 export const getEmailEnv = () => parseEmailEnv(process.env)
+export const getBillingEnv = () => parseBillingEnv(process.env)
