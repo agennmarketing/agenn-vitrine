@@ -160,3 +160,27 @@ export async function seedItem(
     .throwOnError()
   return item as { id: string; code: string }
 }
+
+export async function makeTestImage(page: Page, width = 1200, height = 1500): Promise<Buffer> {
+  const dataUrl = await page.evaluate(
+    ([w, h]) => {
+      const canvas = document.createElement('canvas')
+      canvas.width = w
+      canvas.height = h
+      const context = canvas.getContext('2d')!
+      context.fillStyle = '#0b2a1c'
+      context.fillRect(0, 0, w, h)
+      context.fillStyle = '#ffffff'
+      context.fillRect(w / 4, h / 4, w / 2, h / 2)
+      return canvas.toDataURL('image/png')
+    },
+    [width, height],
+  )
+  return Buffer.from(dataUrl.split(',')[1], 'base64')
+}
+
+export async function uploadImage(page: Page, label: string, image: Buffer) {
+  await page.getByLabel(label, { exact: true }).setInputFiles({ name: 'foto.png', mimeType: 'image/png', buffer: image })
+  await page.getByRole('button', { name: 'Usar imagem' }).click()
+  await expect(page.getByRole('img', { name: label, exact: true })).toBeVisible()
+}
