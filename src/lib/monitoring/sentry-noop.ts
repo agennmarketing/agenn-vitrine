@@ -29,3 +29,5 @@ export const captureRouterTransitionStart: SentrySdk['captureRouterTransitionSta
 export const captureConsoleIntegration: SentrySdk['captureConsoleIntegration'] = () => ({ name: 'CaptureConsole' })
 
 export const captureException: SentrySdk['captureException'] = () => ''
+
+export const captureMessage: SentrySdk['captureMessage'] = () => ''

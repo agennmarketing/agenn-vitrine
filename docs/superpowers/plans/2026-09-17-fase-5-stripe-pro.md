@@ -2274,16 +2274,19 @@ test('falha de pagamento dá carência de 7 dias e o cancelamento congela o exce
   expect(encerrada?.pro_ended_at).not.toBeNull()
   expect(await vitrineStatuses(user.id)).toEqual([`${antiga.subdomain}:active`, `${nova.subdomain}:frozen`])
 
+  // Spec 7.1: vitrine congelada continua respondendo 200, com o aviso no lugar do catálogo.
   await expect
-    .poll(async () => (await request.get(`http://${nova.subdomain}.localhost:3000/`)).status())
-    .toBe(404)
-  expect((await request.get(`http://${antiga.subdomain}.localhost:3000/`)).status()).toBe(200)
+    .poll(async () => (await request.get(`http://${nova.subdomain}.localhost:3000/`)).text())
+    .toContain('Vitrine indisponível no momento')
+  expect(await (await request.get(`http://${antiga.subdomain}.localhost:3000/`)).text()).not.toContain(
+    'Vitrine indisponível no momento',
+  )
 })
 ```
 
 Observações para quem executa:
 - `seedVitrine` só cria a segunda vitrine com a conta em Pro (a trava do banco vale sempre); por isso o teste alterna o status antes de semear.
-- Vitrine congelada responde 404 (`notFound()` em `src/app/v/[subdomain]/page.tsx` quando o status não é `active`); o `expect.poll` espera a revalidação por tag.
+- Vitrine congelada **não** responde 404: `src/app/v/[subdomain]/page.tsx` devolve 200 com "Vitrine indisponível no momento" (spec 7.1). O 404 é só para subdomínio inexistente. Por isso as asserções olham o corpo, e o `expect.poll` espera a revalidação por tag.
 
 - [ ] **Step 3: Rodar os testes**
 
@@ -3196,8 +3199,9 @@ test('Pro: marca d’água some ao assinar e volta ao cancelar, congelando a seg
   expect(await vitrineStatuses(user.id)).toEqual([`${primeira.subdomain}:active`, `${segunda.subdomain}:frozen`])
   await page.goto(`http://${primeira.subdomain}.localhost:3000/`)
   await expect(page.getByText('Feito com Agenn Vitrine')).toBeVisible()
-  const congelada = await page.goto(`http://${segunda.subdomain}.localhost:3000/`)
-  expect(congelada?.status()).toBe(404)
+  // Spec 7.1: congelada responde 200 com o aviso no lugar do catálogo.
+  await page.goto(`http://${segunda.subdomain}.localhost:3000/`)
+  await expect(page.getByRole('heading', { name: 'Vitrine indisponível no momento' })).toBeVisible()
 })
 ```
 
