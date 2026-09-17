@@ -17,9 +17,11 @@ Guia passo a passo para colocar a Fase 1 da Agenn Vitrine em produção em `agen
 6. Em **Authentication → SMTP**, use o SMTP do Resend (seção 3).
 7. Em **Authentication → Attack Protection**, ligue o CAPTCHA **Turnstile** com a secret key (seção 4).
 8. Em **Authentication → Providers → Google**, ligue o provedor com Client ID e Secret (seção 5).
+9. Em **Authentication → Providers → Email**, mantenha **Secure email change** ligado. Assim, mesmo com uma sessão roubada, ninguém troca o e-mail da conta pela API sem confirmar nos dois endereços (o app não permite trocar o e-mail).
+10. Em **Project Settings → JWT Keys**, migre o projeto para **chaves de assinatura assimétricas** (JWT Signing Keys, ex.: ECC P-256): crie a nova chave, espere alguns minutos e **rotacione** para ela. Com chave assimétrica, `getClaims()` no proxy valida o token localmente (pela chave pública/JWKS) em vez de chamar o Auth a cada requisição. O Supabase local já usa ES256.
 
 ## 2. Vercel
-1. Importe o repositório e use Node 20+.
+1. Importe o repositório e use Node 20+. O arquivo `vercel.json` do repositório fixa as funções na região `gru1` (São Paulo), a mesma do Supabase — confira em **Settings → Functions** que a região ficou `gru1`.
 2. Domínios: `agenn.com.br`, `app.agenn.com.br` e `*.agenn.com.br`. O domínio curinga exige que o DNS do domínio use os **nameservers da Vercel**.
 3. Variáveis de ambiente (Production):
    - `NEXT_PUBLIC_ROOT_DOMAIN=agenn.com.br`
@@ -28,7 +30,10 @@ Guia passo a passo para colocar a Fase 1 da Agenn Vitrine em produção em `agen
    - `NEXT_PUBLIC_TURNSTILE_SITE_KEY`
    - `NEXT_PUBLIC_GOOGLE_AUTH_ENABLED=true`
    - `SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN`
-4. **Importante sobre o Sentry:** defina `SENTRY_DSN` e `NEXT_PUBLIC_SENTRY_DSN` no ambiente **Production** (e em Preview também, se quiser Sentry nas prévias) e marque-as para estarem disponíveis **em tempo de build**, não só em runtime. O motivo é que `next.config.ts` decide, durante o próprio `next build`, se usa o SDK real do Sentry ou um stub no-op — se o DSN só existir em runtime, o build já terá sido gerado sem o Sentry. Se um build de produção rodar sem essas variáveis, o log de build mostra o aviso `[sentry] VERCEL_ENV=production sem SENTRY_DSN/NEXT_PUBLIC_SENTRY_DSN: o Sentry ficará desligado neste build.` — isso é o sinal de que as variáveis não chegaram ao build.
+4. **Variáveis e deploy:** as variáveis de ambiente normais da Vercel já ficam disponíveis durante o build. Só garanta que estão definidas no ambiente **Production** (e em **Preview**, se usar prévias) **antes** do deploy, e faça **redeploy** depois de alterar qualquer uma — o deploy existente não muda sozinho. Isso vale em especial para:
+   - **Sentry:** `next.config.ts` decide, durante o próprio `next build`, se usa o SDK real ou um stub no-op. Se o build rodar sem `SENTRY_DSN`/`NEXT_PUBLIC_SENTRY_DSN`, o log mostra `[sentry] VERCEL_ENV=production sem SENTRY_DSN/NEXT_PUBLIC_SENTRY_DSN: o Sentry ficará desligado neste build.`
+   - **Qualquer `NEXT_PUBLIC_*`** (ex.: `NEXT_PUBLIC_ROOT_DOMAIN` na migração de domínio): o valor é gravado no código no build, então a mudança só vale após novo deploy.
+5. **Prévias (`*.vercel.app`):** na Fase 1 o proxy só reconhece o domínio raiz e seus subdomínios, então os endereços de Preview da Vercel caem em "Página não encontrada". Teste pelo domínio de produção ou localmente.
 
 ## 3. Resend
 1. Adicione o domínio `agenn.com.br` e configure os registros DNS (SPF, DKIM).
@@ -45,7 +50,7 @@ Guia passo a passo para colocar a Fase 1 da Agenn Vitrine em produção em `agen
 3. URI de redirecionamento autorizado: `https://<ref>.supabase.co/auth/v1/callback`.
 
 ## 6. Sentry
-Crie o projeto Next.js e copie DSN, org, project e auth token para a Vercel. Confira o alerta da seção 2.4 acima: sem `SENTRY_DSN`/`NEXT_PUBLIC_SENTRY_DSN` disponíveis no build, o Sentry fica desligado mesmo que as variáveis existam em runtime.
+Crie o projeto Next.js e copie DSN, org, project e auth token para a Vercel. Confira a seção 2.4: defina `SENTRY_DSN`/`NEXT_PUBLIC_SENTRY_DSN` no ambiente certo antes do deploy (ou faça redeploy depois), senão o build sai com o Sentry desligado. Erros registrados com `console.error` no servidor também são enviados ao Sentry.
 
 ## 7. Conferência em produção
 - [ ] `https://agenn.com.br` mostra a página inicial
@@ -55,6 +60,10 @@ Crie o projeto Next.js e copie DSN, org, project e auth token para a Vercel. Con
 - [ ] "Continuar com Google" entra e a página Conta **não** mostra "Senha"
 - [ ] Login em outro navegador derruba o primeiro com "Sua conta foi acessada em outro aparelho."
 - [ ] Recuperação de senha funciona
+- [ ] Logado com senha, abrir `https://app.agenn.com.br/redefinir-senha` leva para Conta (nova senha sem a atual só pelo link do e-mail)
+
+## Riscos aceitos
+- **Troca de senha direto pela API do Supabase:** a tela `/redefinir-senha` só aceita sessões abertas por link de e-mail há até 15 minutos, e a página Conta pede a senha atual. Mesmo assim, quem tiver uma sessão válida (ex.: cookie roubado) ainda consegue chamar a API do Supabase Auth diretamente (`PUT /auth/v1/user`) e trocar a senha sem informar a atual. Recomendação para a fase de endurecimento: ligar **Secure password change** em **Authentication → Providers → Email** (exige login recente ou código de reautenticação para trocar a senha) e conferir que a recuperação por e-mail continua funcionando.
 
 ## Migração futura para agennvitrine.com.br
 Siga a seção 2.2 da spec: novo domínio e curinga na Vercel, `NEXT_PUBLIC_ROOT_DOMAIN=agennvitrine.com.br`, `LEGACY_DOMAINS=agenn.com.br`, e atualização de Supabase (Site URL e Redirect URLs), Google OAuth, Resend e Turnstile.
