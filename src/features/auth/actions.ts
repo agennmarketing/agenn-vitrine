@@ -5,13 +5,9 @@ import { mapAuthError } from '@/lib/auth/auth-errors'
 import { claimSessionOrFail } from '@/lib/auth/claim-session'
 import { forgotPasswordSchema, resetPasswordSchema, signInSchema, signUpSchema } from '@/lib/auth/schemas'
 import { isRecentEmailLinkSession } from '@/lib/auth/session'
-import { fieldErrorsFromZod, type FormState } from '@/lib/forms/form-state'
+import { fieldErrorsFromZod, type FormState, readFormFields } from '@/lib/forms/form-state'
 import { safeNextPath } from '@/lib/hosts/urls'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-
-function readFields<const K extends string>(formData: FormData, keys: readonly K[]): Record<K, string> {
-  return Object.fromEntries(keys.map((key) => [key, String(formData.get(key) ?? '')])) as Record<K, string>
-}
 
 function readCaptcha(formData: FormData): string | undefined {
   const token = formData.get('captchaToken')
@@ -19,7 +15,7 @@ function readCaptcha(formData: FormData): string | undefined {
 }
 
 export async function signUpAction(_prev: FormState, formData: FormData): Promise<FormState> {
-  const fields = readFields(formData, ['name', 'email', 'password'])
+  const fields = readFormFields(formData, ['name', 'email', 'password'])
   const keep = { name: fields.name, email: fields.email }
   const parsed = signUpSchema.safeParse(fields)
   if (!parsed.success) return { fieldErrors: fieldErrorsFromZod(parsed.error), values: keep }
@@ -36,7 +32,7 @@ export async function signUpAction(_prev: FormState, formData: FormData): Promis
 }
 
 export async function signInAction(_prev: FormState, formData: FormData): Promise<FormState> {
-  const fields = readFields(formData, ['email', 'password'])
+  const fields = readFormFields(formData, ['email', 'password'])
   const keep = { email: fields.email }
   const parsed = signInSchema.safeParse(fields)
   if (!parsed.success) return { fieldErrors: fieldErrorsFromZod(parsed.error), values: keep }
@@ -68,7 +64,7 @@ export async function resendConfirmationAction(_prev: FormState, formData: FormD
 }
 
 export async function forgotPasswordAction(_prev: FormState, formData: FormData): Promise<FormState> {
-  const fields = readFields(formData, ['email'])
+  const fields = readFormFields(formData, ['email'])
   const parsed = forgotPasswordSchema.safeParse(fields)
   if (!parsed.success) return { fieldErrors: fieldErrorsFromZod(parsed.error), values: fields }
 
@@ -84,7 +80,7 @@ export async function forgotPasswordAction(_prev: FormState, formData: FormData)
 }
 
 export async function resetPasswordAction(_prev: FormState, formData: FormData): Promise<FormState> {
-  const parsed = resetPasswordSchema.safeParse(readFields(formData, ['password', 'confirmPassword']))
+  const parsed = resetPasswordSchema.safeParse(readFormFields(formData, ['password', 'confirmPassword']))
   if (!parsed.success) return { fieldErrors: fieldErrorsFromZod(parsed.error) }
 
   const supabase = await createSupabaseServerClient()

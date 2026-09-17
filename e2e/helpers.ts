@@ -70,3 +70,93 @@ export async function signIn(page: Page, email: string, password: string) {
   await page.getByRole('button', { name: 'Entrar', exact: true }).click()
   await expect(page).toHaveURL(/\/painel$/)
 }
+export function uniqueSubdomain(prefix: string) {
+  return `${prefix}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`.slice(0, 30)
+}
+
+export async function setPlan(userId: string, plan: 'free' | 'pro') {
+  const admin = createAdminClient()
+  await admin
+    .from('subscriptions')
+    .upsert({ user_id: userId, plan_id: plan, status: plan === 'pro' ? 'active' : 'none' })
+    .throwOnError()
+}
+
+export type SeededVitrine = { id: string; subdomain: string; categoryId: string; contactId: string; phone: string; name: string }
+
+export async function seedVitrine(
+  ownerId: string,
+  options: { type?: 'produtos' | 'servicos'; name?: string; subdomain?: string; phone?: string } = {},
+): Promise<SeededVitrine> {
+  const admin = createAdminClient()
+  const type = options.type ?? 'produtos'
+  const subdomain = options.subdomain ?? uniqueSubdomain('seed')
+  const name = options.name ?? 'Vitrine Seed'
+  const phone = options.phone ?? '+5511987654321'
+  const { data: vitrine } = await admin
+    .from('vitrines')
+    .insert({ owner_id: ownerId, type, subdomain, name, default_button_text: type === 'servicos' ? 'Agendar' : 'Solicitar orçamento' })
+    .select('id')
+    .single()
+    .throwOnError()
+  const { data: contact } = await admin
+    .from('whatsapp_contacts')
+    .insert({ owner_id: ownerId, vitrine_id: vitrine.id, label: 'Principal', phone_e164: phone })
+    .select('id')
+    .single()
+    .throwOnError()
+  await admin.from('vitrines').update({ primary_whatsapp_id: contact.id }).eq('id', vitrine.id).throwOnError()
+  const { data: category } = await admin
+    .from('categories')
+    .insert({ owner_id: ownerId, vitrine_id: vitrine.id, name: 'Destaques' })
+    .select('id')
+    .single()
+    .throwOnError()
+  return { id: vitrine.id, subdomain, categoryId: category.id, contactId: contact.id, phone, name }
+}
+
+export async function seedItem(
+  vitrine: SeededVitrine,
+  ownerId: string,
+  fields: {
+    name: string
+    priceCents?: number | null
+    priceType?: 'fixed' | 'from' | 'on_request'
+    variations?: { name: string; priceCents: number }[]
+  },
+) {
+  const admin = createAdminClient()
+  const { data: item } = await admin
+    .from('items')
+    .insert({
+      owner_id: ownerId,
+      vitrine_id: vitrine.id,
+      category_id: vitrine.categoryId,
+      name: fields.name,
+      price_type: fields.priceType ?? 'fixed',
+      price_cents: fields.priceType === 'on_request' ? null : (fields.priceCents ?? 1000),
+    })
+    .select('id, code')
+    .single()
+    .throwOnError()
+  if (fields.variations?.length) {
+    await admin
+      .from('item_variations')
+      .insert(fields.variations.map((v, position) => ({ owner_id: ownerId, item_id: item.id, name: v.name, price_cents: v.priceCents, position })))
+      .throwOnError()
+  }
+  await admin
+    .from('media')
+    .insert({
+      owner_id: ownerId,
+      vitrine_id: vitrine.id,
+      item_id: item.id,
+      role: 'cover',
+      kind: 'image',
+      storage_paths: { '480': `${ownerId}/${vitrine.id}/seed-480.webp`, '1080': `${ownerId}/${vitrine.id}/seed-1080.webp` },
+      width: 1080,
+      height: 1350,
+    })
+    .throwOnError()
+  return item as { id: string; code: string }
+}

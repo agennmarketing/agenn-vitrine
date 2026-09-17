@@ -19,3 +19,7 @@ export function fieldErrorsFromZod(error: {
   }
   return result
 }
+
+export function readFormFields<const K extends string>(formData: FormData, keys: readonly K[]): Record<K, string> {
+  return Object.fromEntries(keys.map((key) => [key, String(formData.get(key) ?? '')])) as Record<K, string>
+}

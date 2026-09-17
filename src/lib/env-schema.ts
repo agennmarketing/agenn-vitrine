@@ -18,6 +18,10 @@ export const envSchema = z.object({
     .string()
     .default('false')
     .transform((value) => value === 'true'),
+  NEXT_PUBLIC_MEDIA_BASE_URL: z
+    .string()
+    .default('')
+    .transform((value) => value.trim().replace(/\/+$/, '')),
 })
 
 export type Env = z.infer<typeof envSchema>
