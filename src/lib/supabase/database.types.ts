@@ -34,6 +34,106 @@ export type Database = {
   }
   public: {
     Tables: {
+      addon_groups: {
+        Row: {
+          allow_repeat: boolean
+          created_at: string
+          flavor_price_rule: string | null
+          id: string
+          kind: string
+          max_select: number
+          min_select: number
+          name: string
+          owner_id: string
+          position: number
+          required: boolean
+          updated_at: string
+          vitrine_id: string
+        }
+        Insert: {
+          allow_repeat?: boolean
+          created_at?: string
+          flavor_price_rule?: string | null
+          id?: string
+          kind?: string
+          max_select?: number
+          min_select?: number
+          name: string
+          owner_id?: string
+          position?: number
+          required?: boolean
+          updated_at?: string
+          vitrine_id: string
+        }
+        Update: {
+          allow_repeat?: boolean
+          created_at?: string
+          flavor_price_rule?: string | null
+          id?: string
+          kind?: string
+          max_select?: number
+          min_select?: number
+          name?: string
+          owner_id?: string
+          position?: number
+          required?: boolean
+          updated_at?: string
+          vitrine_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "addon_groups_vitrine_id_fkey"
+            columns: ["vitrine_id"]
+            isOneToOne: false
+            referencedRelation: "vitrines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      addon_options: {
+        Row: {
+          created_at: string
+          group_id: string
+          id: string
+          name: string
+          owner_id: string
+          position: number
+          price_cents: number
+          sold_out: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          id?: string
+          name: string
+          owner_id?: string
+          position?: number
+          price_cents?: number
+          sold_out?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          position?: number
+          price_cents?: number
+          sold_out?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "addon_options_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "addon_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           created_at: string
@@ -68,6 +168,95 @@ export type Database = {
             columns: ["vitrine_id"]
             isOneToOne: false
             referencedRelation: "vitrines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      checkout_settings: {
+        Row: {
+          created_at: string
+          fulfillment_mode: string
+          id: string
+          name_mode: string
+          notes_mode: string
+          owner_id: string
+          payment_mode: string
+          payment_options: string[]
+          schedule_mode: string
+          updated_at: string
+          vitrine_id: string
+        }
+        Insert: {
+          created_at?: string
+          fulfillment_mode?: string
+          id?: string
+          name_mode?: string
+          notes_mode?: string
+          owner_id: string
+          payment_mode?: string
+          payment_options?: string[]
+          schedule_mode?: string
+          updated_at?: string
+          vitrine_id: string
+        }
+        Update: {
+          created_at?: string
+          fulfillment_mode?: string
+          id?: string
+          name_mode?: string
+          notes_mode?: string
+          owner_id?: string
+          payment_mode?: string
+          payment_options?: string[]
+          schedule_mode?: string
+          updated_at?: string
+          vitrine_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkout_settings_vitrine_id_fkey"
+            columns: ["vitrine_id"]
+            isOneToOne: true
+            referencedRelation: "vitrines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      item_addon_groups: {
+        Row: {
+          created_at: string
+          group_id: string
+          item_id: string
+          owner_id: string
+          position: number
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          item_id: string
+          owner_id?: string
+          position?: number
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          item_id?: string
+          owner_id?: string
+          position?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "item_addon_groups_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "addon_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "item_addon_groups_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
             referencedColumns: ["id"]
           },
         ]
@@ -700,6 +889,10 @@ export type Database = {
         Returns: string
       }
       current_video_month: { Args: never; Returns: string }
+      default_checkout_settings: {
+        Args: { p_owner_id: string; p_type: string; p_vitrine_id: string }
+        Returns: undefined
+      }
       effective_plan_id: { Args: { p_user_id: string }; Returns: string }
       hit_rate_limit: {
         Args: { p_key: string; p_limit: number; p_window_seconds: number }
