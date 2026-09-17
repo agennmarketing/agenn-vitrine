@@ -142,10 +142,14 @@ export function VitrineWizard({ rootDomain }: { rootDomain: string }) {
           ) : (
             <span />
           )}
+          {/* Chaves diferentes: sem elas o React reaproveita o mesmo <button> e o troca
+              para submit durante o clique em Continuar, enviando o formulário antes da hora. */}
           {step < STEPS.length - 1 ? (
-            <Button onClick={() => setStep(step + 1)}>Continuar</Button>
+            <Button key="next" onClick={() => setStep(step + 1)}>
+              Continuar
+            </Button>
           ) : (
-            <Button type="submit" disabled={pending}>
+            <Button key="submit" type="submit" disabled={pending}>
               Criar vitrine
             </Button>
           )}

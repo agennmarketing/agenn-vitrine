@@ -9,7 +9,7 @@ test('configurações, mensagens e WhatsApp', async ({ page }) => {
   await page.goto(`/painel/vitrines/${vitrine.id}/configuracoes`)
   await page.getByLabel('Nome da vitrine').fill('Nome Novo')
   const novo = uniqueSubdomain('novo')
-  await page.getByLabel('Endereço da vitrine').fill(novo)
+  await page.getByLabel('Endereço da vitrine', { exact: true }).fill(novo)
   await page.getByRole('button', { name: 'Salvar configurações' }).click()
   await expect(page.getByText('Confirme que o link antigo vai parar de funcionar.')).toBeVisible()
   await page.getByLabel('Entendi que o link antigo vai parar de funcionar').check()
