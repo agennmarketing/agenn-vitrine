@@ -34,6 +34,339 @@ export type Database = {
   }
   public: {
     Tables: {
+      categories: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          owner_id: string
+          position: number
+          updated_at: string
+          vitrine_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          owner_id?: string
+          position?: number
+          updated_at?: string
+          vitrine_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          position?: number
+          updated_at?: string
+          vitrine_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "categories_vitrine_id_fkey"
+            columns: ["vitrine_id"]
+            isOneToOne: false
+            referencedRelation: "vitrines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      item_code_counters: {
+        Row: {
+          next_value: number
+          owner_id: string
+        }
+        Insert: {
+          next_value?: number
+          owner_id: string
+        }
+        Update: {
+          next_value?: number
+          owner_id?: string
+        }
+        Relationships: []
+      }
+      item_codes: {
+        Row: {
+          code: string
+          created_at: string
+          item_id: string | null
+          owner_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          item_id?: string | null
+          owner_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          item_id?: string | null
+          owner_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "item_codes_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      item_variations: {
+        Row: {
+          created_at: string
+          id: string
+          item_id: string
+          name: string
+          owner_id: string
+          position: number
+          price_cents: number
+          promo_price_cents: number | null
+          sold_out: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_id: string
+          name: string
+          owner_id?: string
+          position?: number
+          price_cents: number
+          promo_price_cents?: number | null
+          sold_out?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_id?: string
+          name?: string
+          owner_id?: string
+          position?: number
+          price_cents?: number
+          promo_price_cents?: number | null
+          sold_out?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "item_variations_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      items: {
+        Row: {
+          button_text: string | null
+          category_id: string | null
+          code: string
+          created_at: string
+          custom_message: string | null
+          deleted_at: string | null
+          description: string
+          duration_minutes: number | null
+          id: string
+          name: string
+          owner_id: string
+          position: number
+          price_cents: number | null
+          price_type: string
+          promo_price_cents: number | null
+          sold_out: boolean
+          tags: string[]
+          updated_at: string
+          vitrine_id: string
+          whatsapp_id: string | null
+        }
+        Insert: {
+          button_text?: string | null
+          category_id?: string | null
+          code: string
+          created_at?: string
+          custom_message?: string | null
+          deleted_at?: string | null
+          description?: string
+          duration_minutes?: number | null
+          id?: string
+          name: string
+          owner_id?: string
+          position?: number
+          price_cents?: number | null
+          price_type?: string
+          promo_price_cents?: number | null
+          sold_out?: boolean
+          tags?: string[]
+          updated_at?: string
+          vitrine_id: string
+          whatsapp_id?: string | null
+        }
+        Update: {
+          button_text?: string | null
+          category_id?: string | null
+          code?: string
+          created_at?: string
+          custom_message?: string | null
+          deleted_at?: string | null
+          description?: string
+          duration_minutes?: number | null
+          id?: string
+          name?: string
+          owner_id?: string
+          position?: number
+          price_cents?: number | null
+          price_type?: string
+          promo_price_cents?: number | null
+          sold_out?: boolean
+          tags?: string[]
+          updated_at?: string
+          vitrine_id?: string
+          whatsapp_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "items_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "items_vitrine_id_fkey"
+            columns: ["vitrine_id"]
+            isOneToOne: false
+            referencedRelation: "vitrines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "items_whatsapp_id_fkey"
+            columns: ["whatsapp_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      media: {
+        Row: {
+          aspect: string | null
+          bunny_video_id: string | null
+          bytes: number | null
+          created_at: string
+          duration_seconds: number | null
+          height: number | null
+          id: string
+          item_id: string | null
+          kind: string
+          owner_id: string
+          position: number
+          role: string
+          status: string
+          storage_paths: Json | null
+          updated_at: string
+          vitrine_id: string
+          width: number | null
+        }
+        Insert: {
+          aspect?: string | null
+          bunny_video_id?: string | null
+          bytes?: number | null
+          created_at?: string
+          duration_seconds?: number | null
+          height?: number | null
+          id?: string
+          item_id?: string | null
+          kind: string
+          owner_id: string
+          position?: number
+          role: string
+          status?: string
+          storage_paths?: Json | null
+          updated_at?: string
+          vitrine_id: string
+          width?: number | null
+        }
+        Update: {
+          aspect?: string | null
+          bunny_video_id?: string | null
+          bytes?: number | null
+          created_at?: string
+          duration_seconds?: number | null
+          height?: number | null
+          id?: string
+          item_id?: string | null
+          kind?: string
+          owner_id?: string
+          position?: number
+          role?: string
+          status?: string
+          storage_paths?: Json | null
+          updated_at?: string
+          vitrine_id?: string
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_vitrine_id_fkey"
+            columns: ["vitrine_id"]
+            isOneToOne: false
+            referencedRelation: "vitrines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_snapshots: {
+        Row: {
+          code: string
+          created_at: string
+          expires_at: string
+          id: string
+          owner_id: string
+          payload: Json
+          vitrine_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          owner_id: string
+          payload: Json
+          vitrine_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          owner_id?: string
+          payload?: Json
+          vitrine_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_snapshots_vitrine_id_fkey"
+            columns: ["vitrine_id"]
+            isOneToOne: false
+            referencedRelation: "vitrines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       plans: {
         Row: {
           allow_branding: boolean
@@ -100,6 +433,24 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limits: {
+        Row: {
+          count: number
+          key: string
+          window_start: string
+        }
+        Insert: {
+          count?: number
+          key: string
+          window_start: string
+        }
+        Update: {
+          count?: number
+          key?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           cancel_at_period_end: boolean
@@ -153,13 +504,178 @@ export type Database = {
           },
         ]
       }
+      vitrines: {
+        Row: {
+          banner_enabled: boolean
+          banner_media_id: string | null
+          brand_color: string | null
+          cart_button_text: string
+          cart_enabled: boolean
+          created_at: string
+          default_button_text: string
+          description: string
+          id: string
+          logo_media_id: string | null
+          name: string
+          owner_id: string
+          position: number
+          primary_whatsapp_id: string | null
+          show_media: boolean
+          show_prices: boolean
+          status: string
+          subdomain: string
+          theme: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          banner_enabled?: boolean
+          banner_media_id?: string | null
+          brand_color?: string | null
+          cart_button_text?: string
+          cart_enabled?: boolean
+          created_at?: string
+          default_button_text: string
+          description?: string
+          id?: string
+          logo_media_id?: string | null
+          name: string
+          owner_id?: string
+          position?: number
+          primary_whatsapp_id?: string | null
+          show_media?: boolean
+          show_prices?: boolean
+          status?: string
+          subdomain: string
+          theme?: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          banner_enabled?: boolean
+          banner_media_id?: string | null
+          brand_color?: string | null
+          cart_button_text?: string
+          cart_enabled?: boolean
+          created_at?: string
+          default_button_text?: string
+          description?: string
+          id?: string
+          logo_media_id?: string | null
+          name?: string
+          owner_id?: string
+          position?: number
+          primary_whatsapp_id?: string | null
+          show_media?: boolean
+          show_prices?: boolean
+          status?: string
+          subdomain?: string
+          theme?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vitrines_banner_media_fk"
+            columns: ["banner_media_id"]
+            isOneToOne: false
+            referencedRelation: "media"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vitrines_logo_media_fk"
+            columns: ["logo_media_id"]
+            isOneToOne: false
+            referencedRelation: "media"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vitrines_primary_whatsapp_fk"
+            columns: ["primary_whatsapp_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_contacts: {
+        Row: {
+          created_at: string
+          id: string
+          label: string
+          owner_id: string
+          phone_e164: string
+          position: number
+          updated_at: string
+          vitrine_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label: string
+          owner_id?: string
+          phone_e164: string
+          position?: number
+          updated_at?: string
+          vitrine_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string
+          owner_id?: string
+          phone_e164?: string
+          position?: number
+          updated_at?: string
+          vitrine_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_contacts_vitrine_id_fkey"
+            columns: ["vitrine_id"]
+            isOneToOne: false
+            referencedRelation: "vitrines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
       claim_session: { Args: never; Returns: undefined }
+      create_vitrine: {
+        Args: {
+          p_categories: string[]
+          p_default_button_text: string
+          p_name: string
+          p_subdomain: string
+          p_theme: string
+          p_type: string
+          p_whatsapp_label: string
+          p_whatsapp_phone: string
+        }
+        Returns: string
+      }
       effective_plan_id: { Args: { p_user_id: string }; Returns: string }
+      hit_rate_limit: {
+        Args: { p_key: string; p_limit: number; p_window_seconds: number }
+        Returns: boolean
+      }
+      insert_order_snapshot: {
+        Args: { p_code: string; p_payload: Json; p_vitrine_id: string }
+        Returns: boolean
+      }
+      is_item_code_available: {
+        Args: { p_code: string; p_item_id?: string }
+        Returns: boolean
+      }
+      is_reserved_subdomain: { Args: { p_value: string }; Returns: boolean }
+      is_subdomain_available: {
+        Args: { p_except_vitrine_id?: string; p_subdomain: string }
+        Returns: boolean
+      }
       my_entitlements: {
         Args: never
         Returns: {
@@ -182,6 +698,8 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      next_item_code: { Args: { p_owner_id: string }; Returns: string }
+      peek_next_item_code: { Args: never; Returns: string }
       session_state: { Args: never; Returns: string }
     }
     Enums: {
