@@ -13,11 +13,13 @@ insert into public.categories (id, owner_id, vitrine_id, name) values
   ('00000000-0000-0000-0000-00000000c001', '00000000-0000-0000-0000-0000000001a1', '00000000-0000-0000-0000-00000000a001', 'Geral'),
   ('00000000-0000-0000-0000-00000000c002', '00000000-0000-0000-0000-0000000001a2', '00000000-0000-0000-0000-00000000a002', 'Alheia');
 
+-- O dono não escolhe o id do item (sem grant na coluna); este primeiro item, com id
+-- fixo para os testes seguintes, é criado como postgres. Os triggers valem igual.
+insert into public.items (id, owner_id, vitrine_id, category_id, name, price_cents)
+values ('00000000-0000-0000-0000-00000000e001', '00000000-0000-0000-0000-0000000001a1', '00000000-0000-0000-0000-00000000a001', '00000000-0000-0000-0000-00000000c001', 'Primeiro', 1000);
+
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000001a1","role":"authenticated"}', true);
-
-insert into public.items (id, vitrine_id, category_id, name, price_cents)
-values ('00000000-0000-0000-0000-00000000e001', '00000000-0000-0000-0000-00000000a001', '00000000-0000-0000-0000-00000000c001', 'Primeiro', 1000);
 select is((select code from public.items where id = '00000000-0000-0000-0000-00000000e001'), '101', 'primeiro código automático é 101');
 
 insert into public.items (vitrine_id, category_id, name, code) values
