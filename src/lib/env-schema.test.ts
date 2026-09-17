@@ -34,6 +34,13 @@ describe('parseEnv', () => {
     expect(parseEnv({ ...base, NEXT_PUBLIC_MEDIA_BASE_URL: 'https://cdn.exemplo.com/' }).NEXT_PUBLIC_MEDIA_BASE_URL).toBe('https://cdn.exemplo.com')
   })
 
+  it('URL base dos vídeos: vazia por padrão e sem barra final', () => {
+    expect(parseEnv(base).NEXT_PUBLIC_VIDEO_CDN_BASE_URL).toBe('')
+    expect(parseEnv({ ...base, NEXT_PUBLIC_VIDEO_CDN_BASE_URL: 'https://vz-1.b-cdn.net/' }).NEXT_PUBLIC_VIDEO_CDN_BASE_URL).toBe(
+      'https://vz-1.b-cdn.net',
+    )
+  })
+
   it('falha sem domínio raiz', () => {
     expect(() => parseEnv({ ...base, NEXT_PUBLIC_ROOT_DOMAIN: undefined })).toThrow()
   })

@@ -16,6 +16,10 @@ export function mapDbError(error: DbError): string {
       return `Seu plano permite até ${limit} ${limit === 1 ? 'vitrine' : 'vitrines'}. Assine o Pro para criar mais.`
     case 'plan_limit:items':
       return `Seu plano permite até ${limit} itens por vitrine. Assine o Pro para cadastrar mais.`
+    case 'plan_limit:videos_vitrine':
+      return `Seu plano permite até ${limit} ${limit === 1 ? 'vídeo' : 'vídeos'} por vitrine. Assine o Pro para enviar mais.`
+    case 'plan_limit:videos_account':
+      return `Seu plano permite até ${limit} ${limit === 1 ? 'vídeo' : 'vídeos'} na conta. Assine o Pro para enviar mais.`
     case 'item_code_taken':
       return ITEM_CODE_MESSAGES.taken
     case 'item_deleted':
