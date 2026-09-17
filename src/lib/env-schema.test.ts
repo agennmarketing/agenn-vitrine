@@ -29,6 +29,11 @@ describe('parseEnv', () => {
     expect(parseEnv({ ...base, NEXT_PUBLIC_GOOGLE_AUTH_ENABLED: 'yes' }).NEXT_PUBLIC_GOOGLE_AUTH_ENABLED).toBe(false)
   })
 
+  it('URL base das mídias: vazia por padrão e sem barra final', () => {
+    expect(parseEnv(base).NEXT_PUBLIC_MEDIA_BASE_URL).toBe('')
+    expect(parseEnv({ ...base, NEXT_PUBLIC_MEDIA_BASE_URL: 'https://cdn.exemplo.com/' }).NEXT_PUBLIC_MEDIA_BASE_URL).toBe('https://cdn.exemplo.com')
+  })
+
   it('falha sem domínio raiz', () => {
     expect(() => parseEnv({ ...base, NEXT_PUBLIC_ROOT_DOMAIN: undefined })).toThrow()
   })

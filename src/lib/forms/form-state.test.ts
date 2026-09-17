@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { fieldErrorsFromZod } from './form-state'
+import { fieldErrorsFromZod, readFormFields } from './form-state'
 
 describe('fieldErrorsFromZod', () => {
   it('pega a primeira mensagem de cada campo', () => {
@@ -15,5 +15,13 @@ describe('fieldErrorsFromZod', () => {
   })
   it('ignora erros sem campo', () => {
     expect(fieldErrorsFromZod({ issues: [{ path: [], message: 'geral' }] })).toEqual({})
+  })
+})
+
+describe('readFormFields', () => {
+  it('lê strings e troca ausentes por vazio', () => {
+    const data = new FormData()
+    data.set('name', 'Ana')
+    expect(readFormFields(data, ['name', 'phone'])).toEqual({ name: 'Ana', phone: '' })
   })
 })
