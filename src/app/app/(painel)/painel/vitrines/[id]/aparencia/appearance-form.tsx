@@ -1,6 +1,7 @@
 'use client'
 
 import { useActionState } from 'react'
+import { ImageSlot } from '@/components/media/image-slot'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { FormMessage } from '@/components/ui/form-message'
@@ -16,13 +17,19 @@ type Appearance = {
   bannerEnabled: boolean
 }
 
+type Slot = { id: string; url: string } | null
+
 export function AppearanceForm({
   vitrineId,
   allowBranding,
+  logo,
+  banner,
   initial,
 }: {
   vitrineId: string
   allowBranding: boolean
+  logo: Slot
+  banner: Slot
   initial: Appearance
 }) {
   const [state, formAction, pending] = useActionState(updateAppearanceAction.bind(null, vitrineId), initialFormState)
@@ -82,6 +89,11 @@ export function AppearanceForm({
           Salvar aparência
         </Button>
       </form>
+      {/* Logo e banner são enviados na hora, fora do formulário. */}
+      <div className="mt-6 flex flex-col gap-5 border-t border-line pt-5">
+        <ImageSlot label="Logo" role="logo" vitrineId={vitrineId} initial={logo} removable disabled={!allowBranding} />
+        <ImageSlot label="Banner" role="banner" vitrineId={vitrineId} initial={banner} removable disabled={!allowBranding} />
+      </div>
       <UnsavedChangesGuard formId="appearance-form" />
     </Card>
   )
