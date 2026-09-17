@@ -1,17 +1,5 @@
-import { AuthApiError, AuthRetryableFetchError, AuthSessionMissingError } from '@supabase/supabase-js'
 import { describe, expect, it } from 'vitest'
-import { hasPasswordLogin, isRecentEmailLinkSession, isSessionCurrent, isSessionGoneError } from './session'
-
-describe('isSessionCurrent', () => {
-  it('sem sessão ativa registrada, aceita', () => {
-    expect(isSessionCurrent('s1', null)).toBe(true)
-  })
-  it('aceita só a sessão registrada', () => {
-    expect(isSessionCurrent('s1', 's1')).toBe(true)
-    expect(isSessionCurrent('s2', 's1')).toBe(false)
-    expect(isSessionCurrent(undefined, 's1')).toBe(false)
-  })
-})
+import { hasPasswordLogin, isRecentEmailLinkSession } from './session'
 
 describe('hasPasswordLogin', () => {
   it('true só com identidade email', () => {
@@ -47,21 +35,5 @@ describe('isRecentEmailLinkSession', () => {
     expect(isRecentEmailLinkSession({ method: 'otp', timestamp: now }, now)).toBe(false)
     expect(isRecentEmailLinkSession([null, 1, { method: 'otp' }, { method: 'otp', timestamp: 'x' }], now)).toBe(false)
     expect(isRecentEmailLinkSession(['otp', 'recovery'], now)).toBe(false)
-  })
-})
-
-describe('isSessionGoneError', () => {
-  it('true para sessão revogada ou JWT inválido', () => {
-    expect(isSessionGoneError(new AuthApiError('x', 403, 'session_not_found'))).toBe(true)
-    expect(isSessionGoneError(new AuthApiError('x', 401, undefined))).toBe(true)
-    expect(isSessionGoneError(new AuthApiError('x', 400, 'bad_jwt'))).toBe(true)
-  })
-
-  it('false para falhas de rede, 5xx ou ausência de erro', () => {
-    expect(isSessionGoneError(null)).toBe(false)
-    expect(isSessionGoneError(new AuthRetryableFetchError('fetch failed', 0))).toBe(false)
-    expect(isSessionGoneError(new AuthApiError('x', 500, 'unexpected_failure'))).toBe(false)
-    expect(isSessionGoneError(new AuthSessionMissingError())).toBe(false)
-    expect(isSessionGoneError(new Error('x'))).toBe(false)
   })
 })

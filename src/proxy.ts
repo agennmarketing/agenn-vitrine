@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { decideAppRoute } from '@/lib/auth/app-routes'
-import { isSessionCurrent, isSessionGoneError } from '@/lib/auth/session'
+import { interpretSessionState } from '@/lib/auth/session-state'
 import { env } from '@/lib/env'
 import { internalPathFor, parseHost, type HostResolution } from '@/lib/hosts/parse-host'
 import type { Database } from '@/lib/supabase/database.types'
@@ -49,44 +49,27 @@ async function handleApp(request: NextRequest, resolution: HostResolution) {
     },
   })
 
+  // Com chaves assimétricas, getClaims() valida o JWT localmente (JWKS em cache).
+  // getClaims() não enxerga revogação (signOut em outra aba, "sair de todos"): isso
+  // e a sessão única vêm de uma única consulta ao banco. Sem essa confirmação, um
+  // cookie de sessão revogada seguiria "autenticado" aqui e o layout discordaria.
   const { data } = await supabase.auth.getClaims()
   const claims = data?.claims
-  let userId = typeof claims?.sub === 'string' ? claims.sub : null
 
-  if (userId) {
-    // getClaims() só decodifica o JWT local e não enxerga revogação (ex.: signOut em
-    // outra aba/requisição): sem essa confirmação, um cookie de sessão já revogada
-    // continua "autenticado" aqui mas não no layout (que usa getUser()), e os dois
-    // discordam para sempre — loop de redirecionamento entre rota protegida e /entrar.
-    // Qualquer erro do Auth server aqui (rede, serviço fora do ar) também vira "não
-    // autenticado": fail-closed, sem lançar exceção no proxy.
-    const { data: userData, error: userError } = await supabase.auth.getUser()
-    if (userError || !userData.user) userId = null
-    // Sessão revogada ou JWT inválido: limpa os cookies (copyCookies os propaga). Em
-    // falha de rede/5xx os cookies ficam, para não deslogar por instabilidade.
-    if (isSessionGoneError(userError)) await supabase.auth.signOut({ scope: 'local' })
-  }
-
+  let isAuthenticated = false
   let sessionCurrent = true
-  if (userId) {
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('active_session_id')
-      .eq('id', userId)
-      .maybeSingle()
-    // Sessão única é proteção contra compartilhamento de conta, não uma fronteira de
-    // autenticação: se a consulta falhar, seguimos com a sessão como válida (fail-open),
-    // mas registramos o erro para investigação.
-    if (profileError) {
-      console.error('[proxy] falha ao consultar sessão ativa do perfil', profileError)
-    }
-    const claimSessionId = typeof claims?.session_id === 'string' ? claims.session_id : undefined
-    sessionCurrent = isSessionCurrent(claimSessionId, profile?.active_session_id)
+  if (typeof claims?.sub === 'string') {
+    const { data: state, error, status } = await supabase.rpc('session_state')
+    if (error && status !== 401) console.error('[proxy] falha ao consultar session_state', error)
+    const result = interpretSessionState({ data: state, status, hasError: Boolean(error) })
+    isAuthenticated = result.isAuthenticated
+    sessionCurrent = result.isSessionCurrent
+    if (result.clearCookies) await supabase.auth.signOut({ scope: 'local' })
   }
 
   const decision = decideAppRoute({
     pathname: request.nextUrl.pathname,
-    isAuthenticated: Boolean(userId),
+    isAuthenticated,
     isSessionCurrent: sessionCurrent,
   })
 
