@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseMediaStorageEnv, parseRateLimitSalt } from './server-env-schema'
+import { parseMediaStorageEnv, parseOrderRateLimit, parseRateLimitSalt } from './server-env-schema'
 
 describe('parseMediaStorageEnv', () => {
   it('bunny é o padrão e exige zona e senha', () => {
@@ -21,4 +21,9 @@ describe('parseMediaStorageEnv', () => {
 it('parseRateLimitSalt exige 16 caracteres', () => {
   expect(() => parseRateLimitSalt({ RATE_LIMIT_SALT: 'curto' })).toThrow()
   expect(parseRateLimitSalt({ RATE_LIMIT_SALT: 'ci-salt-somente-para-testes' })).toBe('ci-salt-somente-para-testes')
+})
+
+it('limite de pedidos por hora', () => {
+  expect(parseOrderRateLimit({})).toBe(20)
+  expect(parseOrderRateLimit({ ORDER_RATE_LIMIT_PER_HOUR: '1000' })).toBe(1000)
 })
