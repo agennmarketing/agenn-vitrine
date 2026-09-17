@@ -23,8 +23,24 @@ if (process.env.VERCEL_ENV === 'production' && !hasSentryDsn) {
   )
 }
 
+// Cabeçalhos de segurança para todas as rotas (página inicial, app e vitrines).
+// Nenhuma página é feita para ser embutida em iframe. HSTS só em produção, para
+// não fixar HTTPS em localhost nem em prévias.
+const securityHeaders = [
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  { key: 'X-Frame-Options', value: 'DENY' },
+  { key: 'Content-Security-Policy', value: "frame-ancestors 'none'" },
+  ...(process.env.VERCEL_ENV === 'production'
+    ? [{ key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' }]
+    : []),
+]
+
 const nextConfig: NextConfig = {
   allowedDevOrigins: ['localhost', '*.localhost'],
+  async headers() {
+    return [{ source: '/:path*', headers: securityHeaders }]
+  },
   ...(hasSentryDsn
     ? {}
     : {
