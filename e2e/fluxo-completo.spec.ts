@@ -102,7 +102,8 @@ test('Comida: vitrine → complementos pelo modelo → item → sacola → Whats
 
   const cart = page.getByRole('dialog', { name: 'Sacola' })
   await cart.getByLabel('Nome').fill('Rui')
-  await cart.getByLabel('Entrega').check()
+  // "Entrega" por papel: o rótulo do select de pagamento contém "Cartão na entrega".
+  await cart.getByRole('radio', { name: 'Entrega' }).check()
   await cart.getByLabel('Endereço de entrega').fill('Rua das Flores, 100')
   await cart.getByLabel('Forma de pagamento').selectOption('Dinheiro')
   await cart.getByLabel('Troco para quanto?').fill('50')
