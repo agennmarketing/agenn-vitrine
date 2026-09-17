@@ -46,3 +46,24 @@ Caminho dos arquivos: `{owner_id}/{vitrine_id}/{media_id}-{largura}.{webp|jpg}`.
 - Imagens enviadas e não salvas em um item ficam órfãs até a limpeza diária (Fase 3).
 - Falha ao apagar um arquivo no Bunny vai para o Sentry e não bloqueia a exclusão; a limpeza diária recolhe o resto.
 - `MEDIA_STORAGE_DRIVER=fake` é recusado quando `VERCEL_ENV=production`.
+
+## 5. Conferência em produção
+
+No celular e no computador:
+
+1. Criar conta nova, criar vitrine de Serviços, cadastrar dois itens com foto (um com variações e mensagem personalizada, outro com WhatsApp secundário).
+2. Abrir `https://{subdominio}.agenn.com.br`: listagem, busca por código, barra de categorias, tela do item e envio ao WhatsApp (número, texto e `Pedido #`).
+3. Abrir o link `?item=` em outro aparelho.
+4. Simulador: consultar o código, alterar um preço no painel, consultar de novo e ver o aviso de preço alterado; copiar o resumo.
+5. Trocar o subdomínio em Configurações: o antigo responde "Vitrine não encontrada" e o novo abre.
+6. Excluir a vitrine de teste e conferir no Bunny que os arquivos dela sumiram.
+7. Conferir no Sentry (quando configurado) que não houve erros novos.
+
+## 6. Pendências registradas
+
+- **Fase de design:** arrastar para reordenar (hoje "Subir"/"Descer"), prévia ao vivo no editor (hoje "Ver vitrine"), barra "Alterações não salvas" (hoje aviso do navegador ao sair), acabamento visual do painel e da vitrine.
+- **Endurecimento:** as verificações de endereço e de código do item são server actions chamadas com atraso; se a página muda no meio, o servidor registra "Failed to find Server Action" (inofensivo, mas gera ruído no Sentry). Trocar por rotas GET de consulta.
+- **Fase 3:** limpeza diária de mídias órfãs (inclusive imagens enviadas e não salvas) e de `order_snapshots`/`rate_limits` antigos.
+- **Fase 6:** `robots.txt`/`sitemap.xml` por vitrine (o matcher do proxy ignora `.txt`/`.xml`), QR Code, prévias `*.vercel.app` sem roteamento.
+- **Desempenho:** meta de Lighthouse ≥ 90 ainda não medida no CI.
+- **Lições de configuração:** variáveis da Vercel precisam estar marcadas para **Production** (a `SUPABASE_SECRET_KEY` ficou só em Preview e quebrou o envio de imagens). Na tela nova da Vercel, "Sensitive" se chama **Secret**. Se um merge não gerar deploy, usar **Redeploy** no último deploy de Production.
