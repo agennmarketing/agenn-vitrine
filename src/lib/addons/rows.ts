@@ -31,3 +31,9 @@ export function toAddonGroup(row: AddonGroupRow): AddonGroup {
       .map((option) => ({ id: option.id, name: option.name, priceCents: option.price_cents, soldOut: option.sold_out })),
   }
 }
+
+export function groupsFromLinks(links: { position: number; addon_groups: AddonGroupRow | null }[]): AddonGroup[] {
+  return [...links]
+    .sort((a, b) => a.position - b.position)
+    .flatMap((link) => (link.addon_groups ? [toAddonGroup(link.addon_groups)] : []))
+}

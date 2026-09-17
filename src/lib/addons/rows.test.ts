@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest'
-import { toAddonGroup } from './rows'
+import { groupsFromLinks, toAddonGroup } from './rows'
 
 it('linha do banco vira AddonGroup com opções em ordem', () => {
   expect(
@@ -18,4 +18,16 @@ it('linha do banco vira AddonGroup com opções em ordem', () => {
       { id: 'b', name: 'Marguerita', priceCents: 4590, soldOut: true },
     ],
   })
+})
+
+it('groupsFromLinks ordena pelos vínculos e ignora grupo ausente', () => {
+  const row = (id: string) => ({
+    id, name: id, kind: 'standard', required: false, min_select: 0, max_select: 1, allow_repeat: false,
+    flavor_price_rule: null, position: 0, addon_options: [],
+  })
+  expect(groupsFromLinks([
+    { position: 1, addon_groups: row('b') },
+    { position: 0, addon_groups: row('a') },
+    { position: 2, addon_groups: null },
+  ]).map((group) => group.id)).toEqual(['a', 'b'])
 })
