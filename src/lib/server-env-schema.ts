@@ -34,3 +34,7 @@ export function parseRateLimitSalt(source: Source): string {
 export function parseSupabaseSecretKey(source: Source): string {
   return z.string().min(1, 'SUPABASE_SECRET_KEY não configurada.').parse(source.SUPABASE_SECRET_KEY)
 }
+
+export function parseOrderRateLimit(source: Source): number {
+  return z.coerce.number().int().min(1).default(20).parse(source.ORDER_RATE_LIMIT_PER_HOUR ?? undefined)
+}

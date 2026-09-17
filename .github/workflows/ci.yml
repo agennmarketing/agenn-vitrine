@@ -57,6 +57,7 @@ jobs:
       NEXT_PUBLIC_MEDIA_BASE_URL: /api/dev-media
       MEDIA_STORAGE_DRIVER: fake
       RATE_LIMIT_SALT: ci-salt-somente-para-testes
+      ORDER_RATE_LIMIT_PER_HOUR: '1000'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
