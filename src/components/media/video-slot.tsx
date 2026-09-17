@@ -126,9 +126,15 @@ export function VideoSlot(props: {
             headers: ticket.headers,
             metadata: { filetype: file.type, title: file.name },
             retryDelays: [0, 3000, 5000, 10000, 20000, 60000],
-            onShouldRetry: () => {
-              setNotice('Conexão caiu, retomando…')
-              return true
+            // A retomada é por vídeo: sem isto, reenviar o mesmo arquivo "continuava" o envio
+            // de um vídeo anterior e o novo ficava com 0 bytes no Bunny.
+            fingerprint: async () => `bunny-stream-${ticket.headers.VideoId}`,
+            removeFingerprintOnSuccess: true,
+            onShouldRetry: (uploadError) => {
+              const status = uploadError.originalResponse?.getStatus() ?? 0
+              const retry = status === 0 || status >= 500 || status === 409 || status === 423 || status === 429
+              if (retry) setNotice('Conexão caiu, retomando…')
+              return retry
             },
             onProgress: (sent, total) => {
               setNotice(null)
@@ -145,9 +151,10 @@ export function VideoSlot(props: {
       }
       setProgress(null)
       setNotice(null)
-    } catch {
+    } catch (uploadError) {
       setProgress(null)
-      setError('Não foi possível enviar o vídeo. Tente novamente.')
+      const status = (uploadError as { originalResponse?: { getStatus(): number } | null }).originalResponse?.getStatus()
+      setError(`Não foi possível enviar o vídeo${status ? ` (erro ${status})` : ''}. Tente novamente.`)
       await fetch(`/api/media/${mediaId}`, { method: 'DELETE' }).catch(() => null)
       update(null)
     }
