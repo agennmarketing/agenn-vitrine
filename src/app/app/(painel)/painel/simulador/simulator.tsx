@@ -1,5 +1,6 @@
 'use client'
 
+import type { AddonSelection } from '@/lib/addons/addons'
 import { useState, useTransition, type FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -83,7 +84,7 @@ function OrderLookup() {
   )
 }
 
-type ManualLine = { key: string; itemId: string; variationId: string | null; qty: number }
+type ManualLine = { key: string; itemId: string; variationId: string | null; qty: number; addons: AddonSelection[] }
 
 function ManualMode() {
   const [code, setCode] = useState('')
@@ -106,7 +107,7 @@ function ManualMode() {
       setItems((current) => new Map(current).set(item.id, item))
       setLines((current) => [
         ...current,
-        { key: Math.random().toString(36).slice(2), itemId: item.id, variationId: item.variations[0]?.id ?? null, qty: 1 },
+        { key: Math.random().toString(36).slice(2), itemId: item.id, variationId: item.variations[0]?.id ?? null, qty: 1, addons: [] },
       ])
     })
   }
@@ -191,6 +192,29 @@ function ManualMode() {
                       {result?.subtotalCents != null ? formatBRL(result.subtotalCents) : 'Sob consulta'}
                     </span>
                   </div>
+                  {(item.addonGroups ?? []).map((group) => (
+                    <fieldset key={group.id} className="flex flex-wrap items-end gap-3">
+                      <legend className="text-sm text-ink-muted">{group.name}</legend>
+                      {group.options.map((option) => (
+                        <label key={option.id} className="flex flex-col gap-1 text-sm">
+                          {option.name}
+                          <Input
+                            aria-label={`${option.name} em ${item.name}`}
+                            type="number"
+                            min={0}
+                            max={20}
+                            value={line.addons.find((addon) => addon.optionId === option.id)?.qty ?? 0}
+                            onChange={(event) => {
+                              const qty = Math.min(20, Math.max(0, Number(event.target.value) || 0))
+                              const rest = line.addons.filter((addon) => addon.optionId !== option.id)
+                              update(line.key, { addons: qty > 0 ? [...rest, { optionId: option.id, qty }] : rest })
+                            }}
+                            className="w-24"
+                          />
+                        </label>
+                      ))}
+                    </fieldset>
+                  ))}
                 </li>
               )
             })}
@@ -225,9 +249,17 @@ function SimulationTable({ simulation }: { simulation: Simulation }) {
                 Preço mudou desde o envio (era {line.previousUnitCents != null ? formatBRL(line.previousUnitCents) : 'sob consulta'})
               </span>
             ) : null}
+            {line.addonLines.map((text) => (
+              <span key={text} className="text-sm text-ink-muted">
+                {text.trim()}
+              </span>
+            ))}
             {line.status === 'removed' ? <span className="text-sm text-danger">Item não existe mais</span> : null}
             {line.status === 'variation_removed' ? (
               <span className="text-sm text-danger">Variação não existe mais</span>
+            ) : null}
+            {line.status === 'addon_removed' ? (
+              <span className="text-sm text-danger">Complemento não existe mais</span>
             ) : null}
           </li>
         ))}
