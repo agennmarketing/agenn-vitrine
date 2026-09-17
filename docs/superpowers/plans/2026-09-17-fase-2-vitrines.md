@@ -5458,7 +5458,8 @@ export async function saveItemAction(
       .maybeSingle()
     const { data, error } = await supabase
       .from('items')
-      .insert({ ...row, vitrine_id: vitrineId, code, position: (last?.position ?? -1) + 1 })
+      // code nulo: o trigger items_before_write gera o próximo código automático.
+      .insert({ ...row, vitrine_id: vitrineId, code: code as string, position: (last?.position ?? -1) + 1 })
       .select('id')
       .single()
     if (error) return itemError(error, keepValues)
@@ -5649,6 +5650,8 @@ export async function duplicateItemAction(vitrineId: string, itemId: string): Pr
     .insert({
       vitrine_id: vitrineId,
       category_id: item.category_id,
+      // code nulo: o trigger gera o próximo código automático.
+      code: null as unknown as string,
       name: `${item.name.slice(0, 72)} (cópia)`,
       description: item.description,
       price_type: item.price_type,
