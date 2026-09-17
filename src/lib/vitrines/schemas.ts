@@ -74,10 +74,6 @@ export const vitrineSettingsSchema = z.object({
   subdomain: subdomainField,
 })
 
-export const messagesSchema = z.object({
-  defaultButtonText: z.string().trim().min(1, 'Informe o texto do botão.').max(30, 'Use até 30 caracteres.'),
-})
-
 export const appearanceSchema = z.object({
   theme,
   showPrices: checkbox,
