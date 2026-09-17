@@ -33,6 +33,9 @@ export default async function PainelLayout({ children }: { children: ReactNode }
             <Link href="/painel" className="rounded-control px-3 py-2 hover:bg-canvas">
               Vitrines
             </Link>
+            <Link href="/painel/simulador" className="rounded-control px-3 py-2 hover:bg-canvas">
+              Simulador
+            </Link>
             <Link href="/painel/conta" className="rounded-control px-3 py-2 hover:bg-canvas">
               Conta
             </Link>

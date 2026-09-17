@@ -24,9 +24,15 @@ export default async function PainelHome() {
           </Link>
         )}
       </div>
-      <p className="text-sm text-ink-muted">
-        Vitrines: {vitrines.length} de {plan.max_vitrines} · Plano {plan.name}
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm text-ink-muted">
+          Vitrines: {vitrines.length} de {plan.max_vitrines} · Plano {plan.name}
+        </p>
+        {/* Caminho para o simulador também no celular, onde a navegação do topo fica escondida. */}
+        <Link href="/painel/simulador" className="text-sm underline">
+          Simulador
+        </Link>
+      </div>
       {atLimit ? (
         <Card className="px-5 py-4">
           <p>{mapDbError({ message: 'plan_limit:vitrines', hint: String(plan.max_vitrines) })}</p>
