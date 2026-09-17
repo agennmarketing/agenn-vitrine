@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState, useRef, useState } from 'react'
+import { useActionState, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Field } from '@/components/ui/field'
@@ -30,6 +30,9 @@ export function VitrineWizard({ rootDomain }: { rootDomain: string }) {
 
   const [availability, setAvailability] = useState<{ ok: boolean; message: string } | null>(null)
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  // Server actions vão para a URL atual: um timer que dispara depois de sair da página
+  // chamaria a ação numa rota que não a conhece ("Failed to find Server Action").
+  useEffect(() => () => clearTimeout(timer.current), [])
   function onSubdomainChange(value: string) {
     setAvailability(null)
     clearTimeout(timer.current)
