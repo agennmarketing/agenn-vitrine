@@ -1,5 +1,6 @@
 import * as Sentry from '@sentry/nextjs'
 import { NextResponse } from 'next/server'
+import { SYNC_MEDIA_COLUMNS, syncVideoStatus } from '@/features/videos/sync-status'
 import { getApiUser } from '@/lib/auth/require-user'
 import { deleteMediaRows } from '@/lib/media/remove-media'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
@@ -36,7 +37,18 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const session = await getApiUser()
   if (!session) return NextResponse.json({ error: 'Sua sessão expirou. Entre novamente.' }, { status: 401 })
   const { id } = await params
-  const { data: media } = await session.supabase.from('media').select('status').eq('id', id).maybeSingle()
+  // RLS: só encontra mídia do próprio dono.
+  const { data: media } = await session.supabase.from('media').select(SYNC_MEDIA_COLUMNS).eq('id', id).maybeSingle()
   if (!media) return NextResponse.json({ error: 'Mídia não encontrada.' }, { status: 404 })
-  return NextResponse.json({ status: media.status }, { headers: { 'Cache-Control': 'no-store' } })
+
+  let status = media.status
+  // Enquanto processa, consulta o Stream: o painel não depende só do webhook.
+  if (status === 'processing' && media.bunny_video_id) {
+    try {
+      status = await syncVideoStatus(createSupabaseAdminClient(), media)
+    } catch (error) {
+      Sentry.captureException(error)
+    }
+  }
+  return NextResponse.json({ status }, { headers: { 'Cache-Control': 'no-store' } })
 }

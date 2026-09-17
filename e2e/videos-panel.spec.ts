@@ -87,3 +87,15 @@ test('banner em vídeo: só Pro e só horizontal', async ({ page }) => {
   await page.getByLabel('Banner em vídeo', { exact: true }).setInputFiles(videoFixture('horizontal-3s'))
   await expect(page.getByText('Processando o vídeo…')).toBeVisible({ timeout: 20_000 })
 })
+
+test('status sincroniza com o Stream mesmo sem webhook', async ({ page }) => {
+  const user = await createConfirmedUser('video-sync')
+  const vitrine = await seedVitrine(user.id)
+  const item = await seedItem(vitrine, user.id, { name: 'Sem aviso', priceCents: 1000 })
+  await signIn(page, user.email, user.password)
+
+  await page.goto(`/painel/vitrines/${vitrine.id}/itens/${item.id}`)
+  await page.getByLabel('Vídeo', { exact: true }).setInputFiles(videoFixture('vertical-3s'))
+  await expect(page.getByText('Vídeo pronto')).toBeVisible({ timeout: 30_000 })
+  expect((await mediaOfItem(item.id))?.status).toBe('ready')
+})
