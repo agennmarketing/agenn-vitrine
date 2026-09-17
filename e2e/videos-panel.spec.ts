@@ -31,6 +31,7 @@ test('envia vídeo do item, processa pelo webhook e respeita o limite do gratuit
   expect(media?.status).toBe('processing')
   const response = await sendBunnyWebhook(request, media!.bunny_video_id!)
   expect(response.status()).toBe(200)
+  expect(await response.json()).toEqual({ status: 'ready' })
   await expect(page.getByText('Vídeo pronto')).toBeVisible({ timeout: 15_000 })
 
   await page.goto(`/painel/vitrines/${vitrine.id}/itens/${second.id}`)
