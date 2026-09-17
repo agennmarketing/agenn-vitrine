@@ -1,3 +1,5 @@
+import { escapeHtml } from './html'
+
 const TIME_ZONE = 'America/Sao_Paulo'
 
 function yearMonth(now: Date): { year: number; month: number } {
@@ -23,10 +25,6 @@ export function nextMonthStartLabel(now: Date): string {
 function listNames(names: string[]): string {
   if (names.length <= 1) return names[0] ?? 'suas vitrines'
   return `${names.slice(0, -1).join(', ')} e ${names[names.length - 1]}`
-}
-
-function escapeHtml(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
 
 export function buildQuotaEmail(input: {
