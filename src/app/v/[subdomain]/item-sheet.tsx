@@ -2,16 +2,29 @@
 
 import { useEffect, useRef, useState } from 'react'
 import type { PublicItem, PublicVitrine } from '@/features/public/build-catalog'
+import { validateAddonSelections, type AddonSelection } from '@/lib/addons/addons'
+import type { CartLine, NewCartLine } from '@/lib/cart/cart'
+import { lineUnitCents } from '@/lib/cart/reconcile'
 import { formatBRL } from '@/lib/money/money'
-import { formatPriceLabel, priceLabel, unitPriceCents } from '@/lib/pricing/price'
+import { formatPriceLabel, priceLabel } from '@/lib/pricing/price'
+import { AddonPicker } from './addon-picker'
 import { sendDirect } from './send-direct'
 import { VideoPlayer } from './video-player'
 
-export type ItemSheetProps = { vitrine: PublicVitrine; item: PublicItem; onClose: () => void }
+export type ItemSheetProps = {
+  vitrine: PublicVitrine
+  item: PublicItem
+  onClose: () => void
+  cart?: { initial?: CartLine; onSubmit: (line: NewCartLine) => void }
+}
 
-export default function ItemSheet({ vitrine, item, onClose }: ItemSheetProps) {
-  const [variationId, setVariationId] = useState<string | null>(null)
-  const [missingChoice, setMissingChoice] = useState(false)
+export default function ItemSheet({ vitrine, item, onClose, cart }: ItemSheetProps) {
+  const [variationId, setVariationId] = useState<string | null>(cart?.initial?.variationId ?? null)
+  const [addons, setAddons] = useState<AddonSelection[]>(cart?.initial?.addons ?? [])
+  const [qty, setQty] = useState(cart?.initial?.qty ?? 1)
+  const [note, setNote] = useState(cart?.initial?.note ?? '')
+  const [missingVariation, setMissingVariation] = useState(false)
+  const [addonError, setAddonError] = useState<{ groupId: string | null; message: string } | null>(null)
   const [sending, setSending] = useState(false)
   const [activeIndex, setActiveIndex] = useState(0)
   const closeRef = useRef<HTMLButtonElement>(null)
@@ -34,29 +47,60 @@ export default function ItemSheet({ vitrine, item, onClose }: ItemSheetProps) {
   const variation = item.variations.find((v) => v.id === variationId) ?? null
   const phone = item.whatsappPhone ?? vitrine.primaryPhone
   const images = [item.cover, ...item.gallery].filter((image) => image !== null)
-  const price = variation
-    ? formatBRL(unitPriceCents(item, variation) ?? 0)
-    : formatPriceLabel(priceLabel(item, item.variations))
+  const line: NewCartLine = { itemId: item.id, variationId, qty, note, addons }
+  const unitCents = lineUnitCents(line, item)
+  const hasChoice = variation !== null || addons.length > 0
   const showPrice = vitrine.showPrices && !(variation && item.priceType === 'on_request')
+  const headerPrice = hasChoice && unitCents !== null ? formatBRL(unitCents) : formatPriceLabel(priceLabel(item, item.variations))
 
-  async function onSend() {
+  function validate(): boolean {
     if (item.variations.length > 0 && !variation) {
-      setMissingChoice(true)
+      setMissingVariation(true)
       choicesRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      return false
+    }
+    const check = validateAddonSelections(item.addonGroups, addons)
+    if (!check.ok) {
+      setAddonError({ groupId: check.groupId, message: check.message })
+      if (check.groupId) {
+        document.getElementById(`addon-group-${check.groupId}`)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      }
+      return false
+    }
+    setAddonError(null)
+    return true
+  }
+
+  async function onPrimary() {
+    if (!validate()) return
+    const normalized = validateAddonSelections(item.addonGroups, addons)
+    const chosen = normalized.ok ? normalized.selections : addons
+    if (cart) {
+      cart.onSubmit({ itemId: item.id, variationId, qty, note: note.trim(), addons: chosen })
       return
     }
     setSending(true)
-    await sendDirect(vitrine, item, variation ? { id: variation.id, name: variation.name } : null)
+    await sendDirect(vitrine, item, {
+      variation: variation ? { id: variation.id, name: variation.name } : null,
+      addons: chosen,
+      note,
+    })
     // Se o navegador bloquear a abertura do WhatsApp, o botão volta a funcionar.
     setTimeout(() => setSending(false), 3000)
   }
 
-  let buttonLabel = item.buttonText ?? vitrine.defaultButtonText
+  let buttonLabel: string
+  if (cart) {
+    const verb = cart.initial ? 'Salvar alterações' : 'Adicionar'
+    buttonLabel = vitrine.showPrices && unitCents !== null ? `${verb} · ${formatBRL(unitCents * qty)}` : verb
+  } else {
+    buttonLabel = item.buttonText ?? vitrine.defaultButtonText
+  }
   let disabled = sending
   if (item.soldOut) {
     buttonLabel = 'Esgotado'
     disabled = true
-  } else if (!phone) {
+  } else if (!cart && !phone) {
     buttonLabel = 'WhatsApp não configurado'
     disabled = true
   } else if (sending) {
@@ -115,7 +159,7 @@ export default function ItemSheet({ vitrine, item, onClose }: ItemSheetProps) {
           ) : null}
 
           <h2 className="text-xl font-semibold">{item.name}</h2>
-          {showPrice ? <p className="mt-1 text-lg">{price}</p> : null}
+          {showPrice ? <p className="mt-1 text-lg">{headerPrice}</p> : null}
           {item.durationMinutes ? <p className="text-sm text-ink-muted">{item.durationMinutes} min</p> : null}
           {item.description ? <p className="mt-3 whitespace-pre-line text-ink-muted">{item.description}</p> : null}
           {item.tags.length > 0 ? (
@@ -131,7 +175,7 @@ export default function ItemSheet({ vitrine, item, onClose }: ItemSheetProps) {
           {item.variations.length > 0 ? (
             <fieldset
               ref={choicesRef}
-              className={`mt-5 flex flex-col gap-2 rounded-control border p-3 ${missingChoice ? 'border-danger' : 'border-line'}`}
+              className={`mt-5 flex flex-col gap-2 rounded-control border p-3 ${missingVariation ? 'border-danger' : 'border-line'}`}
             >
               <legend className="px-1 font-medium">Escolha uma opção</legend>
               <p className="text-xs text-ink-muted">Obrigatório · escolha 1</p>
@@ -145,7 +189,7 @@ export default function ItemSheet({ vitrine, item, onClose }: ItemSheetProps) {
                     checked={variationId === option.id}
                     onChange={() => {
                       setVariationId(option.id)
-                      setMissingChoice(false)
+                      setMissingVariation(false)
                     }}
                   />
                   <span>
@@ -157,21 +201,75 @@ export default function ItemSheet({ vitrine, item, onClose }: ItemSheetProps) {
                   </span>
                 </label>
               ))}
-              {missingChoice ? (
+              {missingVariation ? (
                 <p role="alert" className="text-sm text-danger">
                   Escolha uma opção.
                 </p>
               ) : null}
             </fieldset>
           ) : null}
+
+          {item.addonGroups.length > 0 ? (
+            <AddonPicker
+              groups={item.addonGroups}
+              showPrices={vitrine.showPrices}
+              selections={addons}
+              onChange={(next) => {
+                setAddons(next)
+                setAddonError(null)
+              }}
+              errorGroupId={addonError?.groupId ?? null}
+              errorMessage={addonError?.message ?? null}
+            />
+          ) : null}
+          {addonError && !addonError.groupId ? (
+            <p role="alert" className="mt-2 text-sm text-danger">
+              {addonError.message}
+            </p>
+          ) : null}
+
+          <label className="mt-5 flex flex-col gap-1 text-sm">
+            Observação
+            <textarea
+              value={note}
+              maxLength={140}
+              rows={2}
+              onChange={(event) => setNote(event.target.value)}
+              className="rounded-control border border-line-strong bg-surface px-3 py-2 text-base"
+            />
+            <span className="self-end text-xs text-ink-muted">{note.length}/140</span>
+          </label>
         </div>
 
-        <div className="border-t border-line p-4">
+        <div className="flex items-center gap-3 border-t border-line p-4">
+          {cart ? (
+            <div className="flex items-center gap-2" aria-label="Quantidade" role="group">
+              <button
+                type="button"
+                aria-label="Diminuir quantidade"
+                disabled={qty <= 1}
+                onClick={() => setQty((value) => Math.max(1, value - 1))}
+                className="size-10 rounded-full border border-line-strong disabled:opacity-40"
+              >
+                −
+              </button>
+              <span aria-live="polite" className="w-6 text-center">{qty}</span>
+              <button
+                type="button"
+                aria-label="Aumentar quantidade"
+                disabled={qty >= 99}
+                onClick={() => setQty((value) => Math.min(99, value + 1))}
+                className="size-10 rounded-full border border-line-strong disabled:opacity-40"
+              >
+                +
+              </button>
+            </div>
+          ) : null}
           <button
             type="button"
             disabled={disabled}
-            onClick={onSend}
-            className="h-12 w-full rounded-control bg-brand font-semibold text-brand-ink disabled:opacity-60"
+            onClick={onPrimary}
+            className="h-12 flex-1 rounded-control bg-brand font-semibold text-brand-ink disabled:opacity-60"
           >
             {buttonLabel}
           </button>
