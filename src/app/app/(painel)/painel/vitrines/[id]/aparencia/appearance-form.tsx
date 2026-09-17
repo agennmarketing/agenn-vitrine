@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react'
 import { ImageSlot } from '@/components/media/image-slot'
+import { VideoSlot } from '@/components/media/video-slot'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { FormMessage } from '@/components/ui/form-message'
@@ -24,12 +25,16 @@ export function AppearanceForm({
   allowBranding,
   logo,
   banner,
+  bannerVideo,
+  videoLimits,
   initial,
 }: {
   vitrineId: string
   allowBranding: boolean
   logo: Slot
   banner: Slot
+  bannerVideo: { id: string; status: 'processing' | 'ready' | 'failed' } | null
+  videoLimits: { maxSeconds: number; maxUploadMb: number }
   initial: Appearance
 }) {
   const [state, formAction, pending] = useActionState(updateAppearanceAction.bind(null, vitrineId), initialFormState)
@@ -93,6 +98,15 @@ export function AppearanceForm({
       <div className="mt-6 flex flex-col gap-5 border-t border-line pt-5">
         <ImageSlot label="Logo" role="logo" vitrineId={vitrineId} initial={logo} removable disabled={!allowBranding} />
         <ImageSlot label="Banner" role="banner" vitrineId={vitrineId} initial={banner} removable disabled={!allowBranding} />
+        <VideoSlot
+          label="Banner em vídeo"
+          role="banner"
+          vitrineId={vitrineId}
+          initial={bannerVideo}
+          limits={videoLimits}
+          disabled={!allowBranding}
+        />
+        <p className="text-sm text-ink-muted">O banner mostra a imagem ou o vídeo enviado por último. Vídeo só horizontal.</p>
       </div>
       <UnsavedChangesGuard formId="appearance-form" />
     </Card>

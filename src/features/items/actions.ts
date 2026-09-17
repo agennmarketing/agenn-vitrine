@@ -13,7 +13,7 @@ import { itemSchema, type ItemInput } from '@/lib/vitrines/schemas'
 
 const ITEM_FIELDS = [
   'name', 'description', 'categoryId', 'code', 'priceType', 'price', 'promoPrice', 'durationMinutes', 'tags',
-  'soldOut', 'whatsappId', 'buttonText', 'customMessage', 'variations', 'coverMediaId', 'galleryMediaIds',
+  'soldOut', 'whatsappId', 'buttonText', 'customMessage', 'variations', 'coverMediaId', 'galleryMediaIds', 'videoMediaId',
 ] as const
 
 export async function checkItemCodeAction(code: string, itemId: string | null): Promise<{ ok: boolean; message: string }> {
@@ -144,6 +144,7 @@ async function linkPendingMedia(
   const wanted = [
     { id: args.input.coverMediaId, role: 'cover' as const, position: 0 },
     ...args.input.galleryMediaIds.map((id, index) => ({ id, role: 'gallery' as const, position: index + 1 })),
+    ...(args.input.videoMediaId ? [{ id: args.input.videoMediaId, role: 'video' as const, position: 0 }] : []),
   ]
   for (const slot of wanted) {
     const { data: pending } = await admin

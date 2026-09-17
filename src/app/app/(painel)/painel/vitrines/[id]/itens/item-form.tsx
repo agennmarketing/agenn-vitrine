@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from 'react'
 import { ImageSlot } from '@/components/media/image-slot'
+import { VideoSlot } from '@/components/media/video-slot'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Field } from '@/components/ui/field'
@@ -33,10 +34,12 @@ export function ItemForm(props: {
   categories: { id: string; name: string }[]
   contacts: { id: string; label: string }[]
   nextCode: string
+  videoLimits: { maxSeconds: number; maxUploadMb: number }
   item?: ItemForEdit
 }) {
   const { vitrineId, item } = props
   const [coverId, setCoverId] = useState<string>(item?.cover?.id ?? '')
+  const [videoId, setVideoId] = useState<string>(item?.video?.id ?? '')
   const [galleryIds, setGalleryIds] = useState<(string | null)[]>([item?.gallery[0]?.id ?? null, item?.gallery[1]?.id ?? null])
   const [priceType, setPriceType] = useState<string>(item?.price_type ?? 'fixed')
   const [variations, setVariations] = useState<VariationRow[]>(
@@ -85,7 +88,7 @@ export function ItemForm(props: {
   return (
     <div className="flex flex-col gap-6">
       <Card className="flex flex-col gap-4 p-5">
-        <h2 className="text-lg font-medium">Imagens</h2>
+        <h2 className="text-lg font-medium">Imagens e vídeo</h2>
         <div className="grid gap-5 sm:grid-cols-3">
           <div className="flex flex-col gap-1">
             <ImageSlot
@@ -118,12 +121,25 @@ export function ItemForm(props: {
             />
           ))}
         </div>
+        <VideoSlot
+          label="Vídeo"
+          role="video"
+          vitrineId={vitrineId}
+          itemId={item?.id}
+          initial={item?.video ?? null}
+          limits={props.videoLimits}
+          onChange={(media) => setVideoId(media?.id ?? '')}
+        />
+        <p className="text-sm text-ink-muted">
+          Até {props.videoLimits.maxSeconds} s, vertical (9:16) ou horizontal (16:9).
+        </p>
       </Card>
 
       <Card className="p-5">
         <form id="item-form" action={formAction} noValidate className="flex flex-col gap-4">
           <input type="hidden" name="coverMediaId" value={coverId} />
           <input type="hidden" name="galleryMediaIds" value={JSON.stringify(galleryIds.filter(Boolean))} />
+          <input type="hidden" name="videoMediaId" value={videoId} />
           <input
             type="hidden"
             name="variations"

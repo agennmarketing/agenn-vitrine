@@ -1,4 +1,6 @@
-import { expect, type Page } from '@playwright/test'
+import { createHmac } from 'node:crypto'
+import path from 'node:path'
+import { expect, type APIRequestContext, type Page } from '@playwright/test'
 import { createClient } from '@supabase/supabase-js'
 import { APP_URL } from '../playwright.config'
 
@@ -183,4 +185,60 @@ export async function uploadImage(page: Page, label: string, image: Buffer) {
   await page.getByLabel(label, { exact: true }).setInputFiles({ name: 'foto.png', mimeType: 'image/png', buffer: image })
   await page.getByRole('button', { name: 'Usar imagem' }).click()
   await expect(page.getByRole('img', { name: label, exact: true })).toBeVisible()
+}
+
+export function videoFixture(name: 'horizontal-3s' | 'vertical-3s' | 'longo-61s') {
+  return path.join('e2e', 'fixtures', `${name}.webm`)
+}
+
+export function signBunnyWebhook(body: string) {
+  return createHmac('sha256', process.env.BUNNY_STREAM_WEBHOOK_SECRET ?? 'ci-webhook-secret').update(body).digest('hex')
+}
+
+export async function sendBunnyWebhook(request: APIRequestContext, guid: string, status = 3) {
+  const body = JSON.stringify({ VideoLibraryId: 1, VideoGuid: guid, Status: status })
+  return request.post(`${APP_URL}/api/webhooks/bunny`, {
+    data: body,
+    headers: { 'content-type': 'application/json', 'x-bunnystream-signature': signBunnyWebhook(body) },
+  })
+}
+
+export async function seedVideo(
+  vitrine: SeededVitrine,
+  ownerId: string,
+  itemId: string | null,
+  options: { status?: 'processing' | 'ready' | 'failed'; role?: 'video' | 'banner' } = {},
+) {
+  const admin = createAdminClient()
+  const guid = crypto.randomUUID()
+  const { data } = await admin
+    .from('media')
+    .insert({
+      owner_id: ownerId,
+      vitrine_id: vitrine.id,
+      item_id: itemId,
+      role: options.role ?? 'video',
+      kind: 'video',
+      status: options.status ?? 'ready',
+      bunny_video_id: guid,
+      duration_seconds: 3,
+      aspect: '9:16',
+      width: 360,
+      height: 640,
+    })
+    .select('id')
+    .single()
+    .throwOnError()
+  return { id: data.id as string, guid }
+}
+
+export async function mediaOfItem(itemId: string, role: 'video' | 'cover' = 'video') {
+  const { data } = await createAdminClient()
+    .from('media')
+    .select('id, status, bunny_video_id')
+    .eq('item_id', itemId)
+    .eq('role', role)
+    .maybeSingle()
+    .throwOnError()
+  return data as { id: string; status: string; bunny_video_id: string | null } | null
 }

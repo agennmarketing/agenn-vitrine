@@ -1,14 +1,14 @@
 import Link from 'next/link'
 import { Card } from '@/components/ui/card'
 import { getItemFormOptions } from '@/features/items/queries'
-import { getMyVitrine } from '@/features/vitrines/queries'
+import { getMyVitrine, getVideoLimits } from '@/features/vitrines/queries'
 import { ItemForm } from '../item-form'
 
 export const metadata = { title: 'Novo item' }
 
 export default async function NovoItemPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const [options, vitrine] = await Promise.all([getItemFormOptions(id), getMyVitrine(id)])
+  const [options, vitrine, videoLimits] = await Promise.all([getItemFormOptions(id), getMyVitrine(id), getVideoLimits()])
 
   if (options.categories.length === 0) {
     return (
@@ -31,6 +31,7 @@ export default async function NovoItemPage({ params }: { params: Promise<{ id: s
         categories={options.categories}
         contacts={options.contacts}
         nextCode={options.nextCode}
+        videoLimits={videoLimits}
       />
     </div>
   )
