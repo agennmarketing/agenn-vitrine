@@ -70,7 +70,13 @@ describe('itemSchema', () => {
     variations: '[]',
     coverMediaId: uuid,
     galleryMediaIds: '[]',
+    videoMediaId: '',
   }
+
+  it('vídeo do item é opcional', () => {
+    expect(itemSchema.parse(valid).videoMediaId).toBeNull()
+    expect(itemSchema.parse({ ...valid, videoMediaId: uuid }).videoMediaId).toBe(uuid)
+  })
 
   it('converte os campos do formulário', () => {
     const parsed = itemSchema.parse(valid)

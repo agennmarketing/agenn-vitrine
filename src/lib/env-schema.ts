@@ -22,6 +22,10 @@ export const envSchema = z.object({
     .string()
     .default('')
     .transform((value) => value.trim().replace(/\/+$/, '')),
+  NEXT_PUBLIC_VIDEO_CDN_BASE_URL: z
+    .string()
+    .default('')
+    .transform((value) => value.trim().replace(/\/+$/, '')),
 })
 
 export type Env = z.infer<typeof envSchema>

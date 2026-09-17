@@ -38,3 +38,35 @@ export function parseSupabaseSecretKey(source: Source): string {
 export function parseOrderRateLimit(source: Source): number {
   return z.coerce.number().int().min(1).default(20).parse(source.ORDER_RATE_LIMIT_PER_HOUR ?? undefined)
 }
+
+const videoStreamSchema = z
+  .object({
+    VIDEO_STREAM_DRIVER: z.enum(['bunny', 'fake']).default('bunny'),
+    BUNNY_STREAM_LIBRARY_ID: z.string().default(''),
+    BUNNY_STREAM_API_KEY: z.string().default(''),
+    VERCEL_ENV: z.string().optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.VIDEO_STREAM_DRIVER === 'bunny' && (!value.BUNNY_STREAM_LIBRARY_ID || !value.BUNNY_STREAM_API_KEY)) {
+      ctx.addIssue({ code: 'custom', message: 'BUNNY_STREAM_LIBRARY_ID e BUNNY_STREAM_API_KEY são obrigatórias com o driver bunny.' })
+    }
+    if (value.VIDEO_STREAM_DRIVER === 'fake' && value.VERCEL_ENV === 'production') {
+      ctx.addIssue({ code: 'custom', message: 'VIDEO_STREAM_DRIVER=fake não pode ser usado em produção.' })
+    }
+  })
+
+export type VideoStreamEnv = { driver: 'fake' } | { driver: 'bunny'; libraryId: string; apiKey: string }
+
+export function parseVideoStreamEnv(source: Source): VideoStreamEnv {
+  const value = videoStreamSchema.parse(source)
+  if (value.VIDEO_STREAM_DRIVER === 'fake') return { driver: 'fake' }
+  return { driver: 'bunny', libraryId: value.BUNNY_STREAM_LIBRARY_ID, apiKey: value.BUNNY_STREAM_API_KEY }
+}
+
+export function parseWebhookSecret(source: Source): string {
+  return z.string().min(8, 'BUNNY_STREAM_WEBHOOK_SECRET não configurada.').parse(source.BUNNY_STREAM_WEBHOOK_SECRET)
+}
+
+export function parseCronSecret(source: Source): string {
+  return z.string().min(16, 'CRON_SECRET precisa de pelo menos 16 caracteres.').parse(source.CRON_SECRET)
+}
