@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  parseBillingEnv,
   parseCronSecret,
   parseEmailEnv,
   parseMediaStorageEnv,
@@ -74,5 +75,42 @@ describe('parseEmailEnv', () => {
   it('fake só fora de produção', () => {
     expect(parseEmailEnv({ EMAIL_DRIVER: 'fake' })).toEqual({ driver: 'fake' })
     expect(() => parseEmailEnv({ EMAIL_DRIVER: 'fake', VERCEL_ENV: 'production' })).toThrow(/produção/)
+  })
+})
+
+describe('parseBillingEnv', () => {
+  const stripeEnv = {
+    BILLING_DRIVER: 'stripe',
+    STRIPE_SECRET_KEY: 'sk_test_123',
+    STRIPE_WEBHOOK_SECRET: 'whsec_123456789',
+    STRIPE_PRICE_MONTH: 'price_mes',
+    STRIPE_PRICE_YEAR: 'price_ano',
+  }
+
+  it('lê a configuração do Stripe', () => {
+    expect(parseBillingEnv(stripeEnv)).toEqual({
+      driver: 'stripe',
+      secretKey: 'sk_test_123',
+      webhookSecret: 'whsec_123456789',
+      priceMonth: 'price_mes',
+      priceYear: 'price_ano',
+    })
+  })
+
+  it('exige chave e preços com o driver stripe', () => {
+    expect(() => parseBillingEnv({ ...stripeEnv, STRIPE_PRICE_YEAR: '' })).toThrow()
+    expect(() => parseBillingEnv({ ...stripeEnv, STRIPE_SECRET_KEY: '' })).toThrow()
+  })
+
+  it('exige o segredo do webhook nos dois drivers', () => {
+    expect(() => parseBillingEnv({ ...stripeEnv, STRIPE_WEBHOOK_SECRET: 'curto' })).toThrow()
+    expect(() => parseBillingEnv({ BILLING_DRIVER: 'fake' })).toThrow()
+  })
+
+  it('aceita o driver falso fora de produção e recusa na Vercel', () => {
+    expect(parseBillingEnv({ BILLING_DRIVER: 'fake', STRIPE_WEBHOOK_SECRET: 'whsec_de_teste' }).driver).toBe('fake')
+    expect(() =>
+      parseBillingEnv({ BILLING_DRIVER: 'fake', STRIPE_WEBHOOK_SECRET: 'whsec_de_teste', VERCEL_ENV: 'production' }),
+    ).toThrow()
   })
 })

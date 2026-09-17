@@ -94,3 +94,50 @@ export function parseEmailEnv(source: Source): EmailEnv {
   if (value.EMAIL_DRIVER === 'resend') return { driver: 'resend', apiKey: value.RESEND_API_KEY, from: value.EMAIL_FROM }
   return { driver: value.EMAIL_DRIVER }
 }
+
+const billingSchema = z
+  .object({
+    BILLING_DRIVER: z.enum(['stripe', 'fake']).default('stripe'),
+    STRIPE_SECRET_KEY: z.string().default(''),
+    STRIPE_WEBHOOK_SECRET: z.string().default(''),
+    STRIPE_PRICE_MONTH: z.string().default(''),
+    STRIPE_PRICE_YEAR: z.string().default(''),
+    VERCEL_ENV: z.string().optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (
+      value.BILLING_DRIVER === 'stripe' &&
+      (!value.STRIPE_SECRET_KEY || !value.STRIPE_PRICE_MONTH || !value.STRIPE_PRICE_YEAR)
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'STRIPE_SECRET_KEY, STRIPE_PRICE_MONTH e STRIPE_PRICE_YEAR são obrigatórias com o driver stripe.',
+      })
+    }
+    // Os dois drivers conferem a assinatura do webhook com o SDK do Stripe.
+    if (value.STRIPE_WEBHOOK_SECRET.length < 8) {
+      ctx.addIssue({ code: 'custom', message: 'STRIPE_WEBHOOK_SECRET não configurada.' })
+    }
+    if (value.BILLING_DRIVER === 'fake' && value.VERCEL_ENV === 'production') {
+      ctx.addIssue({ code: 'custom', message: 'BILLING_DRIVER=fake não pode ser usado em produção.' })
+    }
+  })
+
+export type BillingEnv = {
+  driver: 'stripe' | 'fake'
+  secretKey: string
+  webhookSecret: string
+  priceMonth: string
+  priceYear: string
+}
+
+export function parseBillingEnv(source: Source): BillingEnv {
+  const value = billingSchema.parse(source)
+  return {
+    driver: value.BILLING_DRIVER,
+    secretKey: value.STRIPE_SECRET_KEY,
+    webhookSecret: value.STRIPE_WEBHOOK_SECRET,
+    priceMonth: value.STRIPE_PRICE_MONTH,
+    priceYear: value.STRIPE_PRICE_YEAR,
+  }
+}
