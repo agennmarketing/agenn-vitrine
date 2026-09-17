@@ -504,6 +504,33 @@ export type Database = {
           },
         ]
       }
+      video_usage_monthly: {
+        Row: {
+          bytes_delivered: number
+          created_at: string
+          month: string
+          over_quota: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bytes_delivered?: number
+          created_at?: string
+          month: string
+          over_quota?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bytes_delivered?: number
+          created_at?: string
+          month?: string
+          over_quota?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       vitrines: {
         Row: {
           banner_enabled: boolean
@@ -644,7 +671,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_video_usage: {
+        Args: { p_bytes: number; p_media_id: string }
+        Returns: {
+          crossed_quota: boolean
+          usage_owner_id: string
+        }[]
+      }
       claim_session: { Args: never; Returns: undefined }
+      cleanup_expired_rows: {
+        Args: never
+        Returns: {
+          orders_deleted: number
+          rate_limits_deleted: number
+        }[]
+      }
       create_vitrine: {
         Args: {
           p_categories: string[]
@@ -658,6 +699,7 @@ export type Database = {
         }
         Returns: string
       }
+      current_video_month: { Args: never; Returns: string }
       effective_plan_id: { Args: { p_user_id: string }; Returns: string }
       hit_rate_limit: {
         Args: { p_key: string; p_limit: number; p_window_seconds: number }
@@ -671,10 +713,19 @@ export type Database = {
         Args: { p_code: string; p_item_id?: string }
         Returns: boolean
       }
+      is_over_video_quota: { Args: { p_user_id: string }; Returns: boolean }
       is_reserved_subdomain: { Args: { p_value: string }; Returns: boolean }
       is_subdomain_available: {
         Args: { p_except_vitrine_id?: string; p_subdomain: string }
         Returns: boolean
+      }
+      media_cleanup_candidates: {
+        Args: { p_older_than?: string }
+        Returns: {
+          bunny_video_id: string
+          id: string
+          storage_paths: Json
+        }[]
       }
       my_entitlements: {
         Args: never
@@ -698,9 +749,18 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      my_video_usage: {
+        Args: never
+        Returns: {
+          bytes_delivered: number
+          over_quota: boolean
+          videos_count: number
+        }[]
+      }
       next_item_code: { Args: { p_owner_id: string }; Returns: string }
       peek_next_item_code: { Args: never; Returns: string }
       session_state: { Args: never; Returns: string }
+      subdomains_over_quota_last_month: { Args: never; Returns: string[] }
     }
     Enums: {
       [_ in never]: never
