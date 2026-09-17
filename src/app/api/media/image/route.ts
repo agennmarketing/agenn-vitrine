@@ -81,7 +81,18 @@ export async function POST(request: Request) {
   const storagePaths = Object.fromEntries(
     files.map((file) => [String(file.width), `${userId}/${vitrineId}/${mediaId}-${file.width}.${file.ext}`]),
   )
-  const storage = getMediaStorage()
+  // Configuração do servidor (Bunny, chave secreta) conferida antes de enviar qualquer
+  // arquivo: se faltar algo, nada fica órfão no Storage.
+  let storage: ReturnType<typeof getMediaStorage>
+  let admin: ReturnType<typeof createSupabaseAdminClient>
+  try {
+    storage = getMediaStorage()
+    admin = createSupabaseAdminClient()
+  } catch (error) {
+    Sentry.captureException(error)
+    return fail(503, 'Envio de imagens indisponível no momento. Tente mais tarde.')
+  }
+
   try {
     await Promise.all(files.map((file) => storage.put(storagePaths[String(file.width)], file.bytes, file.contentType)))
   } catch (error) {
@@ -89,14 +100,6 @@ export async function POST(request: Request) {
     await removeStoredFiles(Object.values(storagePaths))
     return fail(502, 'Não foi possível enviar a imagem. Tente novamente.')
   }
-
-  const admin = createSupabaseAdminClient()
-
-  // Mídia que ocupa o mesmo espaço (capa, posição da galeria, logo ou banner) é substituída.
-  let previousQuery = admin.from('media').select('id, storage_paths').eq('vitrine_id', vitrineId).eq('role', role)
-  if (itemId) previousQuery = previousQuery.eq('item_id', itemId)
-  if (role === 'gallery') previousQuery = previousQuery.eq('position', position!)
-  const { data: previous } = itemId || role === 'logo' || role === 'banner' ? await previousQuery : { data: [] }
 
   const large = files[files.length - 1]
   const insertRow = {
@@ -115,7 +118,15 @@ export async function POST(request: Request) {
   }
 
   try {
-    await deleteMediaRows(admin, previous ?? [])
+    // Mídia que ocupa o mesmo espaço (capa, posição da galeria, logo ou banner) é substituída.
+    if (itemId || role === 'logo' || role === 'banner') {
+      let previousQuery = admin.from('media').select('id, storage_paths').eq('vitrine_id', vitrineId).eq('role', role)
+      if (itemId) previousQuery = previousQuery.eq('item_id', itemId)
+      if (role === 'gallery') previousQuery = previousQuery.eq('position', position!)
+      const { data: previous, error: previousError } = await previousQuery
+      if (previousError) throw previousError
+      await deleteMediaRows(admin, previous ?? [])
+    }
     const { error } = await admin.from('media').insert(insertRow)
     if (error) throw error
     if (role === 'logo' || role === 'banner') {
