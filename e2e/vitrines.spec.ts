@@ -1,0 +1,52 @@
+import { expect, test } from '@playwright/test'
+import { createConfirmedUser, seedVitrine, signIn, uniqueSubdomain } from './helpers'
+
+test('cria vitrine pelo assistente e respeita o limite do gratuito', async ({ page }) => {
+  const user = await createConfirmedUser('assistente')
+  await signIn(page, user.email, user.password)
+
+  await page.getByRole('link', { name: 'Nova vitrine' }).click()
+  await page.getByLabel('Produtos').check()
+  await page.getByRole('button', { name: 'Continuar' }).click()
+
+  const subdomain = uniqueSubdomain('loja')
+  await page.getByLabel('Nome da vitrine').fill('Loja Teste')
+  await page.getByLabel('Endereço da vitrine').fill(subdomain)
+  await expect(page.getByText('Endereço disponível.')).toBeVisible()
+  await page.getByRole('button', { name: 'Continuar' }).click()
+
+  await page.getByLabel('WhatsApp', { exact: true }).fill('(11) 98765-4321')
+  await page.getByRole('button', { name: 'Continuar' }).click()
+  await page.getByLabel('Escuro').check()
+  await page.getByRole('button', { name: 'Criar vitrine' }).click()
+
+  await expect(page).toHaveURL(/\/painel\/vitrines\/[0-9a-f-]+\/itens$/)
+  await expect(page.getByRole('heading', { name: 'Loja Teste' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Destaques' })).toBeVisible()
+
+  await page.goto('/painel')
+  await expect(page.getByText('Vitrines: 1 de 1')).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Nova vitrine' })).toHaveCount(0)
+  await expect(page.getByText('Seu plano permite até 1 vitrine. Assine o Pro para criar mais.')).toBeVisible()
+})
+
+test('telefone inválido volta ao passo do WhatsApp; endereço em uso é avisado', async ({ page }) => {
+  const other = await createConfirmedUser('dono-endereco')
+  const taken = await seedVitrine(other.id)
+  const user = await createConfirmedUser('conflito')
+  await signIn(page, user.email, user.password)
+
+  await page.goto('/painel/vitrines/nova')
+  await page.getByLabel('Serviços').check()
+  await page.getByRole('button', { name: 'Continuar' }).click()
+  await page.getByLabel('Nome da vitrine').fill('Clínica')
+  await page.getByLabel('Endereço da vitrine').fill(taken.subdomain)
+  await expect(page.getByText('Este endereço já está em uso. Escolha outro.')).toBeVisible()
+  await page.getByLabel('Endereço da vitrine').fill(uniqueSubdomain('clinica'))
+  await page.getByRole('button', { name: 'Continuar' }).click()
+  await page.getByLabel('WhatsApp', { exact: true }).fill('123')
+  await page.getByRole('button', { name: 'Continuar' }).click()
+  await page.getByRole('button', { name: 'Criar vitrine' }).click()
+  await expect(page.getByText('Passo 3 de 4')).toBeVisible()
+  await expect(page.getByText('Informe um WhatsApp válido com DDD.')).toBeVisible()
+})
