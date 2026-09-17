@@ -53,7 +53,9 @@ it('linesFromSnapshot lê o payload gravado', () => {
     linesFromSnapshot({
       items: [{ item_id: 'i1', code: '104', name: 'X-Bacon', qty: 2, variation: null, addons: [], note: null, unit_price_cents: 2390 }],
     }),
-  ).toEqual([{ itemId: 'i1', variationId: null, qty: 2, previousUnitCents: 2390, snapshotName: 'X-Bacon', snapshotCode: '104', snapshotVariationName: null }])
+  ).toEqual([
+    { itemId: 'i1', variationId: null, qty: 2, addons: [], previousUnitCents: 2390, snapshotName: 'X-Bacon', snapshotCode: '104', snapshotVariationName: null },
+  ])
   expect(linesFromSnapshot(null)).toEqual([])
 })
 
@@ -78,4 +80,41 @@ it('resumo com valores para colar no WhatsApp', () => {
     ].join('\n'),
   )
   expect(buildPricedSummary(result, null).startsWith('*Resumo*')).toBe(true)
+})
+
+describe('complementos', () => {
+  const adicionais = {
+    id: 'g', name: 'Adicionais', kind: 'standard' as const, required: false, minSelect: 0, maxSelect: 5, allowRepeat: true, flavorPriceRule: null,
+    options: [{ id: 'bacon', name: 'Bacon', priceCents: 500, soldOut: false }],
+  }
+  const burger: SimulatorItem = {
+    id: 'b', code: '110', name: 'X-Bacon', vitrineName: 'Burger', deleted: false, soldOut: false, priceType: 'fixed',
+    priceCents: 2590, promoPriceCents: null, variations: [], addonGroups: [adicionais],
+  }
+  const map = new Map([['b', burger]])
+
+  it('preço atual inclui complementos e compara com o enviado', () => {
+    const lines = linesFromSnapshot({
+      items: [
+        {
+          item_id: 'b', code: '110', name: 'X-Bacon', qty: 2, variation: null, note: null, unit_price_cents: 2590, addons_unit_cents: 800,
+          addons: [{ group_id: 'g', group_name: 'Adicionais', option_id: 'bacon', name: 'Bacon', qty: 2, price_cents: 400 }],
+        },
+      ],
+    })
+    expect(lines[0]).toMatchObject({ addons: [{ optionId: 'bacon', qty: 2 }], previousUnitCents: 3390 })
+    const result = simulateOrder(lines, map)
+    expect(result.lines[0]).toMatchObject({
+      unitCents: 3590, subtotalCents: 7180, status: 'price_changed', addonLines: ['   • Adicionais: 2x Bacon'],
+    })
+    expect(buildPricedSummary(result, 'M4X9')).toBe(
+      ['*Pedido #M4X9*', '', '2x X-Bacon (cód. 110) – R$ 35,90 = R$ 71,80', '   • Adicionais: 2x Bacon', '', '*Total: R$ 71,80*'].join('\n'),
+    )
+  })
+
+  it('complemento apagado fica fora do total', () => {
+    const result = simulateOrder([{ itemId: 'b', variationId: null, qty: 1, addons: [{ optionId: 'sumiu', qty: 1 }] }], map)
+    expect(result.lines[0]).toMatchObject({ status: 'addon_removed', subtotalCents: null })
+    expect(result.total).toEqual({ totalCents: 0, hasOnRequest: false })
+  })
 })

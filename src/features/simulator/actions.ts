@@ -1,17 +1,19 @@
 'use server'
 
+import { groupsFromLinks, type AddonGroupRow } from '@/lib/addons/rows'
 import { requireActionUser } from '@/lib/auth/action-user'
 import { validateItemCode } from '@/lib/codes/item-code'
 import { isValidOrderCode, normalizeOrderCode } from '@/lib/codes/order-code'
 import { linesFromSnapshot, type SimulatorItem } from '@/lib/simulator/simulate'
 
 const ITEM_COLUMNS =
-  'id, code, name, deleted_at, sold_out, price_type, price_cents, promo_price_cents, vitrines(name), item_variations(id, name, price_cents, promo_price_cents)'
+  'id, code, name, deleted_at, sold_out, price_type, price_cents, promo_price_cents, vitrines(name), item_variations(id, name, price_cents, promo_price_cents), item_addon_groups(position, addon_groups(id, name, kind, required, min_select, max_select, allow_repeat, flavor_price_rule, position, addon_options(id, name, price_cents, sold_out, position)))'
 
 type ItemRow = {
   id: string; code: string; name: string; deleted_at: string | null; sold_out: boolean; price_type: string
   price_cents: number | null; promo_price_cents: number | null; vitrines: { name: string } | null
   item_variations: { id: string; name: string; price_cents: number; promo_price_cents: number | null }[]
+  item_addon_groups: { position: number; addon_groups: AddonGroupRow | null }[]
 }
 
 function toSimulatorItem(row: ItemRow): SimulatorItem {
@@ -26,6 +28,7 @@ function toSimulatorItem(row: ItemRow): SimulatorItem {
     priceCents: row.price_cents,
     promoPriceCents: row.promo_price_cents,
     variations: row.item_variations.map((v) => ({ id: v.id, name: v.name, priceCents: v.price_cents, promoPriceCents: v.promo_price_cents })),
+    addonGroups: groupsFromLinks(row.item_addon_groups),
   }
 }
 
