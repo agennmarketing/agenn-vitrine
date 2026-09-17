@@ -1,9 +1,10 @@
 import { createHmac } from 'node:crypto'
-import { readdir, readFile } from 'node:fs/promises'
+import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import { expect, type APIRequestContext, type Page } from '@playwright/test'
 import { createClient } from '@supabase/supabase-js'
+import Stripe from 'stripe'
 import { APP_URL } from '../playwright.config'
 
 const MAILPIT_URL = process.env.MAILPIT_URL ?? 'http://127.0.0.1:54324'
@@ -319,4 +320,108 @@ export async function setCheckout(vitrineId: string, patch: Record<string, unkno
 
 export async function setCart(vitrineId: string, enabled: boolean) {
   await createAdminClient().from('vitrines').update({ cart_enabled: enabled }).eq('id', vitrineId).throwOnError()
+}
+
+export async function setSubscription(
+  userId: string,
+  fields: {
+    status?: string
+    planId?: 'free' | 'pro'
+    customerId?: string | null
+    subscriptionId?: string | null
+    currentPeriodEnd?: string | null
+    cancelAtPeriodEnd?: boolean
+    graceUntil?: string | null
+    proEndedAt?: string | null
+  } = {},
+) {
+  const admin = createAdminClient()
+  await admin
+    .from('subscriptions')
+    .upsert({
+      user_id: userId,
+      plan_id: fields.planId ?? 'pro',
+      status: fields.status ?? 'active',
+      stripe_customer_id: fields.customerId ?? null,
+      stripe_subscription_id: fields.subscriptionId ?? null,
+      current_period_end: fields.currentPeriodEnd ?? null,
+      cancel_at_period_end: fields.cancelAtPeriodEnd ?? false,
+      grace_until: fields.graceUntil ?? null,
+      pro_ended_at: fields.proEndedAt ?? null,
+    })
+    .throwOnError()
+}
+
+export async function setVitrineStatus(vitrineId: string, status: 'active' | 'frozen') {
+  await createAdminClient().from('vitrines').update({ status }).eq('id', vitrineId).throwOnError()
+}
+
+export async function vitrineStatuses(ownerId: string) {
+  const { data } = await createAdminClient()
+    .from('vitrines')
+    .select('subdomain, status')
+    .eq('owner_id', ownerId)
+    .order('position')
+    .order('created_at')
+    .throwOnError()
+  return (data ?? []).map((row) => `${row.subdomain}:${row.status}`)
+}
+
+export async function readSubscription(userId: string) {
+  const { data } = await createAdminClient()
+    .from('subscriptions')
+    .select('status, plan_id, interval, grace_until, pro_ended_at, cancel_at_period_end, stripe_subscription_id')
+    .eq('user_id', userId)
+    .maybeSingle()
+    .throwOnError()
+  return data
+}
+
+// Mesma criptografia do Stripe: o driver falso confere a assinatura de verdade.
+export function signStripeWebhook(body: string) {
+  const stripe = new Stripe('sk_test_e2e')
+  return stripe.webhooks.generateTestHeaderString({
+    payload: body,
+    secret: process.env.STRIPE_WEBHOOK_SECRET ?? 'whsec-ci-somente-para-testes',
+  })
+}
+
+export async function sendStripeEvent(
+  request: APIRequestContext,
+  type: string,
+  object: Record<string, unknown>,
+  id = `evt_fake_${crypto.randomUUID()}`,
+) {
+  const body = JSON.stringify({ id, object: 'event', type, data: { object } })
+  return request.post(`${APP_URL}/api/webhooks/stripe`, {
+    data: body,
+    headers: { 'content-type': 'application/json', 'stripe-signature': signStripeWebhook(body) },
+  })
+}
+
+// Escreve direto no armazenamento do driver falso (mesmo formato de fake-billing.ts).
+export async function fakeSubscription(fields: {
+  customerId: string
+  userId?: string | null
+  status?: string
+  interval?: 'month' | 'year'
+  cancelAtPeriodEnd?: boolean
+  currentPeriodEnd?: string | null
+}) {
+  const id = `sub_fake_${crypto.randomUUID()}`
+  const dir = path.join(os.tmpdir(), 'agenn-vitrine-billing')
+  await mkdir(dir, { recursive: true })
+  await writeFile(
+    path.join(dir, `${id}.json`),
+    JSON.stringify({
+      id,
+      customerId: fields.customerId,
+      userId: fields.userId ?? null,
+      status: fields.status ?? 'active',
+      interval: fields.interval ?? 'month',
+      currentPeriodEnd: fields.currentPeriodEnd ?? new Date(Date.now() + 30 * 86_400_000).toISOString(),
+      cancelAtPeriodEnd: fields.cancelAtPeriodEnd ?? false,
+    }),
+  )
+  return id
 }
