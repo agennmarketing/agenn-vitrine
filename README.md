@@ -40,6 +40,8 @@ Tudo o mais roda no GitHub Actions (workflow `CI`) a cada PR:
 
 Acompanhe com `gh pr checks --watch`. Quando uma migração muda o banco, baixe os tipos gerados (`gh run download <run-id> --name database-types --dir <pasta-temporária>`) e copie o arquivo para `src/lib/supabase/database.types.ts`.
 
+Os testes de vídeo usam o driver `fake` do Stream e vídeos WebM gerados com ffmpeg no CI (`scripts/make-video-fixtures.mjs`). Os e-mails usam o driver `fake` (gravados em disco). A reprodução real (HLS do Bunny) e o envio real pelo Resend são conferidos na nuvem.
+
 ## Endereços locais
 
 - Página inicial: http://localhost:3000
@@ -48,5 +50,5 @@ Acompanhe com `gh pr checks --watch`. Quando uma migração muda o banco, baixe 
 ## Documentação
 
 - Especificação: [docs/superpowers/specs](docs/superpowers/specs)
-- Infraestrutura de produção: [docs/setup/fase-1-infra.md](docs/setup/fase-1-infra.md) e [docs/setup/fase-2-infra.md](docs/setup/fase-2-infra.md)
+- Infraestrutura de produção: [docs/setup/fase-1-infra.md](docs/setup/fase-1-infra.md), [docs/setup/fase-2-infra.md](docs/setup/fase-2-infra.md) e [docs/setup/fase-3-infra.md](docs/setup/fase-3-infra.md)
 - Planos de implementação: [docs/superpowers/plans](docs/superpowers/plans)

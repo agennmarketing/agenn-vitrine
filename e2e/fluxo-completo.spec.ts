@@ -1,7 +1,16 @@
 import { expect, test } from '@playwright/test'
-import { createConfirmedUser, makeTestImage, signIn, uniqueSubdomain, uploadImage } from './helpers'
+import {
+  createConfirmedUser,
+  makeTestImage,
+  mediaOfItem,
+  sendBunnyWebhook,
+  signIn,
+  uniqueSubdomain,
+  uploadImage,
+  videoFixture,
+} from './helpers'
 
-test('criar vitrine → cadastrar item → vitrine pública → WhatsApp → simulador', async ({ page }) => {
+test('criar vitrine → cadastrar item com vídeo → vitrine pública → WhatsApp → simulador', async ({ page, request: api }) => {
   const user = await createConfirmedUser('fluxo')
   await signIn(page, user.email, user.password)
 
@@ -25,9 +34,19 @@ test('criar vitrine → cadastrar item → vitrine pública → WhatsApp → sim
   await page.getByRole('button', { name: 'Salvar item' }).click()
   await expect(page.getByText('Item salvo.')).toBeVisible()
 
+  // Vídeo no item (conta gratuita: 1 vídeo permitido)
+  await page.getByRole('link', { name: 'Editar' }).click()
+  await page.getByLabel('Vídeo', { exact: true }).setInputFiles(videoFixture('vertical-3s'))
+  await expect(page.getByText(/Processando o vídeo…|Vídeo pronto/)).toBeVisible({ timeout: 20_000 })
+  const itemId = page.url().split('/').pop()!
+  const media = await mediaOfItem(itemId)
+  await sendBunnyWebhook(api, media!.bunny_video_id!)
+  await expect(page.getByText('Vídeo pronto')).toBeVisible({ timeout: 15_000 })
+
   await page.goto(`http://${subdomain}.localhost:3000/`)
   await expect(page.getByRole('heading', { level: 1, name: 'Burger do Zé' })).toBeVisible()
   await page.getByRole('button', { name: 'X-Bacon' }).click()
+  await expect(page.getByRole('dialog', { name: 'X-Bacon' }).locator(`video[data-media-id="${media!.id}"]`)).toHaveCount(1)
   await page.route('https://wa.me/**', (route) => route.fulfill({ status: 200, body: 'ok' }))
   const request = page.waitForRequest(/^https:\/\/wa\.me\//)
   await page.getByRole('dialog', { name: 'X-Bacon' }).getByRole('button', { name: 'Solicitar orçamento' }).click()

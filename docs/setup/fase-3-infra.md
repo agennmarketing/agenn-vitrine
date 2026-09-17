@@ -64,7 +64,31 @@ A API do Bunny Stream não informa banda por vídeo (só visualizações e tempo
 
 O aviso sai uma vez por dono por mês, quando a franquia estoura, com o assunto "A franquia de vídeo deste mês acabou". Sem `EMAIL_DRIVER=resend`, nenhum e-mail é enviado (o aviso continua no painel).
 
-## 6. Riscos aceitos
+## 6. Conferência em produção
+
+1. Enviar um vídeo vertical de celular (até 60 s) num item: ver "Enviando… N%", "Processando o vídeo…" e "Vídeo pronto".
+2. Derrubar o Wi-Fi no meio de um envio grande e religar: aparece "Conexão caiu, retomando…" e o envio continua.
+3. Tentar um vídeo de 70 s: recusado antes do envio com o motivo.
+4. Na vitrine pelo celular (4G): listagem sem vídeo; abrir o item toca sem som em loop; "Ativar som"; fechar interrompe o download.
+5. No iPhone (Safari): o vídeo toca pelo HLS nativo.
+6. Conta Pro: banner em vídeo horizontal; com "Reduzir movimento" ligado no sistema, fica só a imagem.
+7. No Supabase dev, `video_usage_monthly` do dono soma bytes; em Minhas vitrines, "Franquia do mês" mostra o valor.
+8. Excluir o item com vídeo: o vídeo some da biblioteca do Bunny Stream.
+9. Vercel → Settings → Cron Jobs → Run: resposta 200 com o resumo.
+10. E-mail de franquia: com uma conta de teste, pôr `video_usage_monthly.bytes_delivered` do mês em `1099511627000`, abrir um item com vídeo por alguns segundos; chega "A franquia de vídeo deste mês acabou" (conferir em Resend → Emails) e a vitrine mostra só fotos. Depois voltar `bytes_delivered` para `0` e `over_quota` para `false`.
+
+**Situação em 2026-09-17:** o envio chega ao Bunny, mas a conversão fica em "Processing" também para vídeos enviados direto pelo painel do Bunny. Chamado aberto no suporte do Bunny. Os itens 1 a 8 e 10 dependem da conversão funcionar.
+
+## 7. Pendências registradas
+
+- Conversão travada no Bunny Stream (chamado aberto).
+- Regra dos 90 dias após sair do Pro e aviso no dia 83; conferência diária com o Stripe → Fase 5.
+- Duplicar item não copia o vídeo.
+- Envio de vídeo abandonado ocupa a vaga do plano até a limpeza diária (até 24 h).
+- Verificações de endereço e código do item ainda são server actions com atraso ("Failed to find Server Action" no log ao trocar de página).
+- Fase de design dedicada (visual do painel e da vitrine).
+
+## 8. Riscos aceitos
 
 - Os bytes relatados pelo navegador podem ser manipulados dentro do teto por segundo.
 - Envio de vídeo abandonado ocupa a vaga do plano até a limpeza diária (até 24 h).
