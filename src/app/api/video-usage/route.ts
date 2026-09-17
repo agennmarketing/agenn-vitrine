@@ -1,6 +1,7 @@
 import * as Sentry from '@sentry/nextjs'
-import { NextResponse, type NextRequest } from 'next/server'
+import { after, NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod'
+import { notifyVideoQuotaExceeded } from '@/features/videos/notify-quota'
 import { env } from '@/lib/env'
 import { parseHost } from '@/lib/hosts/parse-host'
 import { clientIp, rateLimitKey } from '@/lib/orders/client-ip'
@@ -47,6 +48,15 @@ export async function POST(request: NextRequest) {
     if (result?.crossed_quota) {
       const { data: vitrines } = await admin.from('vitrines').select('subdomain').eq('owner_id', result.usage_owner_id)
       revalidateVitrine(...(vitrines ?? []).map((v) => v.subdomain))
+      const ownerId = result.usage_owner_id
+      // O e-mail sai depois da resposta: a vitrine não espera o Resend.
+      after(async () => {
+        try {
+          await notifyVideoQuotaExceeded(admin, ownerId)
+        } catch (error) {
+          Sentry.captureException(error)
+        }
+      })
     }
     return noContent()
   } catch (error) {

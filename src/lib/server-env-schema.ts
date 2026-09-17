@@ -70,3 +70,27 @@ export function parseWebhookSecret(source: Source): string {
 export function parseCronSecret(source: Source): string {
   return z.string().min(16, 'CRON_SECRET precisa de pelo menos 16 caracteres.').parse(source.CRON_SECRET)
 }
+
+const emailSchema = z
+  .object({
+    EMAIL_DRIVER: z.enum(['off', 'fake', 'resend']).default('off'),
+    RESEND_API_KEY: z.string().default(''),
+    EMAIL_FROM: z.string().default(''),
+    VERCEL_ENV: z.string().optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.EMAIL_DRIVER === 'resend' && (!value.RESEND_API_KEY || !value.EMAIL_FROM)) {
+      ctx.addIssue({ code: 'custom', message: 'RESEND_API_KEY e EMAIL_FROM são obrigatórias com EMAIL_DRIVER=resend.' })
+    }
+    if (value.EMAIL_DRIVER === 'fake' && value.VERCEL_ENV === 'production') {
+      ctx.addIssue({ code: 'custom', message: 'EMAIL_DRIVER=fake não pode ser usado em produção.' })
+    }
+  })
+
+export type EmailEnv = { driver: 'off' } | { driver: 'fake' } | { driver: 'resend'; apiKey: string; from: string }
+
+export function parseEmailEnv(source: Source): EmailEnv {
+  const value = emailSchema.parse(source)
+  if (value.EMAIL_DRIVER === 'resend') return { driver: 'resend', apiKey: value.RESEND_API_KEY, from: value.EMAIL_FROM }
+  return { driver: value.EMAIL_DRIVER }
+}
