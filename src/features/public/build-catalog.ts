@@ -1,3 +1,6 @@
+import type { AddonGroup } from '@/lib/addons/addons'
+import { groupsFromLinks, type AddonGroupRow } from '@/lib/addons/rows'
+import type { CheckoutSettings, FieldMode } from '@/lib/cart/checkout'
 import { imageSources } from '@/lib/media/urls'
 import { videoPlaylistUrl, videoThumbnailUrl } from '@/lib/video/urls'
 import type { PriceType } from '@/lib/pricing/price'
@@ -7,7 +10,7 @@ export type CatalogRows = {
   vitrine: {
     id: string; subdomain: string; type: string; name: string; description: string; theme: string; status: string
     show_prices: boolean; show_media: boolean; default_button_text: string; brand_color: string | null
-    banner_enabled: boolean; logo_media_id: string | null; banner_media_id: string | null; primary_whatsapp_id: string | null
+    banner_enabled: boolean; cart_enabled: boolean; cart_button_text: string; logo_media_id: string | null; banner_media_id: string | null; primary_whatsapp_id: string | null
   }
   plan: { max_items_per_vitrine: number; max_videos_per_vitrine: number; allow_branding: boolean; show_watermark: boolean }
   overQuota: boolean
@@ -18,6 +21,10 @@ export type CatalogRows = {
     price_cents: number | null; promo_price_cents: number | null; duration_minutes: number | null; tags: string[]
     sold_out: boolean; position: number; whatsapp_id: string | null; button_text: string | null; custom_message: string | null
   }[]
+  checkout: {
+    name_mode: string; fulfillment_mode: string; payment_mode: string; schedule_mode: string; notes_mode: string; payment_options: string[]
+  } | null
+  addonLinks: { item_id: string; position: number; addon_groups: AddonGroupRow | null }[]
   variations: { id: string; item_id: string; name: string; price_cents: number; promo_price_cents: number | null; sold_out: boolean; position: number }[]
   media: {
     id: string
@@ -41,6 +48,7 @@ export type PublicItem = {
   whatsappPhone: string | null; buttonText: string | null; customMessage: string | null
   cover: PublicImage | null; gallery: PublicImage[]; video: PublicVideo | null
   variations: { id: string; name: string; priceCents: number; promoPriceCents: number | null; soldOut: boolean }[]
+  addonGroups: AddonGroup[]
 }
 
 export type PublicVitrine = {
@@ -48,6 +56,7 @@ export type PublicVitrine = {
   status: 'active' | 'frozen'; showPrices: boolean; showMedia: boolean; defaultButtonText: string
   primaryPhone: string | null; logo: PublicImage | null; brandColor: string | null; banner: PublicImage | null
   bannerVideo: PublicVideo | null
+  cartEnabled: boolean; cartButtonText: string; checkout: CheckoutSettings
   showWatermark: boolean; categories: { id: string; name: string; items: PublicItem[] }[]
 }
 
@@ -99,6 +108,7 @@ export function buildPublicCatalog(rows: CatalogRows, mediaBaseUrl: string, vide
         .sort((a, b) => a.position - b.position)
         .map((m) => image(m.storage_paths))
         .filter((img): img is PublicImage => img !== null),
+      addonGroups: groupsFromLinks(rows.addonLinks.filter((link) => link.item_id === row.id)),
       variations: rows.variations
         .filter((v) => v.item_id === row.id)
         .sort((a, b) => a.position - b.position)
@@ -112,6 +122,17 @@ export function buildPublicCatalog(rows: CatalogRows, mediaBaseUrl: string, vide
           }
         : null,
     }
+  }
+
+  const mode = (value: string | undefined, fallback: FieldMode): FieldMode =>
+    value === 'off' || value === 'optional' || value === 'required' ? value : fallback
+  const checkout: CheckoutSettings = {
+    nameMode: mode(rows.checkout?.name_mode, 'optional'),
+    fulfillmentMode: mode(rows.checkout?.fulfillment_mode, 'off'),
+    paymentMode: mode(rows.checkout?.payment_mode, 'off'),
+    scheduleMode: mode(rows.checkout?.schedule_mode, 'off'),
+    notesMode: mode(rows.checkout?.notes_mode, 'optional'),
+    paymentOptions: rows.checkout?.payment_options ?? [],
   }
 
   const branding = rows.plan.allow_branding
@@ -128,6 +149,9 @@ export function buildPublicCatalog(rows: CatalogRows, mediaBaseUrl: string, vide
     theme: vitrine.theme === 'dark' ? 'dark' : 'light',
     status: vitrine.status === 'active' ? 'active' : 'frozen',
     showPrices: vitrine.show_prices,
+    cartEnabled: vitrine.cart_enabled,
+    cartButtonText: vitrine.cart_button_text,
+    checkout,
     showMedia: vitrine.show_media,
     defaultButtonText: vitrine.default_button_text,
     primaryPhone: vitrine.primary_whatsapp_id ? (phoneById.get(vitrine.primary_whatsapp_id) ?? null) : null,
