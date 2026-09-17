@@ -17,6 +17,7 @@ export default async function PainelLayout({ children }: { children: ReactNode }
     supabase.from('profiles').select('name').eq('id', user.id).single(),
     supabase.rpc('my_entitlements'),
   ])
+  const displayName = profile?.name || user.email
 
   return (
     <div className="min-h-dvh">
@@ -35,12 +36,15 @@ export default async function PainelLayout({ children }: { children: ReactNode }
             </Link>
           </nav>
           <div className="ml-auto flex min-w-0 items-center gap-2 sm:gap-3">
-            <div className="flex min-w-0 flex-col items-end leading-tight">
-              <span className="max-w-[8rem] truncate text-sm font-medium sm:max-w-[10rem]">
-                {profile?.name || user.email}
-              </span>
+            {/* Único acesso a Conta no celular, onde a navegação fica escondida. */}
+            <Link
+              href="/painel/conta"
+              aria-label={`Conta de ${displayName}`}
+              className="flex min-w-0 flex-col items-end rounded-control px-2 py-1 leading-tight hover:bg-canvas"
+            >
+              <span className="max-w-[8rem] truncate text-sm font-medium sm:max-w-[10rem]">{displayName}</span>
               <span className="text-xs text-ink-muted">Plano {plan?.name ?? 'Gratuito'}</span>
-            </div>
+            </Link>
             <form action={signOutAction} className="shrink-0">
               <Button type="submit" variant="ghost">
                 Sair
