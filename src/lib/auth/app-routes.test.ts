@@ -42,6 +42,16 @@ describe('decideAppRoute', () => {
     })
   })
 
+  it('rotas /auth/* seguem mesmo com sessão substituída (elas trocam a sessão)', () => {
+    for (const pathname of ['/auth/callback', '/auth/confirm']) {
+      expect(decideAppRoute({ pathname, isAuthenticated: true, isSessionCurrent: false })).toEqual({ action: 'continue' })
+    }
+    expect(decideAppRoute({ pathname: '/auth/callbackx', isAuthenticated: true, isSessionCurrent: false })).toEqual({
+      action: 'end-session',
+      to: '/entrar?motivo=outro-aparelho',
+    })
+  })
+
   it('não confunde prefixos parecidos', () => {
     expect(decideAppRoute({ pathname: '/entrarx', ...guest })).toEqual({ action: 'redirect', to: '/entrar?next=%2Fentrarx' })
   })

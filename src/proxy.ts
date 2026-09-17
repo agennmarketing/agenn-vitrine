@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { decideAppRoute } from '@/lib/auth/app-routes'
-import { isSessionCurrent } from '@/lib/auth/session'
+import { isSessionCurrent, isSessionGoneError } from '@/lib/auth/session'
 import { env } from '@/lib/env'
 import { internalPathFor, parseHost, type HostResolution } from '@/lib/hosts/parse-host'
 import type { Database } from '@/lib/supabase/database.types'
@@ -62,6 +62,9 @@ async function handleApp(request: NextRequest, resolution: HostResolution) {
     // autenticado": fail-closed, sem lançar exceção no proxy.
     const { data: userData, error: userError } = await supabase.auth.getUser()
     if (userError || !userData.user) userId = null
+    // Sessão revogada ou JWT inválido: limpa os cookies (copyCookies os propaga). Em
+    // falha de rede/5xx os cookies ficam, para não deslogar por instabilidade.
+    if (isSessionGoneError(userError)) await supabase.auth.signOut({ scope: 'local' })
   }
 
   let sessionCurrent = true

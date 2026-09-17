@@ -52,6 +52,13 @@ test('login volta para o destino pedido', async ({ page }) => {
   await expect(page).toHaveURL(/\/painel$/)
 })
 
+test('sessão de login com senha não abre a tela de nova senha sem a senha atual', async ({ page }) => {
+  const user = await createConfirmedUser('sem-link')
+  await signIn(page, user.email, user.password)
+  await page.goto('/redefinir-senha')
+  await expect(page).toHaveURL(/\/painel\/conta$/)
+})
+
 test('recuperação de senha por e-mail', async ({ page }) => {
   const user = await createConfirmedUser('recuperar')
   await page.goto('/entrar')

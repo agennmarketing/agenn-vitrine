@@ -22,6 +22,7 @@ describe('loginNotice', () => {
     expect(loginNotice({ erro: 'link-invalido' })).toEqual({ kind: 'error', text: 'Link inválido ou expirado. Solicite um novo.' })
     expect(loginNotice({ erro: 'google' })).toEqual({ kind: 'error', text: 'Não foi possível entrar com o Google. Tente novamente.' })
     expect(loginNotice({ aviso: 'senha-alterada' })).toEqual({ kind: 'success', text: 'Senha alterada. Entre com a nova senha.' })
+    expect(loginNotice({ erro: 'sessao' })).toEqual({ kind: 'error', text: 'Não foi possível iniciar sua sessão. Tente novamente.' })
     expect(loginNotice({})).toBeNull()
   })
 })

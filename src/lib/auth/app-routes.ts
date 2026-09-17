@@ -7,6 +7,10 @@ export const PUBLIC_APP_PATHS = [
   '/auth/confirm',
 ] as const
 
+// Estas rotas trocam a sessão do cookie pela nova (link de e-mail, Google): não
+// encerram a sessão antiga antes, senão o fluxo seria interrompido.
+const SESSION_REPLACING_PATHS: readonly string[] = ['/auth/callback', '/auth/confirm']
+
 const GUEST_ONLY_PATHS: readonly string[] = ['/entrar', '/cadastro', '/esqueci-senha']
 
 export type AppRouteDecision =
@@ -25,7 +29,7 @@ export function decideAppRoute(input: {
 }): AppRouteDecision {
   const { pathname, isAuthenticated, isSessionCurrent } = input
 
-  if (isAuthenticated && !isSessionCurrent) {
+  if (isAuthenticated && !isSessionCurrent && !SESSION_REPLACING_PATHS.some((path) => matches(pathname, path))) {
     return { action: 'end-session', to: '/entrar?motivo=outro-aparelho' }
   }
   if (pathname === '/') {

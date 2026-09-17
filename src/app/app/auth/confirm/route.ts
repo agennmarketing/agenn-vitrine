@@ -1,6 +1,7 @@
 import type { EmailOtpType } from '@supabase/supabase-js'
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
+import { claimSessionOrFail } from '@/lib/auth/claim-session'
 import { originFor } from '@/lib/hosts/urls'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 
@@ -18,6 +19,6 @@ export async function GET(request: NextRequest) {
   const { error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash })
   if (error) return NextResponse.redirect(`${origin}/entrar?erro=link-invalido`)
 
-  await supabase.rpc('claim_session')
+  if (!(await claimSessionOrFail(supabase))) return NextResponse.redirect(`${origin}/entrar?erro=sessao`)
   return NextResponse.redirect(`${origin}${type === 'recovery' ? '/redefinir-senha' : '/painel'}`)
 }

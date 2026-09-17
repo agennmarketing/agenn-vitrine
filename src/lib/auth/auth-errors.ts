@@ -26,6 +26,7 @@ export function loginNotice(params: {
   if (params.motivo === 'outro-aparelho') return { kind: 'error', text: SESSION_REPLACED_MESSAGE }
   if (params.erro === 'link-invalido') return { kind: 'error', text: 'Link inválido ou expirado. Solicite um novo.' }
   if (params.erro === 'google') return { kind: 'error', text: 'Não foi possível entrar com o Google. Tente novamente.' }
+  if (params.erro === 'sessao') return { kind: 'error', text: 'Não foi possível iniciar sua sessão. Tente novamente.' }
   if (params.aviso === 'senha-alterada') return { kind: 'success', text: 'Senha alterada. Entre com a nova senha.' }
   return null
 }

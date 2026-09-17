@@ -2,7 +2,9 @@
 
 import { redirect } from 'next/navigation'
 import { mapAuthError } from '@/lib/auth/auth-errors'
+import { claimSessionOrFail } from '@/lib/auth/claim-session'
 import { forgotPasswordSchema, resetPasswordSchema, signInSchema, signUpSchema } from '@/lib/auth/schemas'
+import { isRecentEmailLinkSession } from '@/lib/auth/session'
 import { fieldErrorsFromZod, type FormState } from '@/lib/forms/form-state'
 import { safeNextPath } from '@/lib/hosts/urls'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
@@ -47,7 +49,7 @@ export async function signInAction(_prev: FormState, formData: FormData): Promis
   })
   if (error) return { error: mapAuthError(error.code), values: keep }
 
-  await supabase.rpc('claim_session')
+  if (!(await claimSessionOrFail(supabase))) return { error: 'Algo deu errado. Tente novamente.', values: keep }
   redirect(safeNextPath(String(formData.get('next') ?? '')))
 }
 
@@ -86,6 +88,11 @@ export async function resetPasswordAction(_prev: FormState, formData: FormData):
   if (!parsed.success) return { fieldErrors: fieldErrorsFromZod(parsed.error) }
 
   const supabase = await createSupabaseServerClient()
+  // Sem senha atual, só quem acabou de abrir o link de recuperação pode criar nova senha.
+  const { data: claimsData } = await supabase.auth.getClaims()
+  if (!isRecentEmailLinkSession(claimsData?.claims?.amr)) {
+    return { error: 'Link de recuperação expirado. Solicite um novo.' }
+  }
   const { error } = await supabase.auth.updateUser({ password: parsed.data.password })
   if (error) return { error: mapAuthError(error.code) }
 
