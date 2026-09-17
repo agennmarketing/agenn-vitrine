@@ -9,7 +9,7 @@ const SUBJECT_BY_TYPE: Record<'email' | 'recovery', string> = {
   recovery: 'Redefina sua senha da Agenn Vitrine',
 }
 
-function createAdminClient() {
+export function createAdminClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SECRET_KEY!, {
     auth: { persistSession: false },
   })
@@ -53,14 +53,14 @@ export async function waitForAuthLink(email: string, type: 'email' | 'recovery',
 export async function createConfirmedUser(prefix: string) {
   const admin = createAdminClient()
   const user = { email: uniqueEmail(prefix), password: 'senhaForte123', name: 'Pessoa Teste' }
-  const { error } = await admin.auth.admin.createUser({
+  const { data, error } = await admin.auth.admin.createUser({
     email: user.email,
     password: user.password,
     email_confirm: true,
     user_metadata: { name: user.name },
   })
   if (error) throw error
-  return user
+  return { ...user, id: data.user.id }
 }
 
 export async function signIn(page: Page, email: string, password: string) {
