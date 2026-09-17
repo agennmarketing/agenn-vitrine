@@ -1,5 +1,6 @@
 'use server'
 
+import * as Sentry from '@sentry/nextjs'
 import { redirect } from 'next/navigation'
 import { requireActionUser } from '@/lib/auth/action-user'
 import { fieldErrorsFromZod, readFormFields, type FormState } from '@/lib/forms/form-state'
@@ -94,9 +95,16 @@ export async function deleteVitrineAction(vitrineId: string, _prev: FormState, f
   if (String(formData.get('confirm') ?? '').trim().toLowerCase() !== vitrine.subdomain) {
     return { fieldErrors: { confirm: 'Digite o endereço da vitrine para confirmar.' } }
   }
-  const admin = createSupabaseAdminClient()
-  const { data: mediaRows } = await admin.from('media').select('storage_paths').eq('vitrine_id', vitrineId)
-  const paths = (mediaRows ?? []).flatMap((row) => storagePathList(row.storage_paths))
+  let paths: string[]
+  try {
+    const admin = createSupabaseAdminClient()
+    const { data: mediaRows, error: mediaError } = await admin.from('media').select('storage_paths').eq('vitrine_id', vitrineId)
+    if (mediaError) throw mediaError
+    paths = (mediaRows ?? []).flatMap((row) => storagePathList(row.storage_paths))
+  } catch (error) {
+    Sentry.captureException(error)
+    return { error: 'Não foi possível excluir agora. Tente novamente.' }
+  }
   const { error } = await supabase.from('vitrines').delete().eq('id', vitrineId)
   if (error) return { error: mapDbError(error) }
   await removeStoredFiles(paths)
