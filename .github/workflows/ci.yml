@@ -58,6 +58,11 @@ jobs:
       MEDIA_STORAGE_DRIVER: fake
       RATE_LIMIT_SALT: ci-salt-somente-para-testes
       ORDER_RATE_LIMIT_PER_HOUR: '1000'
+      VIDEO_STREAM_DRIVER: fake
+      BUNNY_STREAM_WEBHOOK_SECRET: ci-webhook-secret
+      NEXT_PUBLIC_VIDEO_CDN_BASE_URL: /api/dev-video
+      CRON_SECRET: ci-cron-secret-somente-para-testes
+      EMAIL_DRIVER: fake
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -68,6 +73,11 @@ jobs:
       - name: Supabase local
         run: npx supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,realtime,storage-api
       - run: node scripts/ci-env.mjs
+      - name: Vídeos de teste
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          node scripts/make-video-fixtures.mjs
       - run: npx playwright install --with-deps chromium
       - run: npm run build
       - run: npx playwright test

@@ -47,3 +47,6 @@ playwright-report
 test-results
 banco de imagens/
 .superpowers/
+
+# vídeos de teste gerados no CI
+e2e/fixtures/*.webm
