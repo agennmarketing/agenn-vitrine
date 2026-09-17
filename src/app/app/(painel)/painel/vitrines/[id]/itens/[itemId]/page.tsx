@@ -1,15 +1,16 @@
 import { getItemForEdit, getItemFormOptions } from '@/features/items/queries'
-import { getMyVitrine } from '@/features/vitrines/queries'
+import { getMyVitrine, getVideoLimits } from '@/features/vitrines/queries'
 import { ItemForm } from '../item-form'
 
 export const metadata = { title: 'Editar item' }
 
 export default async function EditarItemPage({ params }: { params: Promise<{ id: string; itemId: string }> }) {
   const { id, itemId } = await params
-  const [options, vitrine, item] = await Promise.all([
+  const [options, vitrine, item, videoLimits] = await Promise.all([
     getItemFormOptions(id),
     getMyVitrine(id),
     getItemForEdit(id, itemId),
+    getVideoLimits(),
   ])
 
   return (
@@ -23,6 +24,7 @@ export default async function EditarItemPage({ params }: { params: Promise<{ id:
         categories={options.categories}
         contacts={options.contacts}
         nextCode={options.nextCode}
+        videoLimits={videoLimits}
         item={item}
       />
     </div>

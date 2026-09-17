@@ -19,4 +19,7 @@ test('Pro envia logo e banner; gratuito vê bloqueado', async ({ page }) => {
   await expect(page.getByRole('img', { name: 'Logo', exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Remover imagem' }).first().click()
   await expect(page.getByRole('img', { name: 'Logo', exact: true })).toHaveCount(0)
+  // Recarregar confirma que a mídia saiu do banco, e não só da tela.
+  await page.reload()
+  await expect(page.getByRole('img', { name: 'Logo', exact: true })).toHaveCount(0)
 })

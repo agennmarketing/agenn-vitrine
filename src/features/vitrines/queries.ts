@@ -39,3 +39,19 @@ export const getMyVitrine = cache(async (id: string) => {
   if (!data) notFound()
   return data
 })
+
+export async function getVideoLimits() {
+  const plan = await getEntitlements()
+  return { maxSeconds: plan.max_video_seconds, maxUploadMb: plan.max_video_upload_mb }
+}
+
+export async function getVideoUsage() {
+  const { supabase } = await getPanelSession()
+  const { data } = await supabase.rpc('my_video_usage')
+  const row = data?.[0]
+  return {
+    videosCount: row?.videos_count ?? 0,
+    bytesDelivered: Number(row?.bytes_delivered ?? 0),
+    overQuota: row?.over_quota ?? false,
+  }
+}

@@ -1,9 +1,10 @@
 import Link from 'next/link'
 import { buttonClasses } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { getEntitlements, listMyVitrines } from '@/features/vitrines/queries'
+import { getEntitlements, getVideoUsage, listMyVitrines } from '@/features/vitrines/queries'
 import { env } from '@/lib/env'
 import { buildVitrineUrl } from '@/lib/hosts/urls'
+import { formatGigabytes } from '@/lib/video/rules'
 import { mapDbError } from '@/lib/vitrines/db-errors'
 import { VITRINE_TYPE_LABEL } from '@/lib/vitrines/vitrine-types'
 import { CopyLinkButton } from './copy-link-button'
@@ -11,7 +12,7 @@ import { CopyLinkButton } from './copy-link-button'
 export const metadata = { title: 'Minhas vitrines' }
 
 export default async function PainelHome() {
-  const [vitrines, plan] = await Promise.all([listMyVitrines(), getEntitlements()])
+  const [vitrines, plan, usage] = await Promise.all([listMyVitrines(), getEntitlements(), getVideoUsage()])
   const atLimit = vitrines.length >= plan.max_vitrines
 
   return (
@@ -26,7 +27,9 @@ export default async function PainelHome() {
       </div>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-ink-muted">
-          Vitrines: {vitrines.length} de {plan.max_vitrines} · Plano {plan.name}
+          Vitrines: {vitrines.length} de {plan.max_vitrines} · Vídeos: {usage.videosCount}
+          {plan.max_videos_per_account !== null ? ` de ${plan.max_videos_per_account}` : ''} · Franquia do mês:{' '}
+          {formatGigabytes(usage.bytesDelivered)} de {plan.monthly_video_gb} GB · Plano {plan.name}
         </p>
         {/* Caminho para o simulador também no celular, onde a navegação do topo fica escondida. */}
         <Link href="/painel/simulador" className="text-sm underline">
@@ -36,6 +39,11 @@ export default async function PainelHome() {
       {atLimit ? (
         <Card className="px-5 py-4">
           <p>{mapDbError({ message: 'plan_limit:vitrines', hint: String(plan.max_vitrines) })}</p>
+        </Card>
+      ) : null}
+      {usage.overQuota ? (
+        <Card className="px-5 py-4">
+          <p>A franquia de vídeo deste mês acabou. Os vídeos voltam no próximo mês.</p>
         </Card>
       ) : null}
 
