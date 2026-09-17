@@ -14,6 +14,7 @@ import { itemSchema, type ItemInput } from '@/lib/vitrines/schemas'
 const ITEM_FIELDS = [
   'name', 'description', 'categoryId', 'code', 'priceType', 'price', 'promoPrice', 'durationMinutes', 'tags',
   'soldOut', 'whatsappId', 'buttonText', 'customMessage', 'variations', 'coverMediaId', 'galleryMediaIds', 'videoMediaId',
+  'addonGroupIds',
 ] as const
 
 export async function checkItemCodeAction(code: string, itemId: string | null): Promise<{ ok: boolean; message: string }> {
@@ -98,6 +99,8 @@ export async function saveItemAction(
   }
 
   const variationError = await syncVariations(supabase, savedId!, input.variations)
+  const addonError = await syncAddonGroups(supabase, savedId!, input.addonGroupIds)
+    if (addonError) return { error: addonError, ...keepValues }
   if (variationError) return { error: variationError, ...keepValues }
   await linkPendingMedia(admin, { userId: user.id, vitrineId, itemId: savedId!, input })
 
@@ -111,6 +114,16 @@ function itemError(error: { code?: string; message?: string; hint?: string }, ke
 }
 
 type ServerClient = Awaited<ReturnType<typeof requireActionUser>>['supabase']
+
+async function syncAddonGroups(supabase: ServerClient, itemId: string, groupIds: string[]) {
+  const { error: deleteError } = await supabase.from('item_addon_groups').delete().eq('item_id', itemId)
+  if (deleteError) return mapDbError(deleteError)
+  if (groupIds.length === 0) return null
+  const { error } = await supabase
+    .from('item_addon_groups')
+    .insert(groupIds.map((groupId, position) => ({ item_id: itemId, group_id: groupId, position })))
+  return error ? mapDbError(error) : null
+}
 
 async function syncVariations(supabase: ServerClient, itemId: string, variations: ItemInput['variations']) {
   const { data: existing } = await supabase.from('item_variations').select('id').eq('item_id', itemId)
@@ -170,7 +183,7 @@ async function ownedItem(vitrineId: string, itemId: string) {
   const session = await requireActionUser()
   const { data: item } = await session.supabase
     .from('items')
-    .select('*, vitrines(subdomain), item_variations(*)')
+    .select('*, vitrines(subdomain), item_variations(*), item_addon_groups(group_id, position)')
     .eq('id', itemId)
     .eq('vitrine_id', vitrineId)
     .is('deleted_at', null)
@@ -252,6 +265,9 @@ export async function duplicateItemAction(vitrineId: string, itemId: string): Pr
     position: v.position,
   }))
   if (variations.length) await supabase.from('item_variations').insert(variations)
+
+  const links = (item.item_addon_groups ?? []).map((link) => ({ item_id: copy.id, group_id: link.group_id, position: link.position }))
+  if (links.length) await supabase.from('item_addon_groups').insert(links)
 
   const admin = createSupabaseAdminClient()
   const { data: media } = await admin.from('media').select('*').eq('item_id', itemId).in('role', ['cover', 'gallery'])

@@ -25,6 +25,7 @@ export default async function NovoItemPage({ params }: { params: Promise<{ id: s
     <div className="flex flex-col gap-4">
       <h2 className="text-xl font-semibold">Novo item</h2>
       <ItemForm
+        addonGroups={options.addonGroups}
         vitrineId={id}
         vitrineType={options.vitrine.type}
         defaultButtonText={vitrine.default_button_text}

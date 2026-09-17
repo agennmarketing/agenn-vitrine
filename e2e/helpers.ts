@@ -90,7 +90,7 @@ export type SeededVitrine = { id: string; subdomain: string; categoryId: string;
 
 export async function seedVitrine(
   ownerId: string,
-  options: { type?: 'produtos' | 'servicos'; name?: string; subdomain?: string; phone?: string } = {},
+  options: { type?: 'produtos' | 'servicos' | 'comida'; name?: string; subdomain?: string; phone?: string } = {},
 ): Promise<SeededVitrine> {
   const admin = createAdminClient()
   const type = options.type ?? 'produtos'
@@ -99,7 +99,7 @@ export async function seedVitrine(
   const phone = options.phone ?? '+5511987654321'
   const { data: vitrine } = await admin
     .from('vitrines')
-    .insert({ owner_id: ownerId, type, subdomain, name, default_button_text: type === 'servicos' ? 'Agendar' : 'Solicitar orçamento' })
+    .insert({ owner_id: ownerId, type, subdomain, name, default_button_text: { produtos: 'Solicitar orçamento', servicos: 'Agendar', comida: 'Pedir' }[type], cart_enabled: type === 'comida' })
     .select('id')
     .single()
     .throwOnError()
@@ -252,4 +252,71 @@ export async function readFakeEmails(to: string) {
     files.map(async (file) => JSON.parse(await readFile(path.join(dir, file), 'utf8')) as { to: string; subject: string; text: string }),
   )
   return emails.filter((email) => email.to === to)
+}
+
+export async function seedAddonGroup(
+  vitrine: SeededVitrine,
+  ownerId: string,
+  group: {
+    name: string
+    kind?: 'standard' | 'flavors'
+    required?: boolean
+    minSelect?: number
+    maxSelect?: number
+    allowRepeat?: boolean
+    flavorPriceRule?: 'max' | 'average' | null
+    options: { name: string; priceCents?: number; soldOut?: boolean }[]
+  },
+) {
+  const admin = createAdminClient()
+  const required = group.required ?? false
+  const { data: created } = await admin
+    .from('addon_groups')
+    .insert({
+      owner_id: ownerId,
+      vitrine_id: vitrine.id,
+      name: group.name,
+      kind: group.kind ?? 'standard',
+      required,
+      min_select: group.minSelect ?? (required ? 1 : 0),
+      max_select: group.maxSelect ?? 1,
+      allow_repeat: group.allowRepeat ?? false,
+      flavor_price_rule: group.flavorPriceRule ?? null,
+    })
+    .select('id')
+    .single()
+    .throwOnError()
+  const { data: options } = await admin
+    .from('addon_options')
+    .insert(
+      group.options.map((option, position) => ({
+        owner_id: ownerId,
+        group_id: created.id,
+        name: option.name,
+        price_cents: option.priceCents ?? 0,
+        sold_out: option.soldOut ?? false,
+        position,
+      })),
+    )
+    .select('id, name, position')
+    .throwOnError()
+  return {
+    id: created.id as string,
+    options: (options as { id: string; name: string; position: number }[]).sort((a, b) => a.position - b.position),
+  }
+}
+
+export async function linkAddonGroup(ownerId: string, itemId: string, groupId: string, position = 0) {
+  await createAdminClient()
+    .from('item_addon_groups')
+    .insert({ owner_id: ownerId, item_id: itemId, group_id: groupId, position })
+    .throwOnError()
+}
+
+export async function setCheckout(vitrineId: string, patch: Record<string, unknown>) {
+  await createAdminClient().from('checkout_settings').update(patch).eq('vitrine_id', vitrineId).throwOnError()
+}
+
+export async function setCart(vitrineId: string, enabled: boolean) {
+  await createAdminClient().from('vitrines').update({ cart_enabled: enabled }).eq('id', vitrineId).throwOnError()
 }

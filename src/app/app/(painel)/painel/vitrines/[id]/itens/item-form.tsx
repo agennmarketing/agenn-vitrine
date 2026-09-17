@@ -35,6 +35,7 @@ export function ItemForm(props: {
   contacts: { id: string; label: string }[]
   nextCode: string
   videoLimits: { maxSeconds: number; maxUploadMb: number }
+  addonGroups: { id: string; name: string }[]
   item?: ItemForEdit
 }) {
   const { vitrineId, item } = props
@@ -52,6 +53,7 @@ export function ItemForm(props: {
       soldOut: v.sold_out,
     })),
   )
+  const [groupIds, setGroupIds] = useState<string[]>(item?.addonGroupIds ?? [])
   const [codeEdited, setCodeEdited] = useState(false)
   const [codeCheck, setCodeCheck] = useState<{ ok: boolean; message: string } | null>(null)
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
@@ -140,6 +142,7 @@ export function ItemForm(props: {
           <input type="hidden" name="coverMediaId" value={coverId} />
           <input type="hidden" name="galleryMediaIds" value={JSON.stringify(galleryIds.filter(Boolean))} />
           <input type="hidden" name="videoMediaId" value={videoId} />
+          <input type="hidden" name="addonGroupIds" value={JSON.stringify(groupIds)} />
           <input
             type="hidden"
             name="variations"
@@ -320,6 +323,27 @@ export function ItemForm(props: {
             >
               Adicionar variação
             </Button>
+          </fieldset>
+
+          <fieldset className="flex flex-col gap-2">
+            <legend className="font-medium">Complementos</legend>
+            {props.addonGroups.length === 0 ? (
+              <p className="text-sm text-ink-muted">Nenhum grupo criado. Crie grupos na aba Complementos.</p>
+            ) : (
+              props.addonGroups.map((group) => (
+                <label key={group.id} className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={groupIds.includes(group.id)}
+                    onChange={(event) =>
+                      setGroupIds((ids) => (event.target.checked ? [...ids, group.id] : ids.filter((id) => id !== group.id)))
+                    }
+                  />
+                  {group.name}
+                </label>
+              ))
+            )}
+            <p className="text-sm text-ink-muted">Os grupos aparecem na ordem em que foram marcados.</p>
           </fieldset>
 
           <details ref={advancedRef} className="rounded-control border border-line p-3">

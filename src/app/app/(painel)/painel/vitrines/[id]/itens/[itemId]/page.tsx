@@ -17,6 +17,7 @@ export default async function EditarItemPage({ params }: { params: Promise<{ id:
     <div className="flex flex-col gap-4">
       <h2 className="text-xl font-semibold">Editar item</h2>
       <ItemForm
+        addonGroups={options.addonGroups}
         key={item.updated_at}
         vitrineId={id}
         vitrineType={options.vitrine.type}
