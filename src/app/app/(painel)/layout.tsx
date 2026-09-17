@@ -36,20 +36,28 @@ export default async function PainelLayout({ children }: { children: ReactNode }
             <Link href="/painel/simulador" className="rounded-control px-3 py-2 hover:bg-canvas">
               Simulador
             </Link>
+            <Link href="/painel/plano" className="rounded-control px-3 py-2 hover:bg-canvas">
+              Plano
+            </Link>
             <Link href="/painel/conta" className="rounded-control px-3 py-2 hover:bg-canvas">
               Conta
             </Link>
           </nav>
           <div className="ml-auto flex min-w-0 items-center gap-2 sm:gap-3">
             {/* Único acesso a Conta no celular, onde a navegação fica escondida. */}
-            <Link
-              href="/painel/conta"
-              aria-label={`Conta de ${displayName}`}
-              className="flex min-w-0 flex-col items-end rounded-control px-2 py-1 leading-tight hover:bg-canvas"
-            >
-              <span className="max-w-[8rem] truncate text-sm font-medium sm:max-w-[10rem]">{displayName}</span>
-              <span className="text-xs text-ink-muted">Plano {plan?.name ?? 'Gratuito'}</span>
-            </Link>
+            <div className="flex min-w-0 flex-col items-end leading-tight">
+              <Link
+                href="/painel/conta"
+                aria-label={`Conta de ${displayName}`}
+                className="max-w-[8rem] truncate rounded-control px-2 py-0.5 text-sm font-medium hover:bg-canvas sm:max-w-[10rem]"
+              >
+                {displayName}
+              </Link>
+              {/* Link separado: um <a> dentro de outro seria HTML inválido. */}
+              <Link href="/painel/plano" className="rounded-control px-2 py-0.5 text-xs text-ink-muted hover:bg-canvas">
+                Plano {plan?.name ?? 'Gratuito'}
+              </Link>
+            </div>
             <form action={signOutAction} className="shrink-0">
               <Button type="submit" variant="ghost">
                 Sair
