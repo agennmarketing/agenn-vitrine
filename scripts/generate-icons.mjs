@@ -1,4 +1,4 @@
-// Gera os ícones do app a partir do logo original (public/brand/logo-icone.png).
+// Gera os ícones do app a partir do logo original (assets/brand/logo-icone.png, fora de public/ para não ser publicado).
 // Rodar de novo quando o logo mudar:  node scripts/generate-icons.mjs
 //
 // Saídas:
@@ -9,7 +9,7 @@
 import { writeFile } from 'node:fs/promises'
 import sharp from 'sharp'
 
-const SOURCE = 'public/brand/logo-icone.png'
+const SOURCE = 'assets/brand/logo-icone.png'
 
 function png(size) {
   return sharp(SOURCE)
