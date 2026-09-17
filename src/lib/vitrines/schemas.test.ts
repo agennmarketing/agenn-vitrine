@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createVitrineSchema, itemSchema, vitrineSettingsSchema } from './schemas'
+import { addonGroupSchema, checkoutSettingsSchema, createVitrineSchema, itemSchema, vitrineSettingsSchema } from './schemas'
 
 const uuid = '00000000-0000-4000-8000-000000000001'
 
@@ -25,7 +25,7 @@ describe('createVitrineSchema', () => {
 
   it('mensagens em português', () => {
     const result = createVitrineSchema.safeParse({
-      type: 'comida',
+      type: 'bebidas',
       name: '',
       subdomain: 'app',
       whatsappLabel: 'Principal',
@@ -71,6 +71,7 @@ describe('itemSchema', () => {
     coverMediaId: uuid,
     galleryMediaIds: '[]',
     videoMediaId: '',
+    addonGroupIds: '[]',
   }
 
   it('vídeo do item é opcional', () => {
@@ -92,7 +93,15 @@ describe('itemSchema', () => {
       buttonText: null,
       customMessage: null,
       variations: [],
+      addonGroupIds: [],
     })
+  })
+
+  it('grupos de complementos são opcionais no formulário', () => {
+    const withoutGroups: Partial<typeof valid> = { ...valid }
+    delete withoutGroups.addonGroupIds
+    expect(itemSchema.parse(withoutGroups).addonGroupIds).toEqual([])
+    expect(itemSchema.parse({ ...valid, addonGroupIds: JSON.stringify([uuid]) }).addonGroupIds).toEqual([uuid])
   })
 
   it('exige preço sem variações e promoção menor que o preço', () => {
@@ -123,5 +132,57 @@ describe('itemSchema', () => {
   it('código personalizado é normalizado', () => {
     expect(itemSchema.parse({ ...valid, code: ' x 1 ' }).code).toBe('X1')
     expect(itemSchema.safeParse({ ...valid, code: 'ABCDEFG' }).error!.issues[0].message).toBe('Use até 6 letras ou números.')
+  })
+})
+
+describe('addonGroupSchema', () => {
+  const group = {
+    name: 'Adicionais', kind: 'standard', required: '', minSelect: '0', maxSelect: '5', allowRepeat: 'on', flavorPriceRule: '',
+    options: JSON.stringify([{ name: 'Bacon', price: '4,00', soldOut: false }]),
+  }
+
+  it('converte e normaliza', () => {
+    expect(addonGroupSchema.parse(group)).toEqual({
+      name: 'Adicionais', kind: 'standard', required: false, minSelect: 0, maxSelect: 5, allowRepeat: true, flavorPriceRule: null,
+      options: [{ id: null, name: 'Bacon', priceCents: 400, soldOut: false }],
+    })
+  })
+
+  it('obrigatório força mínimo 1; sabores não repetem e exigem regra', () => {
+    expect(addonGroupSchema.parse({ ...group, required: 'on', minSelect: '0' }).minSelect).toBe(1)
+    expect(addonGroupSchema.parse({ ...group, kind: 'flavors', flavorPriceRule: 'average' })).toMatchObject({ allowRepeat: false, flavorPriceRule: 'average' })
+    expect(addonGroupSchema.safeParse({ ...group, kind: 'flavors' }).error!.issues[0].message).toBe('Escolha a regra de preço dos sabores.')
+  })
+
+  it('mensagens', () => {
+    expect(addonGroupSchema.safeParse({ ...group, options: '[]' }).error!.issues[0].message).toBe('Adicione pelo menos uma opção.')
+    expect(addonGroupSchema.safeParse({ ...group, required: 'on', minSelect: '6' }).error!.issues[0].message).toBe(
+      'O mínimo não pode passar do máximo.',
+    )
+    expect(addonGroupSchema.safeParse({ ...group, maxSelect: '0' }).error!.issues[0].message).toBe('Informe um número de 1 a 20.')
+  })
+})
+
+describe('checkoutSettingsSchema', () => {
+  const form = {
+    cartEnabled: 'on', cartButtonText: 'Enviar pedido', defaultButtonText: 'Pedir',
+    nameMode: 'required', fulfillmentMode: 'required', paymentMode: 'required', scheduleMode: 'off', notesMode: 'optional',
+    paymentOptions: 'Pix\nCartão na entrega\n\nPix\nDinheiro',
+  }
+
+  it('converte as formas de pagamento (uma por linha)', () => {
+    expect(checkoutSettingsSchema.parse(form)).toEqual({
+      cartEnabled: true, cartButtonText: 'Enviar pedido', defaultButtonText: 'Pedir',
+      nameMode: 'required', fulfillmentMode: 'required', paymentMode: 'required', scheduleMode: 'off', notesMode: 'optional',
+      paymentOptions: ['Pix', 'Cartão na entrega', 'Dinheiro'],
+    })
+  })
+
+  it('pagamento ligado exige ao menos uma forma', () => {
+    expect(checkoutSettingsSchema.safeParse({ ...form, paymentOptions: ' ' }).error!.issues[0]).toMatchObject({
+      path: ['paymentOptions'],
+      message: 'Informe pelo menos uma forma de pagamento.',
+    })
+    expect(checkoutSettingsSchema.parse({ ...form, paymentMode: 'off', paymentOptions: '' }).paymentOptions).toEqual([])
   })
 })

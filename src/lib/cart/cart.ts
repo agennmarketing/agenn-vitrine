@@ -87,5 +87,5 @@ export function parseStoredCart(raw: string | null): CartLine[] {
 }
 
 export function serializeCart(lines: CartLine[]): string {
-  return JSON.stringify({ version: 1, lines: lines.map(({ key: _key, ...line }) => line) })
+  return JSON.stringify({ version: 1, lines: lines.map(({ itemId, variationId, qty, note, addons }) => ({ itemId, variationId, qty, note, addons })) })
 }
