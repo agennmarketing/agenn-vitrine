@@ -49,7 +49,9 @@ test('checkout completo deixa a conta Pro e descongela as vitrines', async ({ re
   const row = await readSubscription(user.id)
   expect([row?.status, row?.plan_id, row?.interval]).toEqual(['active', 'pro', 'month'])
   expect(await vitrineStatuses(user.id)).toEqual([`${primeira.subdomain}:active`, `${segunda.subdomain}:active`])
-  await expect.poll(async () => (await request.get(`http://${segunda.subdomain}.localhost:3000/`)).status()).toBe(200)
+  await expect
+    .poll(async () => (await request.get(`http://${segunda.subdomain}.localhost:3000/`)).text())
+    .not.toContain('Vitrine indisponível no momento')
 })
 
 test('evento repetido não é processado duas vezes', async ({ request }) => {
@@ -98,6 +100,11 @@ test('falha de pagamento dá carência de 7 dias e o cancelamento congela o exce
   expect(encerrada?.pro_ended_at).not.toBeNull()
   expect(await vitrineStatuses(user.id)).toEqual([`${antiga.subdomain}:active`, `${nova.subdomain}:frozen`])
 
-  await expect.poll(async () => (await request.get(`http://${nova.subdomain}.localhost:3000/`)).status()).toBe(404)
-  expect((await request.get(`http://${antiga.subdomain}.localhost:3000/`)).status()).toBe(200)
+  // Spec 7.1: vitrine congelada continua respondendo 200, com o aviso no lugar do catálogo.
+  await expect
+    .poll(async () => (await request.get(`http://${nova.subdomain}.localhost:3000/`)).text())
+    .toContain('Vitrine indisponível no momento')
+  expect(await (await request.get(`http://${antiga.subdomain}.localhost:3000/`)).text()).not.toContain(
+    'Vitrine indisponível no momento',
+  )
 })
