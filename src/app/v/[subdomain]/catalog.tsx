@@ -6,6 +6,7 @@ import type { PublicImage, PublicItem, PublicVitrine } from '@/features/public/b
 import { readableTextColor } from '@/lib/color/contrast'
 import { formatBRL } from '@/lib/money/money'
 import { formatPriceLabel, priceLabel } from '@/lib/pricing/price'
+import { BannerVideo } from './banner-video'
 import { useItemParam } from './item-param'
 
 // Tela do item, galeria e envio só carregam quando um item é aberto.
@@ -108,7 +109,11 @@ export function Catalog({ vitrine, siteUrl }: { vitrine: PublicVitrine; siteUrl:
         />
       </header>
 
-      {vitrine.banner ? (
+      {vitrine.bannerVideo ? (
+        <div className="mx-auto mt-4 max-w-5xl px-4">
+          <BannerVideo video={vitrine.bannerVideo} />
+        </div>
+      ) : vitrine.banner ? (
         <div className="mx-auto mt-4 max-w-5xl px-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
