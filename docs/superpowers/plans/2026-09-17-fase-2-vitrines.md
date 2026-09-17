@@ -5650,6 +5650,8 @@ export async function duplicateItemAction(vitrineId: string, itemId: string): Pr
     .insert({
       vitrine_id: vitrineId,
       category_id: item.category_id,
+      // code nulo: o trigger gera o próximo código automático.
+      code: null as unknown as string,
       name: `${item.name.slice(0, 72)} (cópia)`,
       description: item.description,
       price_type: item.price_type,
