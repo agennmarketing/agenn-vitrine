@@ -182,6 +182,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      session_state: { Args: never; Returns: string }
     }
     Enums: {
       [_ in never]: never
