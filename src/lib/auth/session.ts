@@ -1,13 +1,3 @@
-import { isAuthError } from '@supabase/supabase-js'
-
-export function isSessionCurrent(
-  claimSessionId: string | null | undefined,
-  activeSessionId: string | null | undefined,
-): boolean {
-  if (!activeSessionId) return true
-  return claimSessionId === activeSessionId
-}
-
 export function hasPasswordLogin(identities: ReadonlyArray<{ provider: string }> | null | undefined): boolean {
   return Boolean(identities?.some((identity) => identity.provider === 'email'))
 }
@@ -30,12 +20,4 @@ export function isRecentEmailLinkSession(amr: unknown, nowSec = Date.now() / 100
       nowSec - timestamp <= maxAgeSec
     )
   })
-}
-
-// Erro do Auth que indica que a sessão do cookie não existe mais (revogada, JWT
-// inválido). Falhas de rede e 5xx não contam: nesses casos os cookies são mantidos.
-export function isSessionGoneError(error: unknown): boolean {
-  if (!isAuthError(error)) return false
-  if (error.code === 'session_not_found' || error.code === 'bad_jwt') return true
-  return error.status === 401 || error.status === 403
 }

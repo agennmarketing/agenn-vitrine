@@ -43,9 +43,10 @@ Os tipos em `src/lib/supabase/database.types.ts` são gerados no CI, porque a m�
 2. O job `db` roda o pgTAP e gera os tipos. Na primeira execução ele **falha de propósito** no passo "Tipos commitados estão atualizados", porque os tipos mudaram.
 3. Baixar os tipos gerados:
    ```bash
-   gh run download --name database-types --dir src/lib/supabase
+   gh run download <run-id> --name database-types --dir <scratchpad>/types
+   cp <scratchpad>/types/database.types.ts src/lib/supabase/database.types.ts
    ```
-   (sem `--run`, o `gh` pergunta qual execução; escolha a mais recente da branch.)
+   O `gh` não sobrescreve arquivo existente, por isso baixa numa pasta temporária. O `<run-id>` vem de `gh run list --branch <branch> --limit 1`.
 4. `git add src/lib/supabase/database.types.ts && git commit -m "chore(db): tipos gerados" && git push`.
 5. O código TypeScript que usa as tabelas novas vem **depois** deste commit.
 

@@ -7,17 +7,19 @@ import { signOutAction } from '@/features/auth/actions'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 
 export default async function PainelLayout({ children }: { children: ReactNode }) {
+  // O proxy já confirmou a sessão (session_state); aqui basta o JWT validado localmente.
   const supabase = await createSupabaseServerClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) redirect('/entrar')
+  const { data: claimsData } = await supabase.auth.getClaims()
+  const claims = claimsData?.claims
+  if (typeof claims?.sub !== 'string') redirect('/entrar')
+  const userId = claims.sub
+  const email = typeof claims.email === 'string' ? claims.email : ''
 
   const [{ data: profile }, { data: plan }] = await Promise.all([
-    supabase.from('profiles').select('name').eq('id', user.id).single(),
+    supabase.from('profiles').select('name').eq('id', userId).single(),
     supabase.rpc('my_entitlements'),
   ])
-  const displayName = profile?.name || user.email
+  const displayName = profile?.name || email
 
   return (
     <div className="min-h-dvh">
