@@ -17,9 +17,11 @@ async function fetchCatalog(subdomain: string): Promise<PublicVitrine | null> {
 
   const { data: planId, error: planIdError } = await admin.rpc('effective_plan_id', { p_user_id: vitrine.owner_id })
   if (planIdError) throw planIdError
+  const { data: overQuota, error: quotaError } = await admin.rpc('is_over_video_quota', { p_user_id: vitrine.owner_id })
+  if (quotaError) throw quotaError
 
   const [plan, contacts, categories, items, media] = await Promise.all([
-    admin.from('plans').select('max_items_per_vitrine, allow_branding, show_watermark').eq('id', planId).single(),
+    admin.from('plans').select('max_items_per_vitrine, max_videos_per_vitrine, allow_branding, show_watermark').eq('id', planId).single(),
     admin.from('whatsapp_contacts').select('id, phone_e164').eq('vitrine_id', vitrine.id),
     admin.from('categories').select('id, name, position').eq('vitrine_id', vitrine.id),
     admin
@@ -29,7 +31,7 @@ async function fetchCatalog(subdomain: string): Promise<PublicVitrine | null> {
       .is('deleted_at', null)
       .order('position')
       .order('created_at'),
-    admin.from('media').select('id, item_id, role, position, storage_paths').eq('vitrine_id', vitrine.id).eq('status', 'ready'),
+    admin.from('media').select('id, item_id, role, kind, position, storage_paths, bunny_video_id, aspect').eq('vitrine_id', vitrine.id).eq('status', 'ready'),
   ])
   for (const result of [plan, contacts, categories, items, media]) if (result.error) throw result.error
 
@@ -46,6 +48,7 @@ async function fetchCatalog(subdomain: string): Promise<PublicVitrine | null> {
     {
       vitrine,
       plan: plan.data!,
+      overQuota: overQuota ?? false,
       contacts: contacts.data ?? [],
       categories: categories.data ?? [],
       items: (items.data ?? []) as CatalogRows['items'],
@@ -53,6 +56,7 @@ async function fetchCatalog(subdomain: string): Promise<PublicVitrine | null> {
       media: media.data ?? [],
     },
     env.NEXT_PUBLIC_MEDIA_BASE_URL,
+    env.NEXT_PUBLIC_VIDEO_CDN_BASE_URL,
   )
 }
 

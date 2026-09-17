@@ -5,6 +5,7 @@ import type { PublicItem, PublicVitrine } from '@/features/public/build-catalog'
 import { formatBRL } from '@/lib/money/money'
 import { formatPriceLabel, priceLabel, unitPriceCents } from '@/lib/pricing/price'
 import { sendDirect } from './send-direct'
+import { VideoPlayer } from './video-player'
 
 export type ItemSheetProps = { vitrine: PublicVitrine; item: PublicItem; onClose: () => void }
 
@@ -12,6 +13,7 @@ export default function ItemSheet({ vitrine, item, onClose }: ItemSheetProps) {
   const [variationId, setVariationId] = useState<string | null>(null)
   const [missingChoice, setMissingChoice] = useState(false)
   const [sending, setSending] = useState(false)
+  const [activeIndex, setActiveIndex] = useState(0)
   const closeRef = useRef<HTMLButtonElement>(null)
   const choicesRef = useRef<HTMLFieldSetElement>(null)
 
@@ -77,8 +79,27 @@ export default function ItemSheet({ vitrine, item, onClose }: ItemSheetProps) {
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 pb-4">
-          {vitrine.showMedia && images.length > 0 ? (
-            <div className="-mx-4 mb-4 flex snap-x snap-mandatory overflow-x-auto">
+          {vitrine.showMedia && (item.video || images.length > 0) ? (
+            <div
+              className="-mx-4 mb-4 flex snap-x snap-mandatory overflow-x-auto"
+              onScroll={(event) => {
+                const el = event.currentTarget
+                setActiveIndex(el.clientWidth ? Math.round(el.scrollLeft / el.clientWidth) : 0)
+              }}
+            >
+              {/* Spec 6.3: vídeo primeiro. Fora da vista, o player desmonta (pausa e destrói). */}
+              {item.video ? (
+                <div className="w-full shrink-0 snap-center md:w-1/2">
+                  {activeIndex === 0 ? (
+                    <VideoPlayer video={item.video} className="aspect-[4/5] w-full bg-black object-cover" />
+                  ) : item.video.posterUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={item.video.posterUrl} alt="" className="aspect-[4/5] w-full object-cover" />
+                  ) : (
+                    <div className="aspect-[4/5] w-full bg-black" />
+                  )}
+                </div>
+              ) : null}
               {images.map((image) => (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
