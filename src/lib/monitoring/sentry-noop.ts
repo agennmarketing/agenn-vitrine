@@ -14,11 +14,16 @@
 // `NEXT_PUBLIC_SENTRY_DSN` switches back to the real SDK and `withSentryConfig`.
 //
 // Only the members actually imported from `@sentry/nextjs` in this codebase
-// (`init`, `captureRequestError`, `captureRouterTransitionStart`) need to exist
-// here. Add more as needed if new Sentry APIs are used.
+// need to exist here. Each one is typed against the real SDK (type-only import,
+// erased at build time), so `tsc` flags any drift in signatures. Add more as
+// needed if new Sentry APIs are used.
 
-export function init(): void {}
+type SentrySdk = typeof import('@sentry/nextjs')
 
-export function captureRequestError(): void {}
+export const init: SentrySdk['init'] = () => undefined
 
-export function captureRouterTransitionStart(): void {}
+export const captureRequestError: SentrySdk['captureRequestError'] = () => {}
+
+export const captureRouterTransitionStart: SentrySdk['captureRouterTransitionStart'] = () => {}
+
+export const captureConsoleIntegration: SentrySdk['captureConsoleIntegration'] = () => ({ name: 'CaptureConsole' })
