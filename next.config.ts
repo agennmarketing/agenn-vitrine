@@ -12,6 +12,17 @@ import type { NextConfig } from 'next'
 // `NEXT_PUBLIC_SENTRY_DSN` enables the real SDK below.
 const hasSentryDsn = Boolean(process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN)
 
+// SENTRY_DSN / NEXT_PUBLIC_SENTRY_DSN precisam estar disponíveis em tempo de
+// build (não só em runtime) na Vercel, pois é este arquivo — executado
+// durante `next build` — que decide entre o SDK real e o stub no-op acima.
+// Se faltarem em um build de produção, avisa em vez de falhar silenciosamente
+// com o Sentry desligado.
+if (process.env.VERCEL_ENV === 'production' && !hasSentryDsn) {
+  console.warn(
+    '[sentry] VERCEL_ENV=production sem SENTRY_DSN/NEXT_PUBLIC_SENTRY_DSN: o Sentry ficará desligado neste build.',
+  )
+}
+
 const nextConfig: NextConfig = {
   allowedDevOrigins: ['localhost', '*.localhost'],
   ...(hasSentryDsn
