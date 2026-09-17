@@ -4,7 +4,7 @@ import * as Sentry from '@sentry/nextjs'
 import { redirect } from 'next/navigation'
 import { requireActionUser } from '@/lib/auth/action-user'
 import { fieldErrorsFromZod, readFormFields, type FormState } from '@/lib/forms/form-state'
-import { removeStoredFiles } from '@/lib/media/remove-media'
+import { removeStoredFiles, removeStreamVideos } from '@/lib/media/remove-media'
 import { storagePathList } from '@/lib/media/urls'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { revalidateVitrine } from '@/lib/vitrines/cache'
@@ -96,18 +96,23 @@ export async function deleteVitrineAction(vitrineId: string, _prev: FormState, f
     return { fieldErrors: { confirm: 'Digite o endereço da vitrine para confirmar.' } }
   }
   let paths: string[]
+  let guids: string[]
   try {
     const admin = createSupabaseAdminClient()
-    const { data: mediaRows, error: mediaError } = await admin.from('media').select('storage_paths').eq('vitrine_id', vitrineId)
+    const { data: mediaRows, error: mediaError } = await admin
+      .from('media')
+      .select('storage_paths, bunny_video_id')
+      .eq('vitrine_id', vitrineId)
     if (mediaError) throw mediaError
     paths = (mediaRows ?? []).flatMap((row) => storagePathList(row.storage_paths))
+    guids = (mediaRows ?? []).flatMap((row) => (row.bunny_video_id ? [row.bunny_video_id] : []))
   } catch (error) {
     Sentry.captureException(error)
     return { error: 'Não foi possível excluir agora. Tente novamente.' }
   }
   const { error } = await supabase.from('vitrines').delete().eq('id', vitrineId)
   if (error) return { error: mapDbError(error) }
-  await removeStoredFiles(paths)
+  await Promise.all([removeStoredFiles(paths), removeStreamVideos(guids)])
   revalidateVitrine(vitrine.subdomain)
   redirect('/painel')
 }

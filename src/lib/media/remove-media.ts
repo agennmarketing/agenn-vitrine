@@ -2,6 +2,7 @@ import 'server-only'
 import * as Sentry from '@sentry/nextjs'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/supabase/database.types'
+import { getVideoStream } from '@/lib/video/stream'
 import { getMediaStorage } from './storage'
 import { storagePathList } from './urls'
 
@@ -13,14 +14,29 @@ export async function removeStoredFiles(paths: string[]): Promise<void> {
   for (const result of results) if (result.status === 'rejected') Sentry.captureException(result.reason)
 }
 
+export async function removeStreamVideos(guids: string[]): Promise<void> {
+  if (guids.length === 0) return
+  try {
+    const stream = getVideoStream()
+    const results = await Promise.allSettled(guids.map((guid) => stream.deleteVideo(guid)))
+    for (const result of results) if (result.status === 'rejected') Sentry.captureException(result.reason)
+  } catch (error) {
+    // Configuração ausente: o vídeo fica no Stream até a próxima limpeza.
+    Sentry.captureException(error)
+  }
+}
+
 export async function deleteMediaRows(
   admin: SupabaseClient<Database>,
-  rows: ReadonlyArray<{ id: string; storage_paths: unknown }>,
+  rows: ReadonlyArray<{ id: string; storage_paths: unknown; bunny_video_id?: string | null }>,
 ): Promise<void> {
   if (rows.length === 0) return
   const { error } = await admin.from('media').delete().in('id', rows.map((row) => row.id))
   if (error) throw error
-  await removeStoredFiles(rows.flatMap((row) => storagePathList(row.storage_paths)))
+  await Promise.all([
+    removeStoredFiles(rows.flatMap((row) => storagePathList(row.storage_paths))),
+    removeStreamVideos(rows.flatMap((row) => (row.bunny_video_id ? [row.bunny_video_id] : []))),
+  ])
 }
 
 // Duplicar item: cada cópia tem arquivos próprios.

@@ -156,7 +156,7 @@ async function linkPendingMedia(
       .is('item_id', null)
       .maybeSingle()
     if (!pending) continue
-    let occupied = admin.from('media').select('id, storage_paths').eq('item_id', args.itemId).eq('role', slot.role)
+    let occupied = admin.from('media').select('id, storage_paths, bunny_video_id').eq('item_id', args.itemId).eq('role', slot.role)
     if (slot.role === 'gallery') occupied = occupied.eq('position', slot.position)
     const { data: previous } = await occupied
     await deleteMediaRows(admin, previous ?? [])
@@ -210,7 +210,7 @@ export async function deleteItemAction(vitrineId: string, itemId: string): Promi
   const { error } = await supabase.from('items').update({ deleted_at: new Date().toISOString() }).eq('id', itemId)
   if (error) return { error: mapDbError(error) }
   const admin = createSupabaseAdminClient()
-  const { data: media } = await admin.from('media').select('id, storage_paths').eq('item_id', itemId).eq('owner_id', user.id)
+  const { data: media } = await admin.from('media').select('id, storage_paths, bunny_video_id').eq('item_id', itemId).eq('owner_id', user.id)
   await deleteMediaRows(admin, media ?? [])
   revalidateVitrine(subdomain)
   return { success: 'Item excluído.' }
