@@ -3,6 +3,9 @@
 import { redirect } from 'next/navigation'
 import { requireActionUser } from '@/lib/auth/action-user'
 import { fieldErrorsFromZod, readFormFields, type FormState } from '@/lib/forms/form-state'
+import { removeStoredFiles } from '@/lib/media/remove-media'
+import { storagePathList } from '@/lib/media/urls'
+import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { revalidateVitrine } from '@/lib/vitrines/cache'
 import { mapDbError } from '@/lib/vitrines/db-errors'
 import { appearanceSchema, createVitrineSchema, messagesSchema, subdomainField, vitrineSettingsSchema } from '@/lib/vitrines/schemas'
@@ -91,9 +94,12 @@ export async function deleteVitrineAction(vitrineId: string, _prev: FormState, f
   if (String(formData.get('confirm') ?? '').trim().toLowerCase() !== vitrine.subdomain) {
     return { fieldErrors: { confirm: 'Digite o endereço da vitrine para confirmar.' } }
   }
-  // Bloco 5: apagar também os arquivos das mídias (Task 15).
+  const admin = createSupabaseAdminClient()
+  const { data: mediaRows } = await admin.from('media').select('storage_paths').eq('vitrine_id', vitrineId)
+  const paths = (mediaRows ?? []).flatMap((row) => storagePathList(row.storage_paths))
   const { error } = await supabase.from('vitrines').delete().eq('id', vitrineId)
   if (error) return { error: mapDbError(error) }
+  await removeStoredFiles(paths)
   revalidateVitrine(vitrine.subdomain)
   redirect('/painel')
 }

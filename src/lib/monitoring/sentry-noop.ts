@@ -27,3 +27,5 @@ export const captureRequestError: SentrySdk['captureRequestError'] = () => {}
 export const captureRouterTransitionStart: SentrySdk['captureRouterTransitionStart'] = () => {}
 
 export const captureConsoleIntegration: SentrySdk['captureConsoleIntegration'] = () => ({ name: 'CaptureConsole' })
+
+export const captureException: SentrySdk['captureException'] = () => ''
