@@ -1,6 +1,7 @@
 import 'server-only'
 import {
   parseCronSecret,
+  parseEmailEnv,
   parseMediaStorageEnv,
   parseOrderRateLimit,
   parseRateLimitSalt,
@@ -17,3 +18,4 @@ export const getOrderRateLimit = () => parseOrderRateLimit(process.env)
 export const getVideoStreamEnv = () => parseVideoStreamEnv(process.env)
 export const getWebhookSecret = () => parseWebhookSecret(process.env)
 export const getCronSecret = () => parseCronSecret(process.env)
+export const getEmailEnv = () => parseEmailEnv(process.env)

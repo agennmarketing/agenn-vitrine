@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { createAdminClient, createConfirmedUser, seedItem, seedVideo, seedVitrine, setPlan } from './helpers'
+import { createAdminClient, createConfirmedUser, readFakeEmails, seedItem, seedVideo, seedVitrine, setPlan } from './helpers'
 
 const vitrineUrl = (subdomain: string) => `http://${subdomain}.localhost:3000/`
 
@@ -54,6 +54,9 @@ test('relatório de consumo soma bytes e franquia estourada esconde os vídeos',
     data: { mediaId: video.id, bytes: 1000, seconds: 5 },
   })
   expect(crossing.status()).toBe(204)
+  await expect
+    .poll(async () => (await readFakeEmails(user.email)).map((email) => email.subject), { timeout: 10_000 })
+    .toEqual(['A franquia de vídeo deste mês acabou'])
 
   await page.goto(vitrineUrl(vitrine.subdomain))
   await page.getByRole('button', { name: 'Com vídeo' }).click()

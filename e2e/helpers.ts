@@ -1,4 +1,6 @@
 import { createHmac } from 'node:crypto'
+import { readdir, readFile } from 'node:fs/promises'
+import os from 'node:os'
 import path from 'node:path'
 import { expect, type APIRequestContext, type Page } from '@playwright/test'
 import { createClient } from '@supabase/supabase-js'
@@ -241,4 +243,13 @@ export async function mediaOfItem(itemId: string, role: 'video' | 'cover' = 'vid
     .maybeSingle()
     .throwOnError()
   return data as { id: string; status: string; bunny_video_id: string | null } | null
+}
+
+export async function readFakeEmails(to: string) {
+  const dir = path.join(os.tmpdir(), 'agenn-vitrine-email')
+  const files = await readdir(dir).catch(() => [] as string[])
+  const emails = await Promise.all(
+    files.map(async (file) => JSON.parse(await readFile(path.join(dir, file), 'utf8')) as { to: string; subject: string; text: string }),
+  )
+  return emails.filter((email) => email.to === to)
 }

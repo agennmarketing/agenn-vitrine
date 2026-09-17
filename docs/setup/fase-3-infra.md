@@ -46,7 +46,25 @@ Gerar o `CRON_SECRET` com `node -e "console.log(crypto.randomUUID()+crypto.rando
 
 A API do Bunny Stream não informa banda por vídeo (só visualizações e tempo assistido; banda só no total da biblioteca). Por isso o player da vitrine mede os bytes baixados (hls.js) ou estima pelo tempo assistido (HLS nativo do Safari) e envia a `POST /api/video-usage`. O servidor limita cada relatório a 1,5 × 4 Mbps por segundo e soma em `video_usage_monthly` (mês civil em São Paulo). Ao passar de 1024 GB, as vitrines do dono mostram só as capas até o mês virar.
 
-## 5. Riscos aceitos
+## 5. Resend (e-mail de franquia)
+
+1. Criar conta em resend.com (se ainda não existir).
+2. **Domains → Add Domain**: `agenn.com.br`, região **São Paulo (sa-east-1)**.
+3. Criar no **Cloudflare → DNS** os registros que o Resend mostrar (DKIM em `resend._domainkey`, MX e TXT de SPF no subdomínio `send`), com **Proxy status: DNS only**. Clicar **Verify** no Resend e esperar **Verified**.
+4. **API Keys → Create API Key**: nome `agenn-vitrine-producao`, permissão **Sending access**, domínio `agenn.com.br`.
+5. Na Vercel (Production):
+
+| Key | Value | Type |
+|---|---|---|
+| `EMAIL_DRIVER` | `resend` | Config |
+| `RESEND_API_KEY` | chave `re_…` | Secret |
+| `EMAIL_FROM` | `Agenn Vitrine <nao-responda@agenn.com.br>` | Config |
+
+6. (Recomendado) **Supabase → Authentication → SMTP** com o SMTP do Resend: host `smtp.resend.com`, porta `465`, usuário `resend`, senha = uma API key do Resend, remetente `nao-responda@agenn.com.br`.
+
+O aviso sai uma vez por dono por mês, quando a franquia estoura, com o assunto "A franquia de vídeo deste mês acabou". Sem `EMAIL_DRIVER=resend`, nenhum e-mail é enviado (o aviso continua no painel).
+
+## 6. Riscos aceitos
 
 - Os bytes relatados pelo navegador podem ser manipulados dentro do teto por segundo.
 - Envio de vídeo abandonado ocupa a vaga do plano até a limpeza diária (até 24 h).

@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { parseCronSecret, parseMediaStorageEnv, parseOrderRateLimit, parseRateLimitSalt, parseVideoStreamEnv, parseWebhookSecret } from './server-env-schema'
+import {
+  parseCronSecret,
+  parseEmailEnv,
+  parseMediaStorageEnv,
+  parseOrderRateLimit,
+  parseRateLimitSalt,
+  parseVideoStreamEnv,
+  parseWebhookSecret,
+} from './server-env-schema'
 
 describe('parseMediaStorageEnv', () => {
   it('bunny é o padrão e exige zona e senha', () => {
@@ -49,4 +57,22 @@ it('segredos do webhook e do cron', () => {
   expect(parseWebhookSecret({ BUNNY_STREAM_WEBHOOK_SECRET: 'ci-webhook-secret' })).toBe('ci-webhook-secret')
   expect(() => parseCronSecret({ CRON_SECRET: 'curto' })).toThrow()
   expect(parseCronSecret({ CRON_SECRET: 'ci-cron-secret-somente-para-testes' })).toBe('ci-cron-secret-somente-para-testes')
+})
+
+describe('parseEmailEnv', () => {
+  it('desligado por padrão', () => {
+    expect(parseEmailEnv({})).toEqual({ driver: 'off' })
+  })
+
+  it('resend exige chave e remetente', () => {
+    expect(() => parseEmailEnv({ EMAIL_DRIVER: 'resend' })).toThrow(/RESEND_API_KEY/)
+    expect(
+      parseEmailEnv({ EMAIL_DRIVER: 'resend', RESEND_API_KEY: 're_x', EMAIL_FROM: 'Agenn Vitrine <nao-responda@agenn.com.br>' }),
+    ).toEqual({ driver: 'resend', apiKey: 're_x', from: 'Agenn Vitrine <nao-responda@agenn.com.br>' })
+  })
+
+  it('fake só fora de produção', () => {
+    expect(parseEmailEnv({ EMAIL_DRIVER: 'fake' })).toEqual({ driver: 'fake' })
+    expect(() => parseEmailEnv({ EMAIL_DRIVER: 'fake', VERCEL_ENV: 'production' })).toThrow(/produção/)
+  })
 })
