@@ -1,6 +1,6 @@
 'use client'
 
-import { ImageIcon, PackageOpen, Plus, Search, X } from 'lucide-react'
+import { GripVertical, ImageIcon, PackageOpen, Plus, Search, X } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition, type ReactNode } from 'react'
@@ -8,8 +8,15 @@ import { Badge } from '@/components/ui/badge'
 import { buttonClasses } from '@/components/ui/button'
 import { FormMessage } from '@/components/ui/form-message'
 import { Input } from '@/components/ui/input'
+import { DragHandle, SortableItem, SortableList } from '@/components/ui/sortable-list'
 import { Switch } from '@/components/ui/switch'
-import { deleteItemAction, duplicateItemAction, moveItemAction, toggleSoldOutAction } from '@/features/items/actions'
+import {
+  deleteItemAction,
+  duplicateItemAction,
+  moveItemAction,
+  reorderItemsAction,
+  toggleSoldOutAction,
+} from '@/features/items/actions'
 import type { FormState } from '@/lib/forms/form-state'
 import { formatPriceLabel, priceLabel, type PriceType } from '@/lib/pricing/price'
 import { ItemActionsMenu } from './item-actions-menu'
@@ -47,6 +54,13 @@ export function ItemList({
   const [message, setMessage] = useState<FormState>({})
   const [pending, startTransition] = useTransition()
   const [busyId, setBusyId] = useState<string | null>(null)
+  // Cópia local para a ordem mudar na hora ao soltar; volta a seguir o servidor quando ele manda itens novos.
+  const [serverItems, setServerItems] = useState(items)
+  const [localItems, setLocalItems] = useState(items)
+  if (serverItems !== items) {
+    setServerItems(items)
+    setLocalItems(items)
+  }
   const newItemHref = `/painel/vitrines/${vitrineId}/itens/novo`
 
   function run(itemId: string, action: () => Promise<FormState>) {
@@ -59,8 +73,23 @@ export function ItemList({
     })
   }
 
+  // Arrastar só dentro da mesma categoria: os itens dela ocupam as mesmas vagas na lista geral, na nova ordem.
+  function reorder(categoryId: string, orderedIds: string[]) {
+    const previous = localItems
+    const byId = new Map(previous.map((item) => [item.id, item]))
+    const queue = orderedIds.map((id) => byId.get(id)!)
+    setLocalItems(previous.map((item) => (item.categoryId === categoryId ? queue.shift()! : item)))
+    setMessage({})
+    startTransition(async () => {
+      const result = await reorderItemsAction(vitrineId, orderedIds)
+      setMessage(result)
+      if (result.error) setLocalItems(previous)
+      else router.refresh()
+    })
+  }
+
   const search = fold(query.trim())
-  const visible = search ? items.filter((item) => fold(item.name).includes(search) || fold(item.code).includes(search)) : items
+  const visible = search ? localItems.filter((item) => fold(item.name).includes(search) || fold(item.code).includes(search)) : localItems
   const empty = items.length === 0
 
   return (
@@ -161,71 +190,102 @@ export function ItemList({
                   Nenhum item nesta categoria.
                 </p>
               ) : (
-                <ul className="flex flex-col rounded-card border-2 border-line bg-surface">
-                  {categoryItems.map((item, index) => (
-                    <li
-                      key={item.id}
-                      className={`flex items-center gap-2 py-2.5 pl-2.5 pr-1.5 sm:gap-3 sm:pl-3 ${index > 0 ? 'border-t-2 border-line' : ''} ${
-                        busyId === item.id ? 'opacity-60' : ''
-                      }`}
-                    >
-                      <Link
-                        href={`/painel/vitrines/${vitrineId}/itens/${item.id}`}
-                        aria-label={`Editar ${item.name}`}
-                        className="group flex min-w-0 flex-1 items-center gap-3 rounded-control p-0.5"
+                <SortableList
+                  entries={categoryItems.map((item) => ({ id: item.id, label: item.name }))}
+                  onReorder={(orderedIds) => reorder(category.id, orderedIds)}
+                  disabled={pending}
+                  handleDisabled={search !== ''}
+                  renderOverlay={(id) => <ItemOverlay item={categoryItems.find((item) => item.id === id)} />}
+                >
+                  <ul className="flex flex-col rounded-card border-2 border-line bg-surface">
+                    {categoryItems.map((item, index) => (
+                      <SortableItem
+                        key={item.id}
+                        id={item.id}
+                        className={`flex items-center gap-1 py-2.5 pl-0.5 pr-1.5 sm:gap-2 sm:pl-1 ${index > 0 ? 'border-t-2 border-line' : ''} ${
+                          busyId === item.id ? 'opacity-60' : ''
+                        }`}
                       >
-                        <span
-                          className={`relative flex h-[4.375rem] w-14 shrink-0 items-center justify-center overflow-hidden rounded-[0.75rem] bg-subtle text-ink-muted ${
-                            item.soldOut ? 'grayscale' : ''
-                          }`}
+                        <DragHandle label={`Reordenar ${item.name}`} className="h-11 w-9 rounded-control sm:w-11 sm:rounded-full" />
+                        <Link
+                          href={`/painel/vitrines/${vitrineId}/itens/${item.id}`}
+                          aria-label={`Editar ${item.name}`}
+                          className="group flex min-w-0 flex-1 items-center gap-3 rounded-control p-0.5"
                         >
-                          {item.thumbUrl ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={item.thumbUrl} alt="" loading="lazy" className="size-full object-cover" />
-                          ) : (
-                            <ImageIcon aria-hidden="true" className="size-6" strokeWidth={2.25} />
-                          )}
-                        </span>
-                        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                          <span className="line-clamp-2 font-extrabold leading-snug text-ink group-hover:text-go-strong">
-                            {item.name}
+                          <span
+                            className={`relative flex h-[4.375rem] w-14 shrink-0 items-center justify-center overflow-hidden rounded-[0.75rem] bg-subtle text-ink-muted ${
+                              item.soldOut ? 'grayscale' : ''
+                            }`}
+                          >
+                            {item.thumbUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={item.thumbUrl} alt="" loading="lazy" className="size-full object-cover" />
+                            ) : (
+                              <ImageIcon aria-hidden="true" className="size-6" strokeWidth={2.25} />
+                            )}
                           </span>
-                          <span className="text-xs font-bold text-ink-muted">cód. {item.code}</span>
-                          <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                            <span className={`font-black numeric ${item.soldOut ? 'text-ink-muted' : 'text-ink'}`}>
-                              {formatPriceLabel(priceLabel(item, item.variations))}
+                          <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                            <span className="line-clamp-2 font-extrabold leading-snug text-ink group-hover:text-go-strong">
+                              {item.name}
                             </span>
-                            {item.soldOut ? <Badge tone="danger">Esgotado</Badge> : null}
+                            <span className="text-xs font-bold text-ink-muted">cód. {item.code}</span>
+                            <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                              <span className={`font-black numeric ${item.soldOut ? 'text-ink-muted' : 'text-ink'}`}>
+                                {formatPriceLabel(priceLabel(item, item.variations))}
+                              </span>
+                              {item.soldOut ? <Badge tone="danger">Esgotado</Badge> : null}
+                            </span>
                           </span>
-                        </span>
-                      </Link>
-                      <Switch
-                        checked={!item.soldOut}
-                        aria-label={`${item.name} disponível`}
-                        title={item.soldOut ? 'Esgotado. Toque para voltar a vender.' : 'Disponível. Toque para marcar como esgotado.'}
-                        disabled={pending}
-                        onClick={() => run(item.id, () => toggleSoldOutAction(vitrineId, item.id))}
-                      />
-                      <ItemActionsMenu
-                        itemName={item.name}
-                        disabled={pending}
-                        canMoveUp={!pending && search === '' && index > 0}
-                        canMoveDown={!pending && search === '' && index < categoryItems.length - 1}
-                        onDuplicate={() => run(item.id, () => duplicateItemAction(vitrineId, item.id))}
-                        onMoveUp={() => run(item.id, () => moveItemAction(vitrineId, item.id, 'up'))}
-                        onMoveDown={() => run(item.id, () => moveItemAction(vitrineId, item.id, 'down'))}
-                        onDelete={() => {
-                          if (window.confirm('Excluir este item?')) run(item.id, () => deleteItemAction(vitrineId, item.id))
-                        }}
-                      />
-                    </li>
-                  ))}
-                </ul>
+                        </Link>
+                        <Switch
+                          checked={!item.soldOut}
+                          aria-label={`${item.name} disponível`}
+                          title={item.soldOut ? 'Esgotado. Toque para voltar a vender.' : 'Disponível. Toque para marcar como esgotado.'}
+                          disabled={pending}
+                          onClick={() => run(item.id, () => toggleSoldOutAction(vitrineId, item.id))}
+                        />
+                        <ItemActionsMenu
+                          itemName={item.name}
+                          disabled={pending}
+                          canMoveUp={!pending && search === '' && index > 0}
+                          canMoveDown={!pending && search === '' && index < categoryItems.length - 1}
+                          onDuplicate={() => run(item.id, () => duplicateItemAction(vitrineId, item.id))}
+                          onMoveUp={() => run(item.id, () => moveItemAction(vitrineId, item.id, 'up'))}
+                          onMoveDown={() => run(item.id, () => moveItemAction(vitrineId, item.id, 'down'))}
+                          onDelete={() => {
+                            if (window.confirm('Excluir este item?')) run(item.id, () => deleteItemAction(vitrineId, item.id))
+                          }}
+                        />
+                      </SortableItem>
+                    ))}
+                  </ul>
+                </SortableList>
               )}
             </section>
           )
         })
       )}
     </div>
+  )
+}
+
+// Linha levantada durante o arrasto: miniatura e nome, como na lista.
+function ItemOverlay({ item }: { item?: ListItem }) {
+  if (!item) return null
+  return (
+    <>
+      <span className="flex h-full w-9 shrink-0 items-center justify-center text-go-strong sm:w-11">
+        <GripVertical aria-hidden="true" className="size-5" strokeWidth={2.5} />
+      </span>
+      <span className="flex h-14 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[0.625rem] bg-subtle text-ink-muted">
+        {item.thumbUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={item.thumbUrl} alt="" className="size-full object-cover" />
+        ) : (
+          <ImageIcon aria-hidden="true" className="size-5" strokeWidth={2.25} />
+        )}
+      </span>
+      <span className="min-w-0 truncate font-extrabold text-ink">{item.name}</span>
+    </>
   )
 }

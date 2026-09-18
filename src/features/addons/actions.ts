@@ -5,6 +5,7 @@ import { requireActionUser } from '@/lib/auth/action-user'
 import { fieldErrorsFromZod, readFormFields, type FormState } from '@/lib/forms/form-state'
 import { revalidateVitrine } from '@/lib/vitrines/cache'
 import { mapDbError } from '@/lib/vitrines/db-errors'
+import { isSameIdSet, REORDER_STALE_MESSAGE } from '@/lib/vitrines/reorder'
 import { addonGroupSchema, type AddonGroupInput } from '@/lib/vitrines/schemas'
 
 const GROUP_FIELDS = ['name', 'kind', 'required', 'minSelect', 'maxSelect', 'allowRepeat', 'flavorPriceRule', 'options'] as const
@@ -91,4 +92,21 @@ export async function deleteAddonGroupAction(vitrineId: string, groupId: string)
   if (error) return { error: mapDbError(error) }
   revalidateVitrine(vitrine.subdomain)
   return { success: 'Grupo excluído.' }
+}
+
+// Arrastar para reordenar os grupos: grava a ordem inteira, desde que seja exatamente o conjunto atual.
+export async function reorderAddonGroupsAction(vitrineId: string, orderedIds: string[]): Promise<FormState> {
+  const { supabase, vitrine } = await ownedVitrine(vitrineId)
+  const { data: groups, error: readError } = await supabase.from('addon_groups').select('id').eq('vitrine_id', vitrineId)
+  if (readError) return { error: mapDbError(readError) }
+  if (!isSameIdSet((groups ?? []).map((g) => g.id), orderedIds)) return { error: REORDER_STALE_MESSAGE }
+  const results = await Promise.all(
+    orderedIds.map((id, position) =>
+      supabase.from('addon_groups').update({ position }).eq('id', id).eq('vitrine_id', vitrineId),
+    ),
+  )
+  const failed = results.find((result) => result.error)
+  if (failed?.error) return { error: mapDbError(failed.error) }
+  revalidateVitrine(vitrine.subdomain)
+  return { success: 'Ordem salva.' }
 }

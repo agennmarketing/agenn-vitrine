@@ -7,25 +7,35 @@ import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { FormMessage } from '@/components/ui/form-message'
 import { Input } from '@/components/ui/input'
+import { DragHandle, SortableItem, SortableList } from '@/components/ui/sortable-list'
 import {
   addCategoryAction,
   deleteCategoryAction,
   moveCategoryAction,
   renameCategoryAction,
+  reorderCategoriesAction,
 } from '@/features/categories/actions'
 import { initialFormState, type FormState } from '@/lib/forms/form-state'
 
 type Category = { id: string; name: string }
 
 const chipBase =
-  'inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full border-2 px-3.5 text-sm font-extrabold transition-colors duration-150 ease-out-quint'
+  'inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full border-2 px-3.5 text-sm font-extrabold transition-colors duration-150 ease-out-quint'
 
 /*
  * Categorias como pílulas: tocar numa abre a edição logo abaixo (renomear, mover, excluir);
  * a pílula "Nova categoria" abre o campo de criar. Sem categorias, o campo de criar já vem aberto.
+ * Cada pílula tem uma alça para arrastar e mudar a ordem (Subir/Descer continuam no painel de edição).
  */
-export function CategoryManager({ vitrineId, categories }: { vitrineId: string; categories: Category[] }) {
+export function CategoryManager({ vitrineId, categories: serverCategories }: { vitrineId: string; categories: Category[] }) {
   const router = useRouter()
+  // Cópia local para a ordem mudar na hora ao soltar; volta a seguir o servidor quando ele manda a lista nova.
+  const [lastServer, setLastServer] = useState(serverCategories)
+  const [categories, setCategories] = useState(serverCategories)
+  if (lastServer !== serverCategories) {
+    setLastServer(serverCategories)
+    setCategories(serverCategories)
+  }
   const [message, setMessage] = useState<FormState>({})
   const [pending, startTransition] = useTransition()
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -33,6 +43,19 @@ export function CategoryManager({ vitrineId, categories }: { vitrineId: string; 
   const editingIndex = categories.findIndex((c) => c.id === editingId)
   const editing = editingIndex >= 0 ? categories[editingIndex] : null
   const panelOpen = !!editing || adding || categories.length === 0
+
+  function reorder(orderedIds: string[]) {
+    const previous = categories
+    const byId = new Map(previous.map((category) => [category.id, category]))
+    setCategories(orderedIds.map((id) => byId.get(id)!))
+    setMessage({})
+    startTransition(async () => {
+      const result = await reorderCategoriesAction(vitrineId, orderedIds)
+      setMessage(result)
+      if (result.error) setCategories(previous)
+      else router.refresh()
+    })
+  }
 
   function run(action: () => Promise<FormState>, after?: () => void) {
     startTransition(async () => {
@@ -51,50 +74,66 @@ export function CategoryManager({ vitrineId, categories }: { vitrineId: string; 
         Categorias
       </h2>
       <div className="-mx-4 lg:mx-0">
-        <ul className="flex gap-2 overflow-x-auto px-4 pb-1.5 [scrollbar-width:none] lg:flex-wrap lg:overflow-visible lg:px-0 [&::-webkit-scrollbar]:hidden">
-          {categories.map((category) => {
-            const active = category.id === editingId
-            return (
-              <li key={category.id}>
-                <button
-                  type="button"
-                  aria-expanded={active}
-                  aria-controls={active ? 'categoria-edicao' : undefined}
-                  aria-label={`Editar categoria ${category.name}`}
-                  onClick={() => {
-                    setAdding(false)
-                    setEditingId(active ? null : category.id)
-                  }}
-                  className={`${chipBase} ${
-                    active
-                      ? 'border-deep bg-deep text-deep-ink'
-                      : 'border-line-strong bg-surface text-ink hover:bg-canvas'
+        <SortableList
+          layout="grid"
+          entries={categories.map((category) => ({ id: category.id, label: category.name }))}
+          onReorder={reorder}
+          disabled={pending}
+        >
+          <ul className="flex gap-2 overflow-x-auto px-4 pb-1.5 [scrollbar-width:none] lg:flex-wrap lg:overflow-visible lg:px-0 [&::-webkit-scrollbar]:hidden">
+            {categories.map((category) => {
+              const active = category.id === editingId
+              return (
+                // A pílula junta a alça de arrastar (à esquerda) e o botão de editar.
+                <SortableItem
+                  key={category.id}
+                  id={category.id}
+                  placeholderClassName="rounded-full"
+                  className={`inline-flex h-11 shrink-0 items-center rounded-full border-2 transition-colors duration-150 ease-out-quint ${
+                    active ? 'border-deep bg-deep text-deep-ink' : 'border-line-strong bg-surface text-ink hover:bg-canvas'
                   }`}
                 >
-                  <span className="max-w-[12rem] truncate">{category.name}</span>
-                  <Pencil aria-hidden="true" className={`size-3.5 ${active ? 'text-deep-muted' : 'text-ink-muted'}`} strokeWidth={2.75} />
-                </button>
-              </li>
-            )
-          })}
-          <li>
-            <button
-              type="button"
-              aria-expanded={adding}
-              aria-controls={adding ? 'categoria-edicao' : undefined}
-              onClick={() => {
-                setEditingId(null)
-                setAdding((open) => !open || categories.length === 0)
-              }}
-              className={`${chipBase} border-dashed ${
-                adding ? 'border-go-strong bg-go-soft text-go-strong' : 'border-line-strong text-go-strong hover:bg-go-soft'
-              }`}
-            >
-              <Plus aria-hidden="true" className="size-4" strokeWidth={3} />
-              Nova categoria
-            </button>
-          </li>
-        </ul>
+                  <DragHandle
+                    label={`Reordenar categoria ${category.name}`}
+                    tone={active ? 'inverse' : 'default'}
+                    className="h-10 w-8 rounded-l-full pl-1"
+                  />
+                  <button
+                    type="button"
+                    aria-expanded={active}
+                    aria-controls={active ? 'categoria-edicao' : undefined}
+                    aria-label={`Editar categoria ${category.name}`}
+                    onClick={() => {
+                      setAdding(false)
+                      setEditingId(active ? null : category.id)
+                    }}
+                    className="inline-flex h-10 items-center gap-1.5 rounded-r-full pl-1 pr-3.5 text-sm font-extrabold"
+                  >
+                    <span className="max-w-[12rem] truncate">{category.name}</span>
+                    <Pencil aria-hidden="true" className={`size-3.5 ${active ? 'text-deep-muted' : 'text-ink-muted'}`} strokeWidth={2.75} />
+                  </button>
+                </SortableItem>
+              )
+            })}
+            <li>
+              <button
+                type="button"
+                aria-expanded={adding}
+                aria-controls={adding ? 'categoria-edicao' : undefined}
+                onClick={() => {
+                  setEditingId(null)
+                  setAdding((open) => !open || categories.length === 0)
+                }}
+                className={`${chipBase} border-dashed ${
+                  adding ? 'border-go-strong bg-go-soft text-go-strong' : 'border-line-strong text-go-strong hover:bg-go-soft'
+                }`}
+              >
+                <Plus aria-hidden="true" className="size-4" strokeWidth={3} />
+                Nova categoria
+              </button>
+            </li>
+          </ul>
+        </SortableList>
       </div>
 
       <div aria-live="polite">
