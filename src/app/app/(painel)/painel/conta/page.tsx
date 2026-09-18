@@ -9,6 +9,7 @@ import { signOutEverywhereAction } from '@/features/account/actions'
 import { hasPasswordLogin } from '@/lib/auth/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { ChangePasswordForm } from './change-password-form'
+import { DeleteAccountForm } from './delete-account-form'
 import { NameForm } from './name-form'
 
 export const metadata = { title: 'Conta' }
@@ -64,6 +65,17 @@ export default async function AccountPage() {
             Sair de todos os aparelhos
           </Button>
         </form>
+      </Card>
+
+      <Card className="flex flex-col gap-4">
+        <div>
+          <h2 className="text-lg font-medium leading-tight">Excluir conta</h2>
+          <p className="mt-1 text-sm leading-5 text-ink-muted">
+            Cancela sua assinatura e apaga suas vitrines, itens, fotos e vídeos. Os links das suas vitrines param de
+            funcionar na hora. Não dá para desfazer.
+          </p>
+        </div>
+        <DeleteAccountForm email={user.email ?? ''} />
       </Card>
 
       <p className="text-sm text-ink-muted">
