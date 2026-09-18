@@ -14,7 +14,10 @@ test('cadastro com confirmação de e-mail leva ao painel', async ({ page }) => 
 
   await page.goto(await waitForAuthLink(email, 'email'))
   await expect(page).toHaveURL(/\/painel$/)
-  await expect(page.getByText('Maria Teste')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Minhas vitrines' })).toBeVisible()
+  // O nome fica na barra lateral (computador) e na página Conta (celular também).
+  await page.goto('/painel/conta')
+  await expect(page.getByRole('main').getByText('Maria Teste')).toBeVisible()
 })
 
 test('cadastro mostra erros de validação', async ({ page }) => {
