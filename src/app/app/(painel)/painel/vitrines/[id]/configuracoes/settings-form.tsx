@@ -7,7 +7,8 @@ import { Field } from '@/components/ui/field'
 import { FormMessage } from '@/components/ui/form-message'
 import { Input } from '@/components/ui/input'
 import { UnsavedChangesGuard } from '@/components/ui/unsaved-changes'
-import { checkSubdomainAction, updateSettingsAction } from '@/features/vitrines/actions'
+import { updateSettingsAction } from '@/features/vitrines/actions'
+import { fetchAvailability } from '@/lib/forms/availability'
 import type { FormState } from '@/lib/forms/form-state'
 
 type Values = { name: string; description: string; subdomain: string }
@@ -26,15 +27,29 @@ export function SettingsForm({ vitrineId, rootDomain, initial }: { vitrineId: st
 
   const [availability, setAvailability] = useState<{ ok: boolean; message: string } | null>(null)
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
-  // Server actions vão para a URL atual: um timer que dispara depois de sair da página
-  // chamaria a ação numa rota que não a conhece ("Failed to find Server Action").
-  useEffect(() => () => clearTimeout(timer.current), [])
+  const inFlight = useRef<AbortController>(undefined)
+  useEffect(
+    () => () => {
+      clearTimeout(timer.current)
+      inFlight.current?.abort()
+    },
+    [],
+  )
   function onSubdomainChange(value: string) {
     setTypedSubdomain(value)
     setAvailability(null)
     clearTimeout(timer.current)
+    inFlight.current?.abort()
     if (!value.trim() || value.trim().toLowerCase() === savedSubdomain) return
-    timer.current = setTimeout(async () => setAvailability(await checkSubdomainAction(value, vitrineId)), 400)
+    timer.current = setTimeout(async () => {
+      const controller = new AbortController()
+      inFlight.current = controller
+      const result = await fetchAvailability(
+        `/api/disponibilidade/subdominio?valor=${encodeURIComponent(value)}&vitrine=${vitrineId}`,
+        controller.signal,
+      )
+      if (result) setAvailability(result)
+    }, 400)
   }
 
   const errors = state.fieldErrors ?? {}

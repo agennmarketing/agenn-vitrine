@@ -9,9 +9,10 @@ import { Field } from '@/components/ui/field'
 import { FormMessage } from '@/components/ui/form-message'
 import { Input } from '@/components/ui/input'
 import { UnsavedChangesGuard } from '@/components/ui/unsaved-changes'
-import { checkItemCodeAction, saveItemAction } from '@/features/items/actions'
+import { saveItemAction } from '@/features/items/actions'
 import type { getItemForEdit } from '@/features/items/queries'
 import { normalizeItemCode } from '@/lib/codes/item-code'
+import { fetchAvailability } from '@/lib/forms/availability'
 import type { FormState } from '@/lib/forms/form-state'
 import { centsToInput } from '@/lib/money/money'
 
@@ -57,8 +58,15 @@ export function ItemForm(props: {
   const [codeEdited, setCodeEdited] = useState(false)
   const [codeCheck, setCodeCheck] = useState<{ ok: boolean; message: string } | null>(null)
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const inFlight = useRef<AbortController>(undefined)
   const advancedRef = useRef<HTMLDetailsElement>(null)
-  useEffect(() => () => clearTimeout(timer.current), [])
+  useEffect(
+    () => () => {
+      clearTimeout(timer.current)
+      inFlight.current?.abort()
+    },
+    [],
+  )
 
   const [state, formAction, pending] = useActionState(async (prev: FormState, formData: FormData) => {
     const result = await saveItemAction(vitrineId, item?.id ?? null, prev, formData)
@@ -75,9 +83,19 @@ export function ItemForm(props: {
     setCodeEdited(true)
     setCodeCheck(null)
     clearTimeout(timer.current)
+    inFlight.current?.abort()
     const value = normalizeItemCode(raw)
     if (!value || value === item?.code) return
-    timer.current = setTimeout(async () => setCodeCheck(await checkItemCodeAction(value, item?.id ?? null)), 400)
+    timer.current = setTimeout(async () => {
+      const controller = new AbortController()
+      inFlight.current = controller
+      const query = item?.id ? `&item=${item.id}` : ''
+      const result = await fetchAvailability(
+        `/api/disponibilidade/codigo?valor=${encodeURIComponent(value)}${query}`,
+        controller.signal,
+      )
+      if (result) setCodeCheck(result)
+    }, 400)
   }
 
   function updateVariation(key: string, patch: Partial<VariationRow>) {

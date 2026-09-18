@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation'
 import { requireActionUser } from '@/lib/auth/action-user'
-import { ITEM_CODE_MESSAGES, validateItemCode } from '@/lib/codes/item-code'
+import { ITEM_CODE_MESSAGES } from '@/lib/codes/item-code'
 import { fieldErrorsFromZod, readFormFields, type FormState } from '@/lib/forms/form-state'
 import { copyMediaFiles, deleteMediaRows, removeStoredFiles } from '@/lib/media/remove-media'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
@@ -16,15 +16,6 @@ const ITEM_FIELDS = [
   'soldOut', 'whatsappId', 'buttonText', 'customMessage', 'variations', 'coverMediaId', 'galleryMediaIds', 'videoMediaId',
   'addonGroupIds',
 ] as const
-
-export async function checkItemCodeAction(code: string, itemId: string | null): Promise<{ ok: boolean; message: string }> {
-  const result = validateItemCode(code)
-  if (!result.ok) return { ok: false, message: ITEM_CODE_MESSAGES[result.reason] }
-  const { supabase } = await requireActionUser()
-  const { data, error } = await supabase.rpc('is_item_code_available', { p_code: result.value, p_item_id: itemId ?? undefined })
-  if (error) return { ok: false, message: 'Não foi possível verificar agora.' }
-  return data ? { ok: true, message: 'Código disponível.' } : { ok: false, message: ITEM_CODE_MESSAGES.taken }
-}
 
 export async function saveItemAction(
   vitrineId: string,
