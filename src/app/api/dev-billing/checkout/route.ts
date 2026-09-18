@@ -24,7 +24,7 @@ export async function GET(request: Request) {
     cancelAtPeriodEnd: false,
   }
   await writeFakeSubscription(subscription)
-  await sendFakeWebhook(request, 'checkout.session.completed', {
+  await sendFakeWebhook('checkout.session.completed', {
     id: session.id,
     object: 'checkout.session',
     customer: session.customerId,

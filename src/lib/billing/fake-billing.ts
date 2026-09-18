@@ -65,12 +65,10 @@ export async function findFakeSubscriptionByCustomer(customerId: string): Promis
   return subscriptions.find((subscription) => subscription?.customerId === customerId) ?? null
 }
 
-// Faz o papel do Stripe: manda o evento assinado para o nosso próprio webhook.
-export async function sendFakeWebhook(
-  request: Request,
-  type: string,
-  object: Record<string, unknown>,
-): Promise<void> {
+// Faz o papel do Stripe: monta o evento assinado e chama o mesmo processamento da
+// rota do webhook. Em processo, e não por HTTP: o servidor chamar a si mesmo trava
+// no CI (o `next start` fica esperando a própria resposta).
+export async function sendFakeWebhook(type: string, object: Record<string, unknown>): Promise<void> {
   const config = getBillingEnv()
   const stripe = createStripeClient(config.secretKey)
   const body = JSON.stringify({
@@ -80,12 +78,10 @@ export async function sendFakeWebhook(
     data: { object },
   })
   const signature = stripe.webhooks.generateTestHeaderString({ payload: body, secret: config.webhookSecret })
-  const response = await fetch(new URL('/api/webhooks/stripe', request.url), {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', 'stripe-signature': signature },
-    body,
-  })
-  if (!response.ok) throw new Error(`webhook falso respondeu ${response.status}`)
+  // Import tardio: a rota e o driver se referenciam, e isto quebra o ciclo estático.
+  const { processStripeEvent } = await import('@/features/billing/process-event')
+  const result = await processStripeEvent(body, signature)
+  if (result.status >= 400) throw new Error(`webhook falso respondeu ${result.status}`)
 }
 
 export function createFakeBilling(config: BillingEnv): Billing {
