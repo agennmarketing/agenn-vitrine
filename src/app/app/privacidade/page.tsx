@@ -1,6 +1,6 @@
+import { LegalDocument } from '@/components/legal/legal-document'
 import { LEGAL_VERSION_LABEL } from '@/lib/legal/company'
 import { PRIVACY } from '@/lib/legal/privacy'
-import { LegalDocument } from '@/components/legal/legal-document'
 
 export const metadata = { title: 'Política de privacidade' }
 

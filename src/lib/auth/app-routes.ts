@@ -7,6 +7,9 @@ export const PUBLIC_APP_PATHS = [
   '/auth/confirm',
   // Buscadores acessam sem cookie: precisa responder sem cair no login.
   '/robots.txt',
+  // Precisam abrir sem sessão: o link vai para quem ainda está criando a conta.
+  '/termos',
+  '/privacidade',
 ] as const
 
 // Estas rotas trocam a sessão do cookie pela nova (link de e-mail, Google): não

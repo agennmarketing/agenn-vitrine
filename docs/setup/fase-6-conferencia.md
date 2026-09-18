@@ -10,9 +10,13 @@ Enquanto estiver assim, os textos legais **não estão prontos** para o lançame
 mude `LEGAL_VERSION` para a data da publicação e mande revisar por um profissional — o texto
 entregue aqui é um rascunho, não um parecer jurídico.
 
-1. **Páginas legais:** `agenn.com.br/termos` e `agenn.com.br/privacidade` abrem, mostram
-   "Última atualização" e não têm "A PREENCHER". Os links aparecem no rodapé da página
-   inicial, abaixo do botão do cadastro e na tela Conta.
+1. **Páginas legais:** `app.agenn.com.br/termos` e `app.agenn.com.br/privacidade` abrem, mostram
+   "Última atualização" e não têm "A PREENCHER". O apex `agenn.com.br` é o site institucional
+   já mantido pelo usuário, atrás do Cloudflare — não é servido pela nossa aplicação, então as
+   páginas ficam no host do painel, que é o nosso. As mesmas páginas continuam publicadas em
+   `agenn.com.br/termos` e `/privacidade` para quando o domínio raiz passar a ser servido por
+   nós. Os links aparecem no rodapé da página inicial, abaixo do botão do cadastro (apontando
+   para o host do painel) e na tela Conta.
 2. **QR Code:** no painel, "QR Code" abre o código da vitrine, o endereço mostrado é o da
    vitrine e "Baixar PNG" salva o arquivo. Ler o QR com o celular precisa abrir a vitrine.
 3. **Excluir conta (use uma conta de teste):** a confirmação exige o e-mail certo; depois da
