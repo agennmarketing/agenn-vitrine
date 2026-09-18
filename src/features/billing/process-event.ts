@@ -66,6 +66,8 @@ export async function processStripeEvent(raw: string, signature: string | null):
     return { status: 200, body: { status: subscription.status, revalidated: subdomains.length } }
   } catch (error) {
     Sentry.captureException(error)
+    // Também no console: nos testes e nos logs da Vercel o Sentry pode estar desligado.
+    console.error('[stripe-webhook] falha ao processar o evento', error)
     // 500 faz o Stripe tentar de novo.
     return { status: 500, body: { error: 'Falha ao processar o evento.' } }
   }

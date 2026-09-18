@@ -12,7 +12,10 @@ export async function GET(request: Request) {
 
   const sessionId = new URL(request.url).searchParams.get('sessao') ?? ''
   const session = await readFakeSession(sessionId).catch(() => null)
-  if (!session) return new NextResponse(null, { status: 404 })
+  if (!session) {
+    console.error('[dev-billing] sessão de checkout não encontrada', sessionId)
+    return new NextResponse(null, { status: 404 })
+  }
 
   const subscription: BillingSubscription = {
     id: `sub_fake_${crypto.randomUUID()}`,
