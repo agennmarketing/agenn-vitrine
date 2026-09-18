@@ -10,6 +10,14 @@ export default function MarketingHome() {
       <Link href={buildAppUrl('/cadastro', env.NEXT_PUBLIC_ROOT_DOMAIN)} className="underline">
         Criar minha vitrine
       </Link>
+      <footer className="flex gap-4 text-sm text-ink-muted">
+        <Link href="/termos" className="underline">
+          Termos de uso
+        </Link>
+        <Link href="/privacidade" className="underline">
+          Política de privacidade
+        </Link>
+      </footer>
     </main>
   )
 }

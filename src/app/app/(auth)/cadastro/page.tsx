@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import { env } from '@/lib/env'
+import { originFor } from '@/lib/hosts/urls'
 import { AuthShell } from '@/components/auth/auth-shell'
 import { SignUpForm } from './sign-up-form'
 
@@ -18,7 +20,7 @@ export default function SignUpPage() {
         </>
       }
     >
-      <SignUpForm />
+      <SignUpForm siteUrl={originFor(env.NEXT_PUBLIC_ROOT_DOMAIN)} />
     </AuthShell>
   )
 }
