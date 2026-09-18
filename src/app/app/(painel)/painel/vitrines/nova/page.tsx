@@ -14,6 +14,9 @@ export default async function NovaVitrinePage() {
       <Card className="flex flex-col gap-3 p-6">
         <h1 className="text-xl font-semibold">Nova vitrine</h1>
         <p>{mapDbError({ message: 'plan_limit:vitrines', hint: String(plan.max_vitrines) })}</p>
+        <Link href="/painel/plano" className="underline">
+          Ver o plano Pro
+        </Link>
         <Link href="/painel" className="underline">
           Voltar para Minhas vitrines
         </Link>

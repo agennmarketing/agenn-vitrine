@@ -37,8 +37,11 @@ export default async function PainelHome() {
         </Link>
       </div>
       {atLimit ? (
-        <Card className="px-5 py-4">
+        <Card className="flex flex-col items-start gap-3 px-5 py-4">
           <p>{mapDbError({ message: 'plan_limit:vitrines', hint: String(plan.max_vitrines) })}</p>
+          <Link href="/painel/plano" className={buttonClasses('secondary')}>
+            Ver o plano Pro
+          </Link>
         </Card>
       ) : null}
       {usage.overQuota ? (

@@ -22,11 +22,11 @@ export async function GET(request: Request) {
         ? { ...subscription, cancelAtPeriodEnd: true }
         : { ...subscription, status: 'canceled' as const, cancelAtPeriodEnd: false }
     await writeFakeSubscription(updated)
-    await sendFakeWebhook(
-      request,
-      action === 'agendar' ? 'customer.subscription.updated' : 'customer.subscription.deleted',
-      { id: updated.id, object: 'subscription', customer: customerId },
-    )
+    await sendFakeWebhook(action === 'agendar' ? 'customer.subscription.updated' : 'customer.subscription.deleted', {
+      id: updated.id,
+      object: 'subscription',
+      customer: customerId,
+    })
     return NextResponse.redirect(new URL(back, request.url))
   }
 

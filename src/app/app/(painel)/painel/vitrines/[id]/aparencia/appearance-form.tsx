@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useActionState } from 'react'
 import { ImageSlot } from '@/components/media/image-slot'
 import { VideoSlot } from '@/components/media/video-slot'
@@ -74,6 +75,9 @@ export function AppearanceForm({
             <div className="rounded-control bg-subtle p-3 text-sm">
               <p className="font-medium">Recurso do plano Pro</p>
               <p className="text-ink-muted">Assine o Pro para usar logo, cor da marca e banner.</p>
+              <Link href="/painel/plano" className="underline">
+                Ver o plano Pro
+              </Link>
             </div>
           )}
           <fieldset disabled={!allowBranding} className="flex flex-col gap-3 disabled:opacity-60">
