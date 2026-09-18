@@ -2,9 +2,9 @@
 
 import { Download, QrCode, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { Button } from '@/components/ui/button'
+import { Button, type ButtonSize } from '@/components/ui/button'
 
-export function QrCodeButton({ url, name, subdomain }: { url: string; name: string; subdomain: string }) {
+export function QrCodeButton({ url, name, subdomain, className = '', size }: { url: string; name: string; subdomain: string; className?: string; size?: ButtonSize }) {
   const [open, setOpen] = useState(false)
   const [failed, setFailed] = useState(false)
   const canvas = useRef<HTMLCanvasElement>(null)
@@ -19,7 +19,7 @@ export function QrCodeButton({ url, name, subdomain }: { url: string; name: stri
       try {
         const { toCanvas } = await import('qrcode')
         if (cancelled || !canvas.current) return
-        await toCanvas(canvas.current, url, { width: 320, margin: 2, color: { dark: '#0b2a1c' } })
+        await toCanvas(canvas.current, url, { width: 320, margin: 2, color: { dark: '#1d1147' } })
       } catch {
         if (!cancelled) setFailed(true)
       }
@@ -50,7 +50,7 @@ export function QrCodeButton({ url, name, subdomain }: { url: string; name: stri
 
   if (!open) {
     return (
-      <Button variant="secondary" onClick={() => setOpen(true)}>
+      <Button variant="secondary" size={size} className={className} onClick={() => setOpen(true)}>
         <QrCode aria-hidden="true" className="size-[1.125rem]" strokeWidth={2.5} />
         QR Code
       </Button>

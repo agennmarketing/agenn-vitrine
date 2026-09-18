@@ -63,7 +63,7 @@ export function AppearanceForm({
 }) {
   const [state, formAction, pending] = useActionState(updateAppearanceAction.bind(null, vitrineId), initialFormState)
   const [color, setColor] = useState(initial.brandColor)
-  const previewColor = HEX.test(color) ? color : '#0b2a1c'
+  const previewColor = HEX.test(color) ? color : '#673de6'
 
   return (
     <>

@@ -1,7 +1,7 @@
 import { ChevronDown, ChevronLeft } from 'lucide-react'
-import Image from 'next/image'
 import Link from 'next/link'
 import type { LegalSection } from '@/lib/legal/terms'
+import { LogoMark, Wordmark } from '@/components/brand/logo'
 
 // Os títulos vêm como "3. Planos, preços e pagamento": separamos o número para o índice.
 function splitTitle(title: string) {
@@ -50,10 +50,8 @@ export function LegalDocument({
             className="group -ml-1.5 inline-flex items-center gap-2 rounded-control px-1.5 py-1 text-ink-muted hover:text-ink"
           >
             <ChevronLeft aria-hidden="true" className="size-4 transition-transform group-hover:-translate-x-0.5" strokeWidth={3} />
-            <Image src="/brand/logo-icone-512.png" alt="" width={32} height={32} className="size-8 rounded-[0.5rem]" />
-            <span className="text-base font-black tracking-[-0.02em] text-deep">
-              Agenn <span className="text-go-strong">Vitrine</span>
-            </span>
+            <LogoMark size={34} />
+            <Wordmark className="text-base" />
           </Link>
         </div>
       </header>

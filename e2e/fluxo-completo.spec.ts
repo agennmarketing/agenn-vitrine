@@ -131,7 +131,7 @@ test('Pro: marca d’água some ao assinar e volta ao cancelar, congelando a seg
   await signIn(page, user.email, user.password)
 
   await page.goto(`http://${primeira.subdomain}.localhost:3000/`)
-  await expect(page.getByText('Feito com Agenn Vitrine')).toBeVisible()
+  await expect(page.getByText('Feito com Vitrimove')).toBeVisible()
 
   await page.goto('/painel/plano')
   await page.getByRole('button', { name: /Assinar por R\$.?149,90 por mês/ }).click()
@@ -140,7 +140,7 @@ test('Pro: marca d’água some ao assinar e volta ao cancelar, congelando a seg
 
   // A revalidação por tag acontece no webhook: a vitrine é gerada de novo sem marca d'água.
   await page.goto(`http://${primeira.subdomain}.localhost:3000/`)
-  await expect(page.getByText('Feito com Agenn Vitrine')).toBeHidden()
+  await expect(page.getByText('Feito com Vitrimove')).toBeHidden()
 
   const segunda = await seedVitrine(user.id, { name: 'Loja Dois', subdomain: uniqueSubdomain('fp-b') })
   await page.goto(`http://${segunda.subdomain}.localhost:3000/`)
@@ -154,7 +154,7 @@ test('Pro: marca d’água some ao assinar e volta ao cancelar, congelando a seg
 
   expect(await vitrineStatuses(user.id)).toEqual([`${primeira.subdomain}:active`, `${segunda.subdomain}:frozen`])
   await page.goto(`http://${primeira.subdomain}.localhost:3000/`)
-  await expect(page.getByText('Feito com Agenn Vitrine')).toBeVisible()
+  await expect(page.getByText('Feito com Vitrimove')).toBeVisible()
   // Spec 7.1: congelada responde 200 com o aviso no lugar do catálogo.
   await page.goto(`http://${segunda.subdomain}.localhost:3000/`)
   await expect(page.getByRole('heading', { name: 'Vitrine indisponível no momento' })).toBeVisible()

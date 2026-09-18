@@ -1,5 +1,4 @@
 import { LogOut } from 'lucide-react'
-import Image from 'next/image'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import type { ReactNode } from 'react'
@@ -7,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { signOutAction } from '@/features/auth/actions'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { BottomNav, SideNav } from './painel-nav'
+import { LogoMark, Wordmark } from '@/components/brand/logo'
 
 export default async function PainelLayout({ children }: { children: ReactNode }) {
   // O proxy já confirmou a sessão (session_state); aqui basta o JWT validado localmente.
@@ -29,10 +29,8 @@ export default async function PainelLayout({ children }: { children: ReactNode }
     <div className="min-h-dvh lg:grid lg:grid-cols-[15.5rem_minmax(0,1fr)]">
       <aside className="sticky top-0 hidden h-dvh flex-col gap-8 border-r-2 border-line bg-surface px-4 py-6 lg:flex">
         <Link href="/painel" className="flex items-center gap-2.5 px-2">
-          <Image src="/brand/logo-icone-512.png" alt="" width={40} height={40} className="size-10 rounded-xl" />
-          <span className="text-lg font-black leading-none tracking-[-0.02em] text-deep">
-            Agenn <span className="text-go-strong">Vitrine</span>
-          </span>
+          <LogoMark size={44} />
+          <Wordmark className="text-xl" />
         </Link>
         <SideNav />
       </aside>
@@ -40,8 +38,8 @@ export default async function PainelLayout({ children }: { children: ReactNode }
       <div className="flex min-w-0 flex-col">
         <header className="sticky top-0 z-30 border-b-2 border-line bg-canvas">
           <div className="mx-auto flex h-16 max-w-5xl items-center gap-3 px-4 lg:px-8">
-            <Link href="/painel" aria-label="Agenn Vitrine, início" className="shrink-0 lg:hidden">
-              <Image src="/brand/logo-icone-512.png" alt="" width={36} height={36} className="size-9 rounded-[0.625rem]" />
+            <Link href="/painel" aria-label="Vitrimove, início" className="shrink-0 lg:hidden">
+              <LogoMark size={44} />
             </Link>
             <div className="ml-auto flex min-w-0 items-center gap-2">
               <span

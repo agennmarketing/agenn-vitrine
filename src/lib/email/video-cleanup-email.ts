@@ -16,7 +16,7 @@ export function buildVideoCleanupEmail(input: {
     `Seu plano Pro terminou em ${formatDateBR(input.proEndedAt)} e a conta voltou ao gratuito, que mostra 1 vídeo.`,
     `Em ${formatDateBR(input.deleteAt)}, ${videos} e não será possível recuperar.`,
     `Para manter todos, assine o Pro de novo em: ${input.panelUrl}`,
-    'Equipe Agenn Vitrine',
+    'Equipe Vitrimove',
   ]
 
   const html = [
@@ -24,7 +24,7 @@ export function buildVideoCleanupEmail(input: {
     `<p>${escapeHtml(paragraphs[1])}</p>`,
     `<p>${escapeHtml(paragraphs[2])}</p>`,
     `<p>Para manter todos, assine o Pro de novo em: <a href="${escapeHtml(input.panelUrl)}">${escapeHtml(input.panelUrl)}</a></p>`,
-    '<p>Equipe Agenn Vitrine</p>',
+    '<p>Equipe Vitrimove</p>',
   ].join('\n')
 
   return { subject: 'Seus vídeos serão apagados em 7 dias', text: paragraphs.join('\n\n'), html }

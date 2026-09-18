@@ -128,7 +128,7 @@ export function ImageSlot(props: {
               <span className="min-w-0 truncate rounded-full bg-deep/85 px-2.5 py-1 text-xs font-extrabold text-deep-ink">
                 {props.label}
               </span>
-              <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-surface px-2 py-1 text-xs font-extrabold text-ink shadow-[0_2px_0_rgb(11_42_28/0.18)]">
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-surface px-2 py-1 text-xs font-extrabold text-ink shadow-[0_2px_0_rgb(29_17_71/0.18)]">
                 <RefreshCw className="size-3" strokeWidth={3} />
                 <span className="hidden @[9rem]:inline">Trocar</span>
               </span>
@@ -163,7 +163,7 @@ export function ImageSlot(props: {
             title="Remover imagem"
             disabled={removing}
             onClick={remove}
-            className="absolute right-2 top-2 z-20 flex size-9 items-center justify-center rounded-full bg-surface text-danger shadow-[0_2px_0_rgb(11_42_28/0.2)] transition-colors hover:bg-danger-soft disabled:opacity-60"
+            className="absolute right-2 top-2 z-20 flex size-9 items-center justify-center rounded-full bg-surface text-danger shadow-[0_2px_0_rgb(29_17_71/0.2)] transition-colors hover:bg-danger-soft disabled:opacity-60"
           >
             {removing ? <Spinner className="size-4" /> : <Trash2 aria-hidden="true" className="size-4" strokeWidth={2.75} />}
           </button>

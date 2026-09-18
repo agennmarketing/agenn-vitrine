@@ -2,14 +2,15 @@
 
 import { Check, Link2 } from 'lucide-react'
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
+import { Button, type ButtonSize } from '@/components/ui/button'
 
-export function CopyLinkButton({ url }: { url: string }) {
+export function CopyLinkButton({ url, className = '', size }: { url: string; className?: string; size?: ButtonSize }) {
   const [copied, setCopied] = useState(false)
   return (
     <Button
       variant="secondary"
-      className={copied ? 'border-go bg-go-soft text-go-strong' : ''}
+      size={size}
+      className={`${className} ${copied ? 'border-success bg-success-soft text-success' : ''}`}
       onClick={async () => {
         try {
           await navigator.clipboard.writeText(url)

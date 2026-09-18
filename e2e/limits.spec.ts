@@ -33,5 +33,5 @@ test('gratuito: nova vitrine bloqueada; marca com cadeado; vitrine pública com 
   await expect(page.getByText('Recurso do plano Pro')).toBeVisible()
 
   await page.goto(`http://${vitrine.subdomain}.localhost:3000/`)
-  await expect(page.getByText('Feito com Agenn Vitrine')).toBeVisible()
+  await expect(page.getByText('Feito com Vitrimove')).toBeVisible()
 })

@@ -1,40 +1,42 @@
 @import "tailwindcss";
 
 /*
- * Agenn Vitrine: "Trilha da Vitrine".
- * Painel claro, neutros puxados para o verde da logo (#0B2A1C), nunca cinza puro.
- * - go: verde vivo das ações (texto em verde-escuro, não branco: contraste 7,8:1).
- * - deep: o verde-escuro da logo, a "placa invertida" do que é ativo ou principal.
+ * Vitrimove: "Trilha da Vitrine".
+ * Painel claro, neutros levemente puxados para o roxo da marca (#673DE6), nunca cinza puro.
+ * - go: o roxo da Vitrimove nas ações principais (texto branco, contraste 6,2:1).
+ * - deep: índigo-escuro, a "placa invertida" do que é ativo ou principal.
  * - sun: dourado, só para Pro e conquistas.
- * - brand: na vitrine pública é a cor do lojista; no painel é o verde da logo (foco e seleção).
+ * - success: verde, só para confirmação (salvo, disponível).
+ * - brand: na vitrine pública é a cor do lojista (padrão: o roxo); no painel, foco e seleção.
  * Controles prensáveis têm um lábio sólido embaixo (--lip) que afunda ao tocar.
  */
 @theme {
-  --color-canvas: #f5f8f4;
+  --color-canvas: #f7f6fb;
   --color-surface: #ffffff;
-  --color-subtle: #edf2eb;
-  --color-ink: #10231a;
-  --color-ink-muted: #56675e;
-  --color-line: #e1e8de;
-  --color-line-strong: #c7d2c3;
+  --color-subtle: #efedf7;
+  --color-ink: #17122b;
+  --color-ink-muted: #5e5873;
+  --color-line: #e6e2f0;
+  --color-line-strong: #ccc5df;
 
-  --color-brand: #0b2a1c;
-  --color-brand-hover: #15432f;
-  --color-brand-active: #061a11;
+  --color-brand: #673de6;
+  --color-brand-hover: #5a31d6;
+  --color-brand-active: #4b27b8;
   --color-brand-ink: #ffffff;
-  --color-brand-soft: #e3ede6;
+  --color-brand-soft: #efeafd;
 
-  --color-go: #2fd36b;
-  --color-go-hover: #45dc7c;
-  --color-go-lip: #1ea354;
-  --color-go-ink: #0b2a1c;
-  --color-go-soft: #e4f8ea;
-  --color-go-strong: #15803d;
+  --color-go: #673de6;
+  --color-go-hover: #7652ee;
+  --color-go-lip: #4a24b8;
+  --color-go-ink: #ffffff;
+  --color-go-soft: #efeafd;
+  --color-go-strong: #5a2fdc;
+  --color-go-bright: #b39cff;
 
-  --color-deep: #0b2a1c;
-  --color-deep-raised: #143a28;
+  --color-deep: #1d1147;
+  --color-deep-raised: #2a1a63;
   --color-deep-ink: #ffffff;
-  --color-deep-muted: #a9c7b5;
+  --color-deep-muted: #b9aeeb;
 
   --color-sun: #ffc83d;
   --color-sun-lip: #d9a110;
@@ -61,8 +63,8 @@
   --radius-card: 1rem;
   --radius-sheet: 1.5rem;
 
-  --shadow-control: 0 1px 2px rgb(11 42 28 / 0.06);
-  --shadow-float: 0 12px 32px -8px rgb(11 42 28 / 0.28), 0 2px 6px rgb(11 42 28 / 0.08);
+  --shadow-control: 0 1px 2px rgb(29 17 71 / 0.06);
+  --shadow-float: 0 12px 32px -8px rgb(29 17 71 / 0.3), 0 2px 6px rgb(29 17 71 / 0.08);
 
   --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -122,7 +124,7 @@
 
 /* Seta do <select> desenhada no traço dos ícones (lucide chevron-down, 2.5). */
 @utility select-chevron {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2356675e' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235e5873' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-size: 1.25rem;
   background-position: right 0.875rem center;
@@ -160,7 +162,7 @@
 
   ::selection {
     background: var(--color-go-soft);
-    color: var(--color-go-ink);
+    color: var(--color-ink);
   }
 
   h1,

@@ -36,7 +36,7 @@ describe('buildQuotaEmail', () => {
         '',
         'Acompanhe o consumo em: https://app.agenn.com.br/painel',
         '',
-        'Equipe Agenn Vitrine',
+        'Equipe Vitrimove',
       ].join('\n'),
     )
   })

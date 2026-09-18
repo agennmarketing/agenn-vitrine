@@ -99,7 +99,7 @@ export function SettingsForm({ vitrineId, rootDomain, initial }: { vitrineId: st
           </Field>
           {availability ? (
             <p
-              className={`-mt-2 animate-rise text-sm font-extrabold ${availability.ok ? 'text-go-strong' : 'text-danger'}`}
+              className={`-mt-2 animate-rise text-sm font-extrabold ${availability.ok ? 'text-success' : 'text-danger'}`}
               aria-live="polite"
             >
               {availability.message}

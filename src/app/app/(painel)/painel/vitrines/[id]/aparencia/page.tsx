@@ -45,7 +45,7 @@ export default async function AparenciaPage({ params }: { params: Promise<{ id: 
           theme: vitrine.theme === 'dark' ? 'dark' : 'light',
           showPrices: vitrine.show_prices,
           showMedia: vitrine.show_media,
-          brandColor: vitrine.brand_color ?? '#0b2a1c',
+          brandColor: vitrine.brand_color ?? '#673de6',
           bannerEnabled: vitrine.banner_enabled,
         }}
       />

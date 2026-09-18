@@ -14,6 +14,8 @@ const SIZES = {
   sm: 'h-10 rounded-[0.75rem] px-3.5 text-sm',
   md: 'h-12 rounded-control px-5 text-base',
   lg: 'h-14 rounded-card px-6 text-[1.0625rem]',
+  // Ladrilho: ícone sobre o rótulo no celular (três lado a lado cabem sem cortar), em linha a partir de sm.
+  tile: 'h-16 flex-col gap-1 rounded-control px-2 text-[0.8125rem] sm:h-12 sm:flex-row sm:gap-2 sm:px-4 sm:text-base',
 } as const
 
 export type ButtonVariant = keyof typeof VARIANTS
