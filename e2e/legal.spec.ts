@@ -4,12 +4,12 @@ import { SITE_URL } from '../playwright.config'
 test('termos e privacidade estão publicados e ligados ao cadastro', async ({ page }) => {
   await page.goto(`${SITE_URL}/termos`)
   await expect(page.getByRole('heading', { level: 1, name: 'Termos de uso' })).toBeVisible()
-  await expect(page.getByText('Última atualização:')).toBeVisible()
-  await expect(page.getByText('renovação automática')).toBeVisible()
+  await expect(page.getByText('Última atualização:').first()).toBeVisible()
+  await expect(page.getByText('renovação automática').first()).toBeVisible()
 
   await page.goto(`${SITE_URL}/privacidade`)
   await expect(page.getByRole('heading', { level: 1, name: 'Política de privacidade' })).toBeVisible()
-  await expect(page.getByText('LGPD')).toBeVisible()
+  await expect(page.getByText('LGPD').first()).toBeVisible()
 
   await page.goto(`${SITE_URL}/`)
   await page.getByRole('link', { name: 'Termos de uso' }).click()
