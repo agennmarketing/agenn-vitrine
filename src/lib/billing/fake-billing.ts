@@ -113,6 +113,12 @@ export function createFakeBilling(config: BillingEnv): Billing {
 
     getSubscription: (subscriptionId) => read<BillingSubscription>(subscriptionId),
 
+    async cancelSubscription(subscriptionId) {
+      const subscription = await read<BillingSubscription>(subscriptionId)
+      if (!subscription) return
+      await writeFakeSubscription({ ...subscription, status: 'canceled', cancelAtPeriodEnd: false })
+    },
+
     async listPrices() {
       return FAKE_PRICES
     },

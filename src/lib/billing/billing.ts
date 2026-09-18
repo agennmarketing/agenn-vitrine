@@ -16,6 +16,8 @@ export interface Billing {
   }): Promise<string>
   createPortalSession(input: { customerId: string; returnUrl: string }): Promise<string>
   getSubscription(subscriptionId: string): Promise<BillingSubscription | null>
+  /** Spec 8.8: excluir a conta cancela a assinatura, mas mantém o Customer (histórico fiscal). */
+  cancelSubscription(subscriptionId: string): Promise<void>
   listPrices(): Promise<BillingPrice[]>
   parseEvent(raw: string, signature: string | null): Promise<BillingEvent | null>
   priceIdFor(interval: BillingInterval): string
