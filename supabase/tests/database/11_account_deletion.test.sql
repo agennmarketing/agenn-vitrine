@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(3);
+select plan(4);
 
 -- Uma conta com um pouco de tudo: apagar o usuário precisa levar todo o resto junto.
 insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000006c1', 'sai@conta.com');
@@ -19,6 +19,8 @@ insert into public.addon_groups (id, owner_id, vitrine_id, name) values
   ('00000000-0000-0000-0000-00000000a601', '00000000-0000-0000-0000-0000000006c1', '00000000-0000-0000-0000-00000000f601', 'Adicionais');
 insert into public.addon_options (owner_id, group_id, name, price_cents) values
   ('00000000-0000-0000-0000-0000000006c1', '00000000-0000-0000-0000-00000000a601', 'Bacon', 200);
+insert into public.item_addon_groups (owner_id, item_id, group_id) values
+  ('00000000-0000-0000-0000-0000000006c1', '00000000-0000-0000-0000-00000000e601', '00000000-0000-0000-0000-00000000a601');
 insert into public.order_snapshots (owner_id, vitrine_id, code, payload, expires_at) values
   ('00000000-0000-0000-0000-0000000006c1', '00000000-0000-0000-0000-00000000f601', 'AB23', '{}'::jsonb, now() + interval '90 days');
 
@@ -26,6 +28,18 @@ select is(
   (select count(*)::int from public.item_codes where owner_id = '00000000-0000-0000-0000-0000000006c1'),
   1,
   'o código do item foi registrado pelo gatilho'
+);
+
+select cmp_ok(
+  (
+    select
+      (select count(*) from public.vitrines where owner_id = '00000000-0000-0000-0000-0000000006c1')
+      + (select count(*) from public.media where owner_id = '00000000-0000-0000-0000-0000000006c1')
+      + (select count(*) from public.item_addon_groups where owner_id = '00000000-0000-0000-0000-0000000006c1')
+      + (select count(*) from public.checkout_settings where owner_id = '00000000-0000-0000-0000-0000000006c1')
+  )::int,
+  '>', 0,
+  'a conta tem dados antes da exclusão'
 );
 
 delete from auth.users where id = '00000000-0000-0000-0000-0000000006c1';
@@ -42,6 +56,7 @@ select is(
       + (select count(*) from public.item_codes where owner_id = '00000000-0000-0000-0000-0000000006c1')
       + (select count(*) from public.addon_groups where owner_id = '00000000-0000-0000-0000-0000000006c1')
       + (select count(*) from public.addon_options where owner_id = '00000000-0000-0000-0000-0000000006c1')
+      + (select count(*) from public.item_addon_groups where owner_id = '00000000-0000-0000-0000-0000000006c1')
       + (select count(*) from public.order_snapshots where owner_id = '00000000-0000-0000-0000-0000000006c1')
       + (select count(*) from public.checkout_settings where owner_id = '00000000-0000-0000-0000-0000000006c1')
   )::int,
