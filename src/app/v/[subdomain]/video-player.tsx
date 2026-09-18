@@ -1,5 +1,6 @@
 'use client'
 
+import { Volume2, VolumeX } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import type { PublicVideo } from '@/features/public/build-catalog'
 import { createUsageReporter } from './usage-reporter'
@@ -12,12 +13,14 @@ export function VideoPlayer({
   controls = false,
   showSoundToggle = true,
   className = '',
+  wrapperClassName = '',
 }: {
   video: PublicVideo
   autoPlay?: boolean
   controls?: boolean
   showSoundToggle?: boolean
   className?: string
+  wrapperClassName?: string
 }) {
   const ref = useRef<HTMLVideoElement>(null)
   const [muted, setMuted] = useState(true)
@@ -73,7 +76,7 @@ export function VideoPlayer({
   }, [video.mediaId, video.playlistUrl, autoPlay])
 
   return (
-    <div className="relative">
+    <div className={`relative ${wrapperClassName}`}>
       <video
         ref={ref}
         data-media-id={video.mediaId}
@@ -92,8 +95,9 @@ export function VideoPlayer({
             setMuted(next)
             if (ref.current) ref.current.muted = next
           }}
-          className="absolute bottom-3 right-3 rounded-full bg-black/60 px-3 py-1.5 text-sm text-white"
+          className="absolute bottom-3 right-3 inline-flex h-10 items-center gap-1.5 rounded-full bg-black/60 px-3.5 text-sm font-semibold text-white backdrop-blur transition-transform duration-150 active:scale-95"
         >
+          {muted ? <VolumeX aria-hidden="true" className="size-4" strokeWidth={2.5} /> : <Volume2 aria-hidden="true" className="size-4" strokeWidth={2.5} />}
           {muted ? 'Ativar som' : 'Desativar som'}
         </button>
       ) : null}

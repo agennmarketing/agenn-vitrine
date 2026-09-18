@@ -1,7 +1,7 @@
-import Link from 'next/link'
-import { buttonClasses } from '@/components/ui/button'
 import { FormMessage } from '@/components/ui/form-message'
 import { getMyVitrine, getPanelSession } from '@/features/vitrines/queries'
+import { env } from '@/lib/env'
+import { imageSources } from '@/lib/media/urls'
 import { CategoryManager } from './category-manager'
 import { ItemList } from './item-list'
 
@@ -21,7 +21,9 @@ export default async function ItensPage({
     supabase.from('categories').select('id, name').eq('vitrine_id', id).order('position').order('created_at'),
     supabase
       .from('items')
-      .select('id, name, code, category_id, price_type, price_cents, promo_price_cents, sold_out, item_variations(price_cents, promo_price_cents)')
+      .select(
+        'id, name, code, category_id, price_type, price_cents, promo_price_cents, sold_out, item_variations(price_cents, promo_price_cents), media(role, storage_paths)',
+      )
       .eq('vitrine_id', id)
       .is('deleted_at', null)
       .order('position')
@@ -29,17 +31,12 @@ export default async function ItensPage({
   ])
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5">
       {salvo === '1' ? <FormMessage success="Item salvo." /> : null}
-      <div className="flex justify-end">
-        <Link href={`/painel/vitrines/${id}/itens/novo`} className={buttonClasses('primary')}>
-          Novo item
-        </Link>
-      </div>
-      <CategoryManager vitrineId={id} categories={categories ?? []} />
       <ItemList
         vitrineId={id}
         categories={categories ?? []}
+        categoryManager={<CategoryManager vitrineId={id} categories={categories ?? []} />}
         items={(items ?? []).map((item) => ({
           id: item.id,
           name: item.name,
@@ -50,6 +47,10 @@ export default async function ItensPage({
           promoPriceCents: item.promo_price_cents,
           soldOut: item.sold_out,
           variations: item.item_variations.map((v) => ({ priceCents: v.price_cents, promoPriceCents: v.promo_price_cents })),
+          // Miniatura da capa (a menor largura); sem capa, a lista mostra um marcador.
+          thumbUrl:
+            imageSources((item.media ?? []).find((m) => m.role === 'cover')?.storage_paths, env.NEXT_PUBLIC_MEDIA_BASE_URL)
+              ?.small ?? null,
         }))}
       />
     </div>

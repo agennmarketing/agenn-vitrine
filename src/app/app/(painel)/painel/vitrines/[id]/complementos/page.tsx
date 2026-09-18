@@ -1,3 +1,4 @@
+import { SectionIntro } from '@/components/ui/config-section'
 import { listAddonGroups } from '@/features/addons/queries'
 import { getMyVitrine } from '@/features/vitrines/queries'
 import { AddonGroups } from './addon-groups'
@@ -9,10 +10,11 @@ export default async function ComplementosPage({ params }: { params: Promise<{ i
   await getMyVitrine(id)
   const groups = await listAddonGroups(id)
   return (
-    <div className="flex flex-col gap-4">
-      <p className="text-sm text-ink-muted">
-        Grupos de complementos podem ser usados em vários itens. Depois de salvar, ligue os grupos no editor de cada item.
-      </p>
+    <div className="flex max-w-2xl flex-col gap-6">
+      <SectionIntro
+        title="Complementos"
+        description="Adicionais, ponto da carne, sabores. Um grupo serve para vários itens: depois de salvar, ligue o grupo no editor de cada item."
+      />
       <AddonGroups vitrineId={id} groups={groups} />
     </div>
   )

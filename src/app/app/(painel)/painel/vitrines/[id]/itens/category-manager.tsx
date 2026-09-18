@@ -1,9 +1,9 @@
 'use client'
 
+import { ArrowLeft, ArrowRight, Pencil, Plus, Trash2, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useActionState, useState, useTransition } from 'react'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
 import { Field } from '@/components/ui/field'
 import { FormMessage } from '@/components/ui/form-message'
 import { Input } from '@/components/ui/input'
@@ -17,61 +17,143 @@ import { initialFormState, type FormState } from '@/lib/forms/form-state'
 
 type Category = { id: string; name: string }
 
+const chipBase =
+  'inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full border-2 px-3.5 text-sm font-extrabold transition-colors duration-150 ease-out-quint'
+
+/*
+ * Categorias como pílulas: tocar numa abre a edição logo abaixo (renomear, mover, excluir);
+ * a pílula "Nova categoria" abre o campo de criar. Sem categorias, o campo de criar já vem aberto.
+ */
 export function CategoryManager({ vitrineId, categories }: { vitrineId: string; categories: Category[] }) {
   const router = useRouter()
   const [message, setMessage] = useState<FormState>({})
   const [pending, startTransition] = useTransition()
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [adding, setAdding] = useState(categories.length === 0)
+  const editingIndex = categories.findIndex((c) => c.id === editingId)
+  const editing = editingIndex >= 0 ? categories[editingIndex] : null
+  const panelOpen = !!editing || adding || categories.length === 0
 
-  function run(action: () => Promise<FormState>) {
+  function run(action: () => Promise<FormState>, after?: () => void) {
     startTransition(async () => {
       const result = await action()
       setMessage(result)
-      if (!result.error) router.refresh()
+      if (!result.error) {
+        after?.()
+        router.refresh()
+      }
     })
   }
 
   return (
-    <Card className="p-5">
-      <details open={categories.length === 0}>
-        <summary className="cursor-pointer font-medium">Categorias</summary>
-        <div className="mt-4 flex flex-col gap-4">
-          <div aria-live="polite">
-            <FormMessage error={message.error} success={message.success} />
-          </div>
-          <ul className="flex flex-col gap-3">
-            {categories.map((category, index) => (
-              <li key={category.id} className="flex flex-col gap-2 rounded-control border border-line p-3">
-                <RenameForm vitrineId={vitrineId} category={category} onDone={() => router.refresh()} />
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    variant="ghost"
-                    disabled={pending || index === 0}
-                    onClick={() => run(() => moveCategoryAction(vitrineId, category.id, 'up'))}
-                  >
-                    Subir
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    disabled={pending || index === categories.length - 1}
-                    onClick={() => run(() => moveCategoryAction(vitrineId, category.id, 'down'))}
-                  >
-                    Descer
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    disabled={pending}
-                    onClick={() => run(() => deleteCategoryAction(vitrineId, category.id))}
-                  >
-                    Excluir categoria
-                  </Button>
-                </div>
+    <section aria-labelledby="categorias-titulo" className="flex flex-col gap-3">
+      <h2 id="categorias-titulo" className="px-1 text-sm font-extrabold text-ink-muted">
+        Categorias
+      </h2>
+      <div className="-mx-4 lg:mx-0">
+        <ul className="flex gap-2 overflow-x-auto px-4 pb-1.5 [scrollbar-width:none] lg:flex-wrap lg:overflow-visible lg:px-0 [&::-webkit-scrollbar]:hidden">
+          {categories.map((category) => {
+            const active = category.id === editingId
+            return (
+              <li key={category.id}>
+                <button
+                  type="button"
+                  aria-expanded={active}
+                  aria-controls={active ? 'categoria-edicao' : undefined}
+                  aria-label={`Editar categoria ${category.name}`}
+                  onClick={() => {
+                    setAdding(false)
+                    setEditingId(active ? null : category.id)
+                  }}
+                  className={`${chipBase} ${
+                    active
+                      ? 'border-deep bg-deep text-deep-ink'
+                      : 'border-line-strong bg-surface text-ink hover:bg-canvas'
+                  }`}
+                >
+                  <span className="max-w-[12rem] truncate">{category.name}</span>
+                  <Pencil aria-hidden="true" className={`size-3.5 ${active ? 'text-deep-muted' : 'text-ink-muted'}`} strokeWidth={2.75} />
+                </button>
               </li>
-            ))}
-          </ul>
-          <NewCategoryForm vitrineId={vitrineId} onAdded={() => router.refresh()} />
+            )
+          })}
+          <li>
+            <button
+              type="button"
+              aria-expanded={adding}
+              aria-controls={adding ? 'categoria-edicao' : undefined}
+              onClick={() => {
+                setEditingId(null)
+                setAdding((open) => !open || categories.length === 0)
+              }}
+              className={`${chipBase} border-dashed ${
+                adding ? 'border-go-strong bg-go-soft text-go-strong' : 'border-line-strong text-go-strong hover:bg-go-soft'
+              }`}
+            >
+              <Plus aria-hidden="true" className="size-4" strokeWidth={3} />
+              Nova categoria
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <div aria-live="polite">
+        <FormMessage error={message.error} success={message.success} />
+      </div>
+
+      {panelOpen ? (
+        <div id="categoria-edicao" className="flex animate-rise flex-col gap-4 rounded-card border-2 border-line bg-surface p-4 sm:p-5">
+          {editing ? (
+            <>
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="min-w-0 truncate font-black tracking-[-0.01em]">Editar “{editing.name}”</h3>
+                <button
+                  type="button"
+                  aria-label="Fechar edição da categoria"
+                  onClick={() => setEditingId(null)}
+                  className="-mr-1.5 flex size-9 shrink-0 items-center justify-center rounded-full text-ink-muted hover:bg-subtle hover:text-ink"
+                >
+                  <X aria-hidden="true" className="size-4" strokeWidth={3} />
+                </button>
+              </div>
+              <RenameForm key={editing.id} vitrineId={vitrineId} category={editing} onDone={() => router.refresh()} />
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={pending || editingIndex === 0}
+                  onClick={() => run(() => moveCategoryAction(vitrineId, editing.id, 'up'))}
+                >
+                  <ArrowLeft aria-hidden="true" className="size-4" strokeWidth={2.75} />
+                  Subir
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={pending || editingIndex === categories.length - 1}
+                  onClick={() => run(() => moveCategoryAction(vitrineId, editing.id, 'down'))}
+                >
+                  Descer
+                  <ArrowRight aria-hidden="true" className="size-4" strokeWidth={2.75} />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={pending}
+                  className="ml-auto text-danger hover:bg-danger-soft"
+                  onClick={() => run(() => deleteCategoryAction(vitrineId, editing.id), () => setEditingId(null))}
+                >
+                  <Trash2 aria-hidden="true" className="size-4" strokeWidth={2.5} />
+                  Excluir categoria
+                </Button>
+              </div>
+            </>
+          ) : (
+            <NewCategoryForm vitrineId={vitrineId} onAdded={() => router.refresh()} />
+          )}
         </div>
-      </details>
-    </Card>
+      ) : null}
+    </section>
   )
 }
 
@@ -83,20 +165,23 @@ function RenameForm({ vitrineId, category, onDone }: { vitrineId: string; catego
   }, { values: { name: category.name } })
   const error = state.fieldErrors?.name
   return (
-    <form action={formAction} noValidate className="flex flex-wrap items-start gap-2">
-      <div className="min-w-0 flex-1">
-        <Input
-          aria-label={`Nome da categoria ${category.name}`}
-          name="name"
-          defaultValue={state.values?.name ?? category.name}
-          maxLength={40}
-          invalid={!!error}
-        />
-        {error ? <p className="mt-1 text-sm text-danger">{error}</p> : null}
+    <form action={formAction} noValidate className="flex flex-col gap-2">
+      <div className="flex items-start gap-2">
+        <div className="min-w-0 flex-1">
+          <Input
+            aria-label={`Nome da categoria ${category.name}`}
+            name="name"
+            defaultValue={state.values?.name ?? category.name}
+            maxLength={40}
+            invalid={!!error}
+          />
+        </div>
+        <Button type="submit" variant="secondary" disabled={pending} className="shrink-0">
+          Renomear
+        </Button>
       </div>
-      <Button type="submit" variant="secondary" disabled={pending}>
-        Renomear
-      </Button>
+      {error ? <p className="text-sm font-bold text-danger">{error}</p> : null}
+      <FormMessage success={state.success} />
     </form>
   )
 }
@@ -110,14 +195,24 @@ function NewCategoryForm({ vitrineId, onAdded }: { vitrineId: string; onAdded: (
   const error = state.fieldErrors?.name
   return (
     <form action={formAction} noValidate className="flex flex-col gap-3">
-      <h3 className="font-medium">Nova categoria</h3>
+      <h3 className="font-black tracking-[-0.01em]">Nova categoria</h3>
       <Field label="Nome da categoria" htmlFor="new-category" error={error}>
-        <Input id="new-category" name="name" maxLength={40} invalid={!!error} />
+        <div className="flex items-start gap-2">
+          <Input
+            id="new-category"
+            name="name"
+            maxLength={40}
+            placeholder="Ex.: Lanches, Bebidas"
+            invalid={!!error}
+            className="flex-1"
+          />
+          <Button type="submit" disabled={pending} className="shrink-0">
+            <Plus aria-hidden="true" className="size-5" strokeWidth={3} />
+            <span className="max-sm:sr-only">Adicionar categoria</span>
+          </Button>
+        </div>
       </Field>
       <FormMessage error={state.error} success={state.success} />
-      <Button type="submit" disabled={pending} className="self-start">
-        Adicionar categoria
-      </Button>
     </form>
   )
 }

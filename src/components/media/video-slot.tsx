@@ -1,7 +1,9 @@
 'use client'
 
+import { CircleAlert, CircleCheck, Clapperboard, RotateCcw, Trash2, Upload } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { Spinner } from '@/components/ui/submit-button'
 import { validateVideoFile } from '@/lib/video/rules'
 
 type SlotMedia = { id: string; status: 'processing' | 'ready' | 'failed' }
@@ -167,38 +169,104 @@ export function VideoSlot(props: {
     else setError('Não foi possível remover o vídeo.')
   }
 
+  const uploading = progress !== null
+  const state: 'empty' | 'uploading' | 'processing' | 'ready' | 'failed' = uploading
+    ? 'uploading'
+    : media === null
+      ? 'empty'
+      : media.status
+  const tone = {
+    empty: 'border-dashed border-line-strong bg-canvas',
+    uploading: 'border-line bg-surface',
+    processing: 'border-line bg-surface',
+    ready: 'border-go/50 bg-go-soft/50',
+    failed: 'border-danger/40 bg-danger-soft/50',
+  }[state]
+  const iconTone = {
+    empty: 'bg-surface text-go-strong shadow-[0_3px_0_var(--color-line-strong)]',
+    uploading: 'bg-go-soft text-go-strong',
+    processing: 'bg-sun-soft text-sun-ink',
+    ready: 'bg-go text-go-ink shadow-[0_3px_0_var(--color-go-lip)]',
+    failed: 'bg-danger-soft text-danger',
+  }[state]
+
   return (
-    <div className="flex flex-col gap-2">
-      <span className="text-sm font-medium">{props.label}</span>
-      {media === null || progress !== null ? (
-        <input
-          type="file"
-          accept="video/*"
-          aria-label={props.label}
-          disabled={props.disabled || progress !== null}
-          onChange={(event) => {
-            const file = event.target.files?.[0]
-            event.target.value = ''
-            if (file) void onFile(file)
-          }}
-        />
-      ) : null}
-      <div aria-live="polite" className="text-sm">
-        {progress !== null ? <p>Enviando… {Math.round(progress * 100)}%</p> : null}
-        {notice ? <p>{notice}</p> : null}
-        {media?.status === 'processing' && progress === null ? <p>Processando o vídeo…</p> : null}
-        {media?.status === 'ready' ? <p>Vídeo pronto</p> : null}
-        {media?.status === 'failed' ? <p className="text-danger">O processamento falhou.</p> : null}
+    <div className="flex min-w-0 flex-col gap-2">
+      <div
+        className={`group relative flex min-h-20 items-center gap-3.5 rounded-card border-2 p-3 transition-colors duration-150 ease-out-quint has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-go-strong ${tone} ${
+          props.disabled ? 'opacity-60' : state === 'empty' ? 'hover:border-go hover:bg-go-soft/60' : ''
+        }`}
+      >
+        <span aria-hidden="true" className={`flex size-14 shrink-0 items-center justify-center rounded-control ${iconTone}`}>
+          {state === 'ready' ? (
+            <CircleCheck className="size-7 animate-pop" strokeWidth={2.5} />
+          ) : state === 'failed' ? (
+            <CircleAlert className="size-7" strokeWidth={2.5} />
+          ) : state === 'processing' ? (
+            <Spinner className="size-6" />
+          ) : state === 'uploading' ? (
+            <Upload className="size-6" strokeWidth={2.75} />
+          ) : (
+            <Clapperboard className="size-6" strokeWidth={2.5} />
+          )}
+        </span>
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <span className="font-extrabold leading-tight text-ink">{props.label}</span>
+          <div aria-live="polite" className="flex flex-col gap-1.5 text-sm font-bold leading-snug">
+            {state === 'empty' ? <p className="text-ink-muted">Toque para escolher um vídeo</p> : null}
+            {uploading ? (
+              <>
+                <p className="text-ink numeric">Enviando… {Math.round(progress * 100)}%</p>
+                <span aria-hidden="true" className="block h-2.5 w-full overflow-hidden rounded-full bg-line">
+                  <span
+                    className="block h-full rounded-full bg-go transition-[width] duration-300 ease-out-quint"
+                    style={{ width: `${Math.max(4, Math.round(progress * 100))}%` }}
+                  />
+                </span>
+              </>
+            ) : null}
+            {notice ? <p className="text-sun-ink">{notice}</p> : null}
+            {media?.status === 'processing' && !uploading ? <p className="text-ink-muted">Processando o vídeo…</p> : null}
+            {media?.status === 'ready' ? <p className="text-go-strong">Vídeo pronto</p> : null}
+            {media?.status === 'failed' ? <p className="text-danger">O processamento falhou.</p> : null}
+          </div>
+        </div>
+        {media && !uploading ? (
+          <Button
+            variant={media.status === 'failed' ? 'secondary' : 'ghost'}
+            size="sm"
+            className={`shrink-0 ${media.status === 'failed' ? '' : 'text-danger hover:bg-danger-soft'}`}
+            onClick={remove}
+          >
+            {media.status === 'failed' ? (
+              <RotateCcw aria-hidden="true" className="size-4" strokeWidth={2.75} />
+            ) : (
+              <Trash2 aria-hidden="true" className="size-4" strokeWidth={2.5} />
+            )}
+            {media.status === 'failed' ? 'Tentar novamente' : 'Remover vídeo'}
+          </Button>
+        ) : null}
+        {media === null || uploading ? (
+          // O input cobre o cartão inteiro, transparente: o toque em qualquer ponto escolhe o arquivo.
+          <input
+            type="file"
+            accept="video/*"
+            aria-label={props.label}
+            disabled={props.disabled || uploading}
+            onChange={(event) => {
+              const file = event.target.files?.[0]
+              event.target.value = ''
+              if (file) void onFile(file)
+            }}
+            className="absolute inset-0 z-10 size-full cursor-pointer rounded-card opacity-0 disabled:cursor-not-allowed"
+          />
+        ) : null}
       </div>
       {error ? (
-        <p role="alert" className="text-sm text-danger">
-          {error}
+        <p role="alert" className="flex animate-rise items-start gap-1.5 text-sm font-bold leading-5 text-danger">
+          <CircleAlert aria-hidden="true" className="mt-px size-4 shrink-0" strokeWidth={2.5} />
+          <span>{error}</span>
         </p>
-      ) : null}
-      {media && progress === null ? (
-        <Button variant="ghost" className="self-start" onClick={remove}>
-          {media.status === 'failed' ? 'Tentar novamente' : 'Remover vídeo'}
-        </Button>
       ) : null}
     </div>
   )

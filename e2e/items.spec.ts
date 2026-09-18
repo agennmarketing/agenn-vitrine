@@ -30,15 +30,19 @@ test('cadastra item com capa e variações, edita código, esgota, duplica e exc
   await page.getByRole('button', { name: 'Salvar item' }).click()
   await expect(page.getByText('cód. CAM1')).toBeVisible()
 
-  await page.getByRole('button', { name: 'Marcar como esgotado' }).click()
+  // Disponibilidade é um interruptor; Duplicar, Subir, Descer e Excluir ficam no menu "Mais ações".
+  await page.getByRole('switch', { name: 'Camiseta disponível' }).click()
   await expect(page.getByText('Esgotado', { exact: true })).toBeVisible()
+  await expect(page.getByRole('switch', { name: 'Camiseta disponível' })).toHaveAttribute('aria-checked', 'false')
 
-  await page.getByRole('button', { name: 'Duplicar' }).click()
+  await page.getByRole('button', { name: 'Mais ações' }).click()
+  await page.getByRole('menuitem', { name: 'Duplicar' }).click()
   await expect(page.getByText('Item duplicado.')).toBeVisible()
   await expect(page.getByText('Camiseta (cópia)')).toBeVisible()
 
   page.once('dialog', (dialog) => dialog.accept())
-  await page.getByRole('button', { name: 'Excluir' }).last().click()
+  await page.getByRole('button', { name: 'Mais ações' }).last().click()
+  await page.getByRole('menuitem', { name: 'Excluir' }).click()
   await expect(page.getByText('Item excluído.')).toBeVisible()
 })
 

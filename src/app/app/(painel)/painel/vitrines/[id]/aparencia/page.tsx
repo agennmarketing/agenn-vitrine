@@ -1,3 +1,4 @@
+import { SectionIntro } from '@/components/ui/config-section'
 import { getEntitlements, getMyVitrine, getPanelSession, getVideoLimits } from '@/features/vitrines/queries'
 import { env } from '@/lib/env'
 import { imageSources } from '@/lib/media/urls'
@@ -30,20 +31,24 @@ export default async function AparenciaPage({ params }: { params: Promise<{ id: 
     : null
 
   return (
-    <AppearanceForm
-      vitrineId={id}
-      allowBranding={plan.allow_branding}
-      logo={slot('logo')}
-      banner={slot('banner')}
-      bannerVideo={bannerVideo}
-      videoLimits={videoLimits}
-      initial={{
-        theme: vitrine.theme === 'dark' ? 'dark' : 'light',
-        showPrices: vitrine.show_prices,
-        showMedia: vitrine.show_media,
-        brandColor: vitrine.brand_color ?? '#0b2a1c',
-        bannerEnabled: vitrine.banner_enabled,
-      }}
-    />
+    <div className="flex max-w-2xl flex-col gap-6">
+      <SectionIntro title="Aparência" description="O jeito da vitrine: tema, o que aparece em cada item e a sua marca." />
+      <AppearanceForm
+        vitrineId={id}
+        allowBranding={plan.allow_branding}
+        logo={slot('logo')}
+        banner={slot('banner')}
+        bannerVideo={bannerVideo}
+        videoLimits={videoLimits}
+        buttonText={vitrine.default_button_text}
+        initial={{
+          theme: vitrine.theme === 'dark' ? 'dark' : 'light',
+          showPrices: vitrine.show_prices,
+          showMedia: vitrine.show_media,
+          brandColor: vitrine.brand_color ?? '#0b2a1c',
+          bannerEnabled: vitrine.banner_enabled,
+        }}
+      />
+    </div>
   )
 }

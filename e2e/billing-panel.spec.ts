@@ -60,6 +60,8 @@ test('assinatura anual mostra a economia', async ({ page }) => {
   await page.goto('/painel/plano')
   await expect(page.getByText('Economize 17% em relação ao mensal.')).toBeVisible()
 
+  // Mensal vem marcado; ao escolher o anual, o botão passa a assinar o anual.
+  await page.getByRole('radio', { name: /Anual/ }).check()
   await page.getByRole('button', { name: ASSINAR_ANUAL }).click()
   await page.waitForURL(/\/painel\/plano\?assinatura=ok$/)
   await expect(page.getByRole('heading', { name: 'Plano Pro' })).toBeVisible()

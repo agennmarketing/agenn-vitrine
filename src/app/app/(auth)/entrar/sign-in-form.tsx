@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useActionState } from 'react'
 import { GoogleButton } from '@/components/auth/google-button'
+import { PasswordInput } from '@/components/auth/password-input'
 import { Turnstile } from '@/components/auth/turnstile'
 import { Field } from '@/components/ui/field'
 import { FormMessage } from '@/components/ui/form-message'
@@ -34,9 +35,9 @@ export function SignInForm({
           <Input id="email" name="email" type="email" autoComplete="email" inputMode="email" defaultValue={state.values?.email} invalid={!!errors.email} />
         </Field>
         <Field label="Senha" htmlFor="password" error={errors.password}>
-          <Input id="password" name="password" type="password" autoComplete="current-password" invalid={!!errors.password} />
+          <PasswordInput id="password" name="password" autoComplete="current-password" invalid={!!errors.password} />
         </Field>
-        <Link href="/esqueci-senha" className="self-end text-sm font-medium text-ink underline">
+        <Link href="/esqueci-senha" className="-mt-1 self-end rounded-md text-sm font-extrabold text-go-strong hover:underline">
           Esqueci minha senha
         </Link>
         <Turnstile resetSignal={state} />

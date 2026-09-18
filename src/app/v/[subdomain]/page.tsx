@@ -1,9 +1,11 @@
+import { Store } from 'lucide-react'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { loadPublicVitrine } from '@/features/public/load-vitrine'
 import { env } from '@/lib/env'
 import { buildVitrineUrl, originFor } from '@/lib/hosts/urls'
 import { Catalog } from './catalog'
+import { vitrineTheme } from './theme'
 
 type Props = { params: Promise<{ subdomain: string }> }
 
@@ -39,8 +41,17 @@ export default async function VitrinePage({ params }: Props) {
   if (!vitrine) notFound()
   if (vitrine.status !== 'active') {
     return (
-      <main className="flex min-h-dvh items-center justify-center p-6 text-center">
-        <h1 className="text-xl font-semibold">Vitrine indisponível no momento</h1>
+      <main
+        style={vitrineTheme(vitrine.brandColor, vitrine.theme).style}
+        className="flex min-h-dvh flex-col items-center justify-center bg-canvas px-6 text-center text-ink"
+      >
+        <span className="flex size-16 items-center justify-center rounded-full bg-subtle text-ink-muted">
+          <Store aria-hidden="true" className="size-7" strokeWidth={2.25} />
+        </span>
+        <h1 className="mt-5 text-2xl font-extrabold tracking-[-0.02em]">Vitrine indisponível no momento</h1>
+        <p className="mt-2 max-w-xs text-ink-muted">
+          <span className="font-semibold text-ink">{vitrine.name}</span> não está recebendo pedidos por aqui agora. Tente de novo mais tarde.
+        </p>
       </main>
     )
   }

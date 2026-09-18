@@ -6,7 +6,7 @@ import { VideoPlayer } from './video-player'
 
 // Spec 6.3: poster primeiro; o vídeo só começa depois do carregamento da página.
 // Com Save-Data ou prefers-reduced-motion, fica só o poster.
-export function BannerVideo({ video }: { video: PublicVideo }) {
+export function BannerVideo({ video, className = 'aspect-video w-full object-cover' }: { video: PublicVideo; className?: string }) {
   const [play, setPlay] = useState(false)
 
   useEffect(() => {
@@ -22,10 +22,9 @@ export function BannerVideo({ video }: { video: PublicVideo }) {
     return () => window.removeEventListener('load', start)
   }, [])
 
-  const className = 'aspect-video w-full rounded-card object-cover'
   if (!play) {
     // eslint-disable-next-line @next/next/no-img-element
-    return video.posterUrl ? <img src={video.posterUrl} alt="" fetchPriority="high" className={className} /> : null
+    return video.posterUrl ? <img src={video.posterUrl} alt="" fetchPriority="high" className={className} /> : <div aria-hidden="true" className={`${className} bg-subtle`} />
   }
   return <VideoPlayer video={video} showSoundToggle={false} className={className} />
 }

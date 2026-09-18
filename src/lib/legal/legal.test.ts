@@ -33,7 +33,7 @@ describe('termos de uso', () => {
   it('explica o que acontece ao voltar para o gratuito', () => {
     const texto = TERMS.flatMap((section) => section.paragraphs).join(' ')
     expect(texto).toContain('90 dias')
-    expect(texto).toContain('marca d\'água')
+    expect(texto).toContain('marca d’água')
   })
 })
 

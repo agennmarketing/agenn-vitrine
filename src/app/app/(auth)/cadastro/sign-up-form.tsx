@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react'
 import { GoogleButton } from '@/components/auth/google-button'
+import { PasswordInput } from '@/components/auth/password-input'
 import { Turnstile } from '@/components/auth/turnstile'
 import { Field } from '@/components/ui/field'
 import { FormMessage } from '@/components/ui/form-message'
@@ -25,18 +26,18 @@ export function SignUpForm() {
           <Input id="email" name="email" type="email" autoComplete="email" inputMode="email" defaultValue={state.values?.email} invalid={!!errors.email} />
         </Field>
         <Field label="Senha" htmlFor="password" error={errors.password} hint="Mínimo de 8 caracteres.">
-          <Input id="password" name="password" type="password" autoComplete="new-password" invalid={!!errors.password} />
+          <PasswordInput id="password" name="password" autoComplete="new-password" invalid={!!errors.password} />
         </Field>
         <Turnstile resetSignal={state} />
         <FormMessage error={state.error} />
         <SubmitButton>Criar conta</SubmitButton>
-        <p className="text-center text-xs leading-5 text-ink-muted">
+        <p className="text-center text-sm font-semibold leading-5 text-ink-muted">
           Ao criar a conta, você concorda com os{' '}
-          <a href="/termos" target="_blank" rel="noreferrer" className="underline">
+          <a href="/termos" target="_blank" rel="noreferrer" className="font-extrabold text-ink underline decoration-line-strong hover:decoration-go-strong">
             Termos de uso
           </a>{' '}
           e a{' '}
-          <a href="/privacidade" target="_blank" rel="noreferrer" className="underline">
+          <a href="/privacidade" target="_blank" rel="noreferrer" className="font-extrabold text-ink underline decoration-line-strong hover:decoration-go-strong">
             Política de privacidade
           </a>
           .

@@ -1,3 +1,4 @@
+import { SectionIntro } from '@/components/ui/config-section'
 import { getMyVitrine, getPanelSession } from '@/features/vitrines/queries'
 import { formatPhone } from '@/lib/whatsapp/phone'
 import { Contacts } from './contacts'
@@ -16,14 +17,20 @@ export default async function WhatsAppPage({ params }: { params: Promise<{ id: s
     .order('created_at')
 
   return (
-    <Contacts
-      vitrineId={id}
-      primaryId={vitrine.primary_whatsapp_id}
-      contacts={(contacts ?? []).map((contact) => ({
-        id: contact.id,
-        label: contact.label,
-        phone: formatPhone(contact.phone_e164),
-      }))}
-    />
+    <div className="flex max-w-2xl flex-col gap-6">
+      <SectionIntro
+        title="WhatsApp"
+        description="Os números que recebem os pedidos. O botão da vitrine abre a conversa com o principal."
+      />
+      <Contacts
+        vitrineId={id}
+        primaryId={vitrine.primary_whatsapp_id}
+        contacts={(contacts ?? []).map((contact) => ({
+          id: contact.id,
+          label: contact.label,
+          phone: formatPhone(contact.phone_e164),
+        }))}
+      />
+    </div>
   )
 }

@@ -20,7 +20,7 @@ test('grupos a partir de modelos, ligados ao item, e formulário da sacola', asy
 
   await page.getByLabel('Começar de um modelo').selectOption({ label: 'Sabores de pizza' })
   const sabores = page.getByRole('form', { name: 'Novo grupo' })
-  await expect(sabores.getByLabel('Tipo')).toHaveValue('flavors')
+  await expect(sabores.getByRole('radio', { name: 'Sabores de pizza' })).toBeChecked()
   await sabores.getByLabel('Preço dos sabores').selectOption({ label: 'Média' })
   await sabores.getByRole('button', { name: 'Salvar grupo' }).click()
   await expect(page.getByRole('form', { name: 'Grupo Sabores' })).toBeVisible()
