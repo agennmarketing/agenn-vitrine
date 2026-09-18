@@ -26,8 +26,8 @@ test('login em outro aparelho encerra a sessão anterior', async ({ browser }) =
 test('conta: e-mail só leitura, alterar nome e trocar senha', async ({ page }) => {
   const user = await createConfirmedUser('conta')
   await signIn(page, user.email, user.password)
-  // Pelo bloco do usuário no topo: único caminho para Conta também no celular.
-  await page.getByRole('link', { name: `Conta de ${user.name}` }).click()
+  // Pela navegação: barra lateral no computador, barra inferior no celular.
+  await page.getByRole('link', { name: 'Conta', exact: true }).filter({ visible: true }).click()
   await expect(page).toHaveURL(/\/painel\/conta$/)
 
   const emailInput = page.getByLabel('E-mail')

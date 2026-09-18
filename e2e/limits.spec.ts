@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { createConfirmedUser, makeTestImage, seedItem, seedVitrine, setPlan, signIn, uploadImage } from './helpers'
+import { createConfirmedUser, itemStep, makeTestImage, seedItem, seedVitrine, setPlan, signIn, uploadImage } from './helpers'
 
 test('gratuito: 11º item vira convite para o Pro; Pro cadastra', async ({ page }) => {
   const user = await createConfirmedUser('limite-itens')
@@ -9,8 +9,10 @@ test('gratuito: 11º item vira convite para o Pro; Pro cadastra', async ({ page 
 
   await page.goto(`/painel/vitrines/${vitrine.id}/itens/novo`)
   await uploadImage(page, 'Capa', await makeTestImage(page))
+  await itemStep(page, 'Detalhes')
   await page.getByLabel('Nome', { exact: true }).fill('Décimo primeiro')
-  await page.getByLabel('Categoria').selectOption({ label: 'Destaques' })
+  await page.getByLabel('Categoria', { exact: true }).selectOption({ label: 'Destaques' })
+  await itemStep(page, 'Preço')
   await page.getByLabel('Preço', { exact: true }).fill('10')
   await page.getByRole('button', { name: 'Salvar item' }).click()
   await expect(page.getByText('Seu plano permite até 10 itens por vitrine. Assine o Pro para cadastrar mais.')).toBeVisible()

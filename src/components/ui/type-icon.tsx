@@ -8,10 +8,10 @@ const TYPE_STYLE: Record<VitrineType, { Icon: typeof Scissors; className: string
   produtos: { Icon: ShoppingBag, className: 'bg-type-produtos text-white [--lip:#1c5cb8]' },
 }
 
-export function TypeIcon({ type, size = 'md' }: { type: VitrineType; size?: 'sm' | 'md' | 'lg' }) {
+export function TypeIcon({ type, size = 'md' }: { type: VitrineType; size?: 'sm' | 'md' | 'lg' | 'xl' }) {
   const { Icon, className } = TYPE_STYLE[type]
-  const box = { sm: 'size-9 rounded-[0.625rem]', md: 'size-12 rounded-control', lg: 'size-14 rounded-card' }[size]
-  const icon = { sm: 'size-5', md: 'size-6', lg: 'size-7' }[size]
+  const box = { sm: 'size-9 rounded-[0.625rem]', md: 'size-12 rounded-control', lg: 'size-14 rounded-card', xl: 'size-16 rounded-[1.125rem]' }[size]
+  const icon = { sm: 'size-5', md: 'size-6', lg: 'size-7', xl: 'size-8' }[size]
   return (
     <span
       aria-hidden="true"

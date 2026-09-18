@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { createAdminClient, createConfirmedUser, seedItem, seedVitrine, signIn, uniqueSubdomain } from './helpers'
+import { createAdminClient, createConfirmedUser, itemStep, seedItem, seedVitrine, signIn, uniqueSubdomain } from './helpers'
 
 const vitrineUrl = (subdomain: string) => `http://${subdomain}.localhost:3000/`
 
@@ -104,6 +104,7 @@ test('alteração no painel aparece na vitrine pública', async ({ page }) => {
 
   await signIn(page, user.email, user.password)
   await page.goto(`/painel/vitrines/${vitrine.id}/itens/${item.id}`)
+  await itemStep(page, 'Detalhes')
   await page.getByLabel('Nome', { exact: true }).fill('Nome Novo')
   await page.getByRole('button', { name: 'Salvar item' }).click()
   await expect(page.getByText('Item salvo.')).toBeVisible()

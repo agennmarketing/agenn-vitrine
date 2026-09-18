@@ -26,7 +26,7 @@ test('cria vitrine pelo assistente e respeita o limite do gratuito', async ({ pa
   await expect(page.getByRole('heading', { name: 'Destaques' })).toBeVisible()
 
   await page.goto('/painel')
-  await expect(page.getByText('Vitrines: 1 de 1')).toBeVisible()
+  await expect(page.getByText('1 de 1 vitrine do seu plano')).toBeVisible()
   await expect(page.getByRole('link', { name: 'Nova vitrine' })).toHaveCount(0)
   await expect(page.getByText('Seu plano permite até 1 vitrine. Assine o Pro para criar mais.')).toBeVisible()
 })

@@ -2,6 +2,7 @@
 
 import { Download, QrCode, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Button, type ButtonSize } from '@/components/ui/button'
 
 export function QrCodeButton({ url, name, subdomain, className = '', size }: { url: string; name: string; subdomain: string; className?: string; size?: ButtonSize }) {
@@ -57,7 +58,8 @@ export function QrCodeButton({ url, name, subdomain, className = '', size }: { u
     )
   }
 
-  return (
+  // Portal no <body>: o cartão entra com animação (transform), e um fixed lá dentro ficaria preso ao cartão.
+  return createPortal(
     <div
       role="dialog"
       aria-label={`QR Code de ${name}`}
@@ -94,6 +96,7 @@ export function QrCodeButton({ url, name, subdomain, className = '', size }: { u
           Baixar PNG
         </Button>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

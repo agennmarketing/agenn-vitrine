@@ -89,6 +89,11 @@ export async function setPlan(userId: string, plan: 'free' | 'pro') {
 
 export type SeededVitrine = { id: string; subdomain: string; categoryId: string; contactId: string; phone: string; name: string }
 
+// Passos do popup de item (Fotos, Detalhes, Preço, Extras): cada um mostra só os seus campos.
+export async function itemStep(page: Page, label: 'Fotos' | 'Detalhes' | 'Preço' | 'Extras') {
+  await page.getByRole('navigation', { name: 'Passos do item' }).getByRole('button', { name: label }).click()
+}
+
 export async function seedVitrine(
   ownerId: string,
   options: { type?: 'produtos' | 'servicos' | 'comida'; name?: string; subdomain?: string; phone?: string } = {},
