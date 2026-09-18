@@ -34,6 +34,17 @@ describe('fetchAvailability', () => {
     })
   })
 
+  it('401 com corpo com mensagem devolve a mensagem do corpo', async () => {
+    vi.stubGlobal(
+      'fetch',
+      async () => new Response(JSON.stringify({ ok: false, message: 'Sessão expirada. Entre de novo.' }), { status: 401 }),
+    )
+    expect(await fetchAvailability('/x', new AbortController().signal)).toEqual({
+      ok: false,
+      message: 'Sessão expirada. Entre de novo.',
+    })
+  })
+
   it('checagem cancelada devolve nulo, sem mensagem', async () => {
     vi.stubGlobal('fetch', async () => {
       throw new DOMException('cancelada', 'AbortError')

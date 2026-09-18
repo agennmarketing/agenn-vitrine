@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { AVAILABILITY_ERROR_MESSAGE } from '@/lib/forms/availability'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { SUBDOMAIN_TAKEN_MESSAGE, subdomainField } from '@/lib/vitrines/schemas'
 
@@ -21,7 +22,7 @@ export async function GET(request: Request) {
     p_subdomain: parsed.data,
     p_except_vitrine_id: url.searchParams.get('vitrine') ?? undefined,
   })
-  if (error) return NextResponse.json({ ok: false, message: 'Não foi possível verificar agora.' })
+  if (error) return NextResponse.json({ ok: false, message: AVAILABILITY_ERROR_MESSAGE })
 
   return NextResponse.json(
     data ? { ok: true, message: 'Endereço disponível.' } : { ok: false, message: SUBDOMAIN_TAKEN_MESSAGE },

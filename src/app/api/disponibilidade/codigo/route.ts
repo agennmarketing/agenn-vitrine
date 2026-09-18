@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { ITEM_CODE_MESSAGES, validateItemCode } from '@/lib/codes/item-code'
+import { AVAILABILITY_ERROR_MESSAGE } from '@/lib/forms/availability'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 
 export async function GET(request: Request) {
@@ -17,7 +18,7 @@ export async function GET(request: Request) {
     p_code: result.value,
     p_item_id: url.searchParams.get('item') ?? undefined,
   })
-  if (error) return NextResponse.json({ ok: false, message: 'Não foi possível verificar agora.' })
+  if (error) return NextResponse.json({ ok: false, message: AVAILABILITY_ERROR_MESSAGE })
 
   return NextResponse.json(
     data ? { ok: true, message: 'Código disponível.' } : { ok: false, message: ITEM_CODE_MESSAGES.taken },
