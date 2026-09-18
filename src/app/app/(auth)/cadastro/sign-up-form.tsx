@@ -10,7 +10,7 @@ import { SubmitButton } from '@/components/ui/submit-button'
 import { signUpAction } from '@/features/auth/actions'
 import { initialFormState } from '@/lib/forms/form-state'
 
-export function SignUpForm({ siteUrl }: { siteUrl: string }) {
+export function SignUpForm() {
   const [state, formAction] = useActionState(signUpAction, initialFormState)
   const errors = state.fieldErrors ?? {}
 
@@ -32,11 +32,11 @@ export function SignUpForm({ siteUrl }: { siteUrl: string }) {
         <SubmitButton>Criar conta</SubmitButton>
         <p className="text-center text-xs leading-5 text-ink-muted">
           Ao criar a conta, você concorda com os{' '}
-          <a href={`${siteUrl}/termos`} target="_blank" rel="noreferrer" className="underline">
+          <a href="/termos" target="_blank" rel="noreferrer" className="underline">
             Termos de uso
           </a>{' '}
           e a{' '}
-          <a href={`${siteUrl}/privacidade`} target="_blank" rel="noreferrer" className="underline">
+          <a href="/privacidade" target="_blank" rel="noreferrer" className="underline">
             Política de privacidade
           </a>
           .

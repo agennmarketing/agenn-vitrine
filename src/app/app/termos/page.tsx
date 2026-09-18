@@ -1,6 +1,6 @@
+import { LegalDocument } from '@/components/legal/legal-document'
 import { LEGAL_VERSION_LABEL } from '@/lib/legal/company'
 import { TERMS } from '@/lib/legal/terms'
-import { LegalDocument } from '@/components/legal/legal-document'
 
 export const metadata = { title: 'Termos de uso' }
 

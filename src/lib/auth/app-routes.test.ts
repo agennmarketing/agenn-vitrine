@@ -30,6 +30,8 @@ describe('decideAppRoute', () => {
       '/auth/callback',
       '/auth/confirm',
       '/robots.txt',
+      '/termos',
+      '/privacidade',
     ]) {
       expect(decideAppRoute({ pathname, ...guest })).toEqual({ action: 'continue' })
     }
