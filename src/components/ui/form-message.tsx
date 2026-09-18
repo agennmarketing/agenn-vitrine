@@ -16,7 +16,7 @@ export function FormMessage({ error, success }: { error?: string; success?: stri
     return (
       <p
         role="status"
-        className="flex animate-rise items-start gap-2.5 rounded-control border-2 border-go/40 bg-go-soft px-4 py-3 text-[0.9375rem] font-bold leading-5 text-go-strong"
+        className="flex animate-rise items-start gap-2.5 rounded-control border-2 border-success/30 bg-success-soft px-4 py-3 text-[0.9375rem] font-bold leading-5 text-success"
       >
         <CircleCheck aria-hidden="true" className="mt-px size-5 shrink-0 animate-pop" strokeWidth={2.5} />
         <span>{success}</span>

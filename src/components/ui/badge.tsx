@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 const TONES = {
   neutral: 'bg-subtle text-ink-muted',
   go: 'bg-go-soft text-go-strong',
+  success: 'bg-success-soft text-success',
   sun: 'bg-sun-soft text-sun-ink',
   danger: 'bg-danger-soft text-danger',
   deep: 'bg-deep text-deep-ink',

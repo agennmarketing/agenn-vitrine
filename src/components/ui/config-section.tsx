@@ -86,7 +86,7 @@ export function ConfigToggle({
         role="switch"
         aria-label={title}
         aria-describedby={description ? `${id}-desc` : undefined}
-        className="relative h-8 w-14 shrink-0 cursor-pointer appearance-none rounded-full border-2 border-line-strong bg-line transition-colors duration-200 ease-out-quint before:absolute before:left-0.5 before:top-1/2 before:size-6 before:-translate-y-1/2 before:rounded-full before:bg-white before:shadow-[0_2px_0_rgb(11_42_28/0.18)] before:transition-transform before:duration-300 before:ease-out-back before:content-[''] checked:border-go-lip checked:bg-go checked:before:translate-x-6 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-go-strong disabled:cursor-not-allowed disabled:opacity-55 motion-reduce:before:transition-none"
+        className="relative h-8 w-14 shrink-0 cursor-pointer appearance-none rounded-full border-2 border-line-strong bg-line transition-colors duration-200 ease-out-quint before:absolute before:left-0.5 before:top-1/2 before:size-6 before:-translate-y-1/2 before:rounded-full before:bg-white before:shadow-[0_2px_0_rgb(29_17_71/0.18)] before:transition-transform before:duration-300 before:ease-out-back before:content-[''] checked:border-go-lip checked:bg-go checked:before:translate-x-6 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-go-strong disabled:cursor-not-allowed disabled:opacity-55 motion-reduce:before:transition-none"
         {...input}
       />
     </label>

@@ -13,7 +13,7 @@ web
 
 ## Product Purpose
 
-SaaS para criar vitrines digitais (catálogos e cardápios) com fotos e vídeos. Não é sistema de pedidos: o cliente monta o que quer e é levado ao WhatsApp do lojista com a mensagem pronta e um código. Sucesso = lojista publica a vitrine sem ajuda e o cliente chega ao WhatsApp com o pedido certo.
+Vitrimove é um SaaS para criar vitrines digitais (catálogos e cardápios) com fotos e vídeos. Não é sistema de pedidos: o cliente monta o que quer e é levado ao WhatsApp do lojista com a mensagem pronta e um código. Sucesso = lojista publica a vitrine sem ajuda e o cliente chega ao WhatsApp com o pedido certo.
 
 ## Positioning
 
@@ -36,8 +36,9 @@ Vídeo nos itens (9:16 e 16:9) sem pesar a vitrine, e o pedido chegando pronto n
 
 ## Brand Commitments
 
-- Nome: Agenn Vitrine. Logo: ícone de loja com toldo, branco sobre verde-escuro `#0B2A1C` (`assets/brand/logo-icone.png`, `public/brand/logo-icone-512.png`).
-- Painel claro, com um verde vivo como cor de ação ao lado do verde-escuro da logo (escolha do usuário, 2026-09-18).
+- Nome: **Vitrimove** (antes Agenn Vitrine; troca decidida pelo usuário em 2026-09-18). Logo: lojinha sorridente com linhas de velocidade, roxa (`assets/brand/vitrimove-logo.png`, fonte em `banco de imagens/LOGO VITRIMOVE.svg`; símbolo transparente em `public/brand/vitrimove-marca-512.png`). O domínio continua `agenn.com.br` até a migração.
+- Painel claro. Cor da marca: roxo **#673DE6** (ações principais, texto branco); índigo-escuro para placas de destaque; verde só para confirmação; dourado só para Pro (decisão do usuário, 2026-09-18, substituindo o verde).
+- O visual do painel e das vitrines mergeado em 2026-09-18 (PRs #44 e #45) foi aprovado pelo usuário; mudanças futuras refinam, não recomeçam.
 - O painel deve lembrar o Duolingo: simples de usar, passos claros, forte na entrega e no retorno ao usuário.
 - Vitrine pública: um layout por segmento (Comida, Serviços, Produtos), com a cor e o tema do lojista por cima. Referências em `banco de imagens/`.
 - Idioma: português do Brasil, tom direto e caloroso.

@@ -366,7 +366,7 @@ export function ItemForm(props: {
               aria-hidden="true"
               className="relative inline-flex h-8 w-14 shrink-0 items-center rounded-full border-2 border-line-strong bg-line transition-colors duration-200 ease-out-quint peer-checked:border-danger-lip peer-checked:bg-danger-fill"
             >
-              <span className="block size-6 translate-x-0.5 rounded-full group-has-[:checked]:translate-x-[1.625rem] bg-white shadow-[0_2px_0_rgb(11_42_28/0.18)] transition-transform duration-300 ease-out-back" />
+              <span className="block size-6 translate-x-0.5 rounded-full group-has-[:checked]:translate-x-[1.625rem] bg-white shadow-[0_2px_0_rgb(29_17_71/0.18)] transition-transform duration-300 ease-out-back" />
             </span>
           </label>
 

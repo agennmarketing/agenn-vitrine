@@ -2,7 +2,7 @@
 // textos legais não estão prontos para o lançamento.
 export const COMPANY = {
   legalName: 'A PREENCHER — razão social',
-  tradeName: 'Agenn Vitrine',
+  tradeName: 'Vitrimove',
   cnpj: 'A PREENCHER — 00.000.000/0001-00',
   address: 'A PREENCHER — endereço completo',
   contactEmail: 'suporte@agenn.com.br',

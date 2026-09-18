@@ -1,19 +1,19 @@
 import { ArrowRight } from 'lucide-react'
-import Image from 'next/image'
 import Link from 'next/link'
 import { buttonClasses } from '@/components/ui/button'
 import { TypeIcon } from '@/components/ui/type-icon'
 import { env } from '@/lib/env'
 import { buildAppUrl } from '@/lib/hosts/urls'
+import { LogoMark, Wordmark } from '@/components/brand/logo'
 
 export default function MarketingHome() {
   return (
     <div className="flex min-h-dvh flex-col bg-canvas">
       <header className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-4 py-5 sm:px-6">
         <div className="flex items-center gap-2.5">
-          <Image src="/brand/logo-icone-512.png" alt="" width={40} height={40} className="size-10 rounded-xl" priority />
-          <h1 className="text-lg font-black tracking-[-0.02em] text-deep">
-            Agenn <span className="text-go-strong">Vitrine</span>
+          <LogoMark size={44} priority />
+          <h1>
+            <Wordmark className="text-xl" />
           </h1>
         </div>
         <Link href={buildAppUrl('/entrar', env.NEXT_PUBLIC_ROOT_DOMAIN)} className={buttonClasses('ghost', '', 'sm')}>

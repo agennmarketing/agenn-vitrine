@@ -8,7 +8,7 @@ import { readableTextColor } from '@/lib/color/contrast'
  * usamos --color-accent, que cai para a cor do texto quando a marca some no fundo.
  */
 
-const DEFAULT_BRAND = '#0b2a1c'
+const DEFAULT_BRAND = '#673de6'
 
 const LIGHT = {
   canvas: '#f7f7f5',
@@ -66,10 +66,9 @@ export function vitrineTheme(brandColor: string | null, theme: 'light' | 'dark')
   const dark = theme === 'dark'
   const base = dark ? DARK : LIGHT
   const custom = normalize(brandColor)
-  // Sem cor escolhida: no claro vale o verde-escuro padrão; no escuro ele sumiria
-  // no fundo, então os botões ficam claros (texto escuro), como um app nativo.
-  const brand = custom ?? (dark ? '#f1f2ee' : DEFAULT_BRAND)
-  const brandInk = custom ? readableTextColor(custom) : dark ? '#0f0f11' : '#ffffff'
+  // Sem cor escolhida vale o roxo da Vitrimove, que aparece bem nos dois temas.
+  const brand = custom ?? DEFAULT_BRAND
+  const brandInk = readableTextColor(brand)
   const tint = custom ?? DEFAULT_BRAND
   const tintAmount = dark ? 0.05 : 0.035
 
