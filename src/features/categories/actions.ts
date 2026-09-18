@@ -5,7 +5,7 @@ import { requireActionUser } from '@/lib/auth/action-user'
 import { fieldErrorsFromZod, readFormFields, type FormState } from '@/lib/forms/form-state'
 import { revalidateVitrine } from '@/lib/vitrines/cache'
 import { mapDbError } from '@/lib/vitrines/db-errors'
-import { moveInList } from '@/lib/vitrines/reorder'
+import { isSameIdSet, moveInList, REORDER_STALE_MESSAGE } from '@/lib/vitrines/reorder'
 import { categoryNameSchema } from '@/lib/vitrines/schemas'
 
 async function ownedVitrine(vitrineId: string) {
@@ -72,6 +72,23 @@ export async function moveCategoryAction(vitrineId: string, categoryId: string, 
   if (failed?.error) return { error: mapDbError(failed.error) }
   revalidateVitrine(vitrine.subdomain)
   return {}
+}
+
+// Arrastar para reordenar: grava a ordem inteira, desde que seja exatamente o conjunto atual.
+export async function reorderCategoriesAction(vitrineId: string, orderedIds: string[]): Promise<FormState> {
+  const { supabase, vitrine } = await ownedVitrine(vitrineId)
+  const { data: categories, error: readError } = await supabase.from('categories').select('id').eq('vitrine_id', vitrineId)
+  if (readError) return { error: mapDbError(readError) }
+  if (!isSameIdSet((categories ?? []).map((c) => c.id), orderedIds)) return { error: REORDER_STALE_MESSAGE }
+  const results = await Promise.all(
+    orderedIds.map((id, position) =>
+      supabase.from('categories').update({ position }).eq('id', id).eq('vitrine_id', vitrineId),
+    ),
+  )
+  const failed = results.find((result) => result.error)
+  if (failed?.error) return { error: mapDbError(failed.error) }
+  revalidateVitrine(vitrine.subdomain)
+  return { success: 'Ordem salva.' }
 }
 
 export async function deleteCategoryAction(vitrineId: string, categoryId: string): Promise<FormState> {

@@ -8,7 +8,7 @@ import { copyMediaFiles, deleteMediaRows, removeStoredFiles } from '@/lib/media/
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { revalidateVitrine } from '@/lib/vitrines/cache'
 import { mapDbError } from '@/lib/vitrines/db-errors'
-import { moveInList } from '@/lib/vitrines/reorder'
+import { isSameIdSet, moveInList, REORDER_STALE_MESSAGE } from '@/lib/vitrines/reorder'
 import { itemSchema, type ItemInput } from '@/lib/vitrines/schemas'
 
 const ITEM_FIELDS = [
@@ -208,6 +208,38 @@ export async function moveItemAction(vitrineId: string, itemId: string, directio
   if (failed?.error) return { error: mapDbError(failed.error) }
   revalidateVitrine(subdomain)
   return {}
+}
+
+// Arrastar para reordenar dentro de uma categoria: a categoria sai dos próprios itens enviados,
+// e a lista precisa ser exatamente o conjunto atual de itens dela (não excluídos).
+export async function reorderItemsAction(vitrineId: string, orderedIds: string[]): Promise<FormState> {
+  if (!Array.isArray(orderedIds) || typeof orderedIds[0] !== 'string') return { error: REORDER_STALE_MESSAGE }
+  const { supabase } = await requireActionUser()
+  const { data: vitrine } = await supabase.from('vitrines').select('id, subdomain').eq('id', vitrineId).maybeSingle()
+  if (!vitrine) redirect('/painel')
+  const { data: first } = await supabase
+    .from('items')
+    .select('category_id')
+    .eq('id', orderedIds[0])
+    .eq('vitrine_id', vitrineId)
+    .is('deleted_at', null)
+    .maybeSingle()
+  if (!first?.category_id) return { error: REORDER_STALE_MESSAGE }
+  const { data: siblings, error: readError } = await supabase
+    .from('items')
+    .select('id')
+    .eq('vitrine_id', vitrineId)
+    .eq('category_id', first.category_id)
+    .is('deleted_at', null)
+  if (readError) return { error: mapDbError(readError) }
+  if (!isSameIdSet((siblings ?? []).map((s) => s.id), orderedIds)) return { error: REORDER_STALE_MESSAGE }
+  const results = await Promise.all(
+    orderedIds.map((id, position) => supabase.from('items').update({ position }).eq('id', id).eq('vitrine_id', vitrineId)),
+  )
+  const failed = results.find((r) => r.error)
+  if (failed?.error) return { error: mapDbError(failed.error) }
+  revalidateVitrine(vitrine.subdomain)
+  return { success: 'Ordem salva.' }
 }
 
 export async function deleteItemAction(vitrineId: string, itemId: string): Promise<FormState> {

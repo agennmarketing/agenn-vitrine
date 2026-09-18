@@ -9,6 +9,7 @@ import { ChoiceCard } from '@/components/ui/choice-card'
 import { Field } from '@/components/ui/field'
 import { FormMessage } from '@/components/ui/form-message'
 import { Input, Select, Textarea } from '@/components/ui/input'
+import { DragHandle, SortableItem, SortableList } from '@/components/ui/sortable-list'
 import { Spinner } from '@/components/ui/submit-button'
 import { UnsavedChangesGuard } from '@/components/ui/unsaved-changes'
 import { saveItemAction } from '@/features/items/actions'
@@ -128,9 +129,16 @@ export function ItemForm(props: {
     }, 400)
   }
 
+  // Reordenar não dispara "input" no formulário; avisa o guarda de alterações não salvas.
+  function markDirty() {
+    document.getElementById('item-form')?.dispatchEvent(new Event('input', { bubbles: true }))
+  }
+
   function updateVariation(key: string, patch: Partial<VariationRow>) {
     setVariations((rows) => rows.map((row) => (row.key === key ? { ...row, ...patch } : row)))
   }
+
+  const groupName = (id: string) => props.addonGroups.find((group) => group.id === id)?.name ?? 'Grupo'
 
   const showPrices = priceType !== 'on_request'
   const initialCode = item?.code ?? props.nextCode
@@ -381,62 +389,75 @@ export function ItemForm(props: {
                 <span>{errors.variations}</span>
               </p>
             ) : null}
-            {variations.map((row, index) => {
-              const n = index + 1
-              return (
-                <div key={row.key} className="flex animate-rise flex-col gap-3 rounded-control border-2 border-line bg-canvas p-3">
-                  <div className="flex items-center gap-2">
-                    <span
-                      aria-hidden="true"
-                      className="flex size-8 shrink-0 items-center justify-center rounded-full bg-deep text-sm font-black text-deep-ink numeric"
-                    >
-                      {n}
-                    </span>
-                    <Input
-                      aria-label={`Nome da variação ${n}`}
-                      placeholder="Nome (ex.: Grande)"
-                      value={row.name}
-                      maxLength={40}
-                      onChange={(event) => updateVariation(row.key, { name: event.target.value })}
-                      className="flex-1"
-                    />
-                    <button
-                      type="button"
-                      aria-label={`Remover variação ${n}`}
-                      title="Remover"
-                      onClick={() => setVariations((rows) => rows.filter((r) => r.key !== row.key))}
-                      className="flex size-11 shrink-0 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-danger-soft hover:text-danger"
-                    >
-                      <Trash2 aria-hidden="true" className="size-5" strokeWidth={2.5} />
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <MoneyInput
-                      aria-label={`Preço da variação ${n}`}
-                      placeholder="Preço"
-                      value={row.price}
-                      onChange={(event) => updateVariation(row.key, { price: event.target.value })}
-                    />
-                    <MoneyInput
-                      aria-label={`Preço promocional da variação ${n}`}
-                      placeholder="Promoção"
-                      value={row.promoPrice}
-                      onChange={(event) => updateVariation(row.key, { promoPrice: event.target.value })}
-                    />
-                  </div>
-                  <label className="flex w-fit cursor-pointer items-center gap-2.5 text-sm font-bold text-ink">
-                    <input
-                      type="checkbox"
-                      aria-label={`Variação ${n} esgotada`}
-                      checked={row.soldOut}
-                      onChange={(event) => updateVariation(row.key, { soldOut: event.target.checked })}
-                      className="size-5 cursor-pointer accent-danger"
-                    />
-                    Esgotada
-                  </label>
-                </div>
-              )
-            })}
+            {/* A ordem da lista é a ordem na vitrine: a posição sai daqui ao salvar. */}
+            <SortableList
+              entries={variations.map((row, index) => ({ id: row.key, label: row.name.trim() || `Variação ${index + 1}` }))}
+              onReorder={(orderedKeys) => {
+                setVariations((rows) => orderedKeys.map((key) => rows.find((row) => row.key === key)!))
+                markDirty()
+              }}
+            >
+              {variations.map((row, index) => {
+                const n = index + 1
+                return (
+                  // A entrada animada fica por dentro: a animação (transform) não pode brigar com o arrasto.
+                  <SortableItem key={row.key} id={row.key} as="div">
+                    <div className="flex animate-rise flex-col gap-3 rounded-control border-2 border-line bg-canvas p-3 pl-1.5">
+                      <div className="flex items-center gap-2">
+                        <DragHandle label={`Reordenar variação ${n}`} className="-mr-1 h-11 w-8 rounded-control" />
+                        <span
+                          aria-hidden="true"
+                          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-deep text-sm font-black text-deep-ink numeric"
+                        >
+                          {n}
+                        </span>
+                        <Input
+                          aria-label={`Nome da variação ${n}`}
+                          placeholder="Nome (ex.: Grande)"
+                          value={row.name}
+                          maxLength={40}
+                          onChange={(event) => updateVariation(row.key, { name: event.target.value })}
+                          className="flex-1"
+                        />
+                        <button
+                          type="button"
+                          aria-label={`Remover variação ${n}`}
+                          title="Remover"
+                          onClick={() => setVariations((rows) => rows.filter((r) => r.key !== row.key))}
+                          className="flex size-11 shrink-0 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-danger-soft hover:text-danger"
+                        >
+                          <Trash2 aria-hidden="true" className="size-5" strokeWidth={2.5} />
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 pl-1.5">
+                        <MoneyInput
+                          aria-label={`Preço da variação ${n}`}
+                          placeholder="Preço"
+                          value={row.price}
+                          onChange={(event) => updateVariation(row.key, { price: event.target.value })}
+                        />
+                        <MoneyInput
+                          aria-label={`Preço promocional da variação ${n}`}
+                          placeholder="Promoção"
+                          value={row.promoPrice}
+                          onChange={(event) => updateVariation(row.key, { promoPrice: event.target.value })}
+                        />
+                      </div>
+                      <label className="ml-1.5 flex w-fit cursor-pointer items-center gap-2.5 text-sm font-bold text-ink">
+                        <input
+                          type="checkbox"
+                          aria-label={`Variação ${n} esgotada`}
+                          checked={row.soldOut}
+                          onChange={(event) => updateVariation(row.key, { soldOut: event.target.checked })}
+                          className="size-5 cursor-pointer accent-danger"
+                        />
+                        Esgotada
+                      </label>
+                    </div>
+                  </SortableItem>
+                )
+              })}
+            </SortableList>
             <Button
               variant="secondary"
               disabled={variations.length >= 20}
@@ -451,7 +472,10 @@ export function ItemForm(props: {
           </fieldset>
         </FormSection>
 
-        <FormSection title="Complementos" description="Os grupos aparecem na ordem em que foram marcados.">
+        <FormSection
+          title="Complementos"
+          description="Os grupos aparecem na ordem em que foram marcados. Com dois ou mais, arraste para mudar a ordem."
+        >
           {props.addonGroups.length === 0 ? (
             <p className="rounded-control border-2 border-dashed border-line-strong px-4 py-4 text-sm font-semibold text-ink-muted">
               Nenhum grupo criado. Crie grupos na aba Complementos.
@@ -476,6 +500,40 @@ export function ItemForm(props: {
               })}
             </div>
           )}
+          {groupIds.length >= 2 ? (
+            <div className="flex flex-col gap-2">
+              <p id="ordem-complementos" className="text-[0.9375rem] font-extrabold leading-5 text-ink">
+                Ordem na vitrine
+              </p>
+              <SortableList
+                entries={groupIds.map((id) => ({ id, label: groupName(id) }))}
+                onReorder={(orderedIds) => {
+                  setGroupIds(orderedIds)
+                  markDirty()
+                }}
+              >
+                <ol aria-labelledby="ordem-complementos" className="flex flex-col rounded-control border-2 border-line bg-surface">
+                  {groupIds.map((id, index) => (
+                    <SortableItem
+                      key={id}
+                      id={id}
+                      className={`flex items-center gap-2 py-1 pl-1 pr-3 ${index > 0 ? 'border-t-2 border-line' : ''}`}
+                    >
+                      {/* Rótulo sem o nome do grupo: o nome já rotula a caixa de marcar lá em cima. */}
+                      <DragHandle label={`Reordenar ${index + 1}º grupo`} className="h-11 w-9 rounded-control" />
+                      <span
+                        aria-hidden="true"
+                        className="flex size-7 shrink-0 items-center justify-center rounded-full bg-deep text-xs font-black text-deep-ink numeric"
+                      >
+                        {index + 1}
+                      </span>
+                      <span className="min-w-0 truncate font-extrabold text-ink">{groupName(id)}</span>
+                    </SortableItem>
+                  ))}
+                </ol>
+              </SortableList>
+            </div>
+          ) : null}
         </FormSection>
 
         <details ref={advancedRef} className="group rounded-card border-2 border-line bg-surface">
