@@ -30,6 +30,9 @@ test('excluir conta cancela a assinatura, apaga tudo e tira a vitrine do ar', as
   await page.getByRole('button', { name: 'Excluir minha conta' }).click()
   await expect(page.getByText('Digite o e-mail da conta para confirmar.')).toBeVisible()
 
+  // A confirmação errada não pode ter apagado nada.
+  expect(await countUserRows(user.id)).toBeGreaterThan(0)
+
   await page.getByLabel('Digite o e-mail da conta para confirmar').fill(user.email)
   await page.getByRole('button', { name: 'Excluir minha conta' }).click()
   await expect(page).toHaveURL(/\/entrar\?motivo=conta-excluida$/)
