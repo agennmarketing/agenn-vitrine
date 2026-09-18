@@ -86,6 +86,8 @@ async function handleApp(request: NextRequest, resolution: HostResolution) {
   )
 }
 
+// `.txt` e `.xml` passam pelo proxy de propósito: robots.txt e sitemap.xml são
+// rotas por host (vitrine, site e painel têm conteúdos diferentes).
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|api/|brand/|favicon.ico|.*\\.(?:png|jpg|jpeg|svg|webp|ico|txt|xml)$).*)'],
+  matcher: ['/((?!_next/static|_next/image|api/|brand/|favicon.ico|.*\\.(?:png|jpg|jpeg|svg|webp|ico)$).*)'],
 }

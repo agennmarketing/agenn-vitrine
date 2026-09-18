@@ -28,6 +28,15 @@ describe('parseHost', () => {
     expect(parseHost('app.agenn.com.br', prod)).toEqual({ type: 'redirect', host: 'app.agennvitrine.com.br' })
   })
 
+  it('prévia da Vercel vale como painel', () => {
+    expect(parseHost('agenn-vitrine-v1-git-fase-6.vercel.app', prod)).toEqual({ type: 'app' })
+    expect(parseHost('agenn-vitrine-v1.vercel.app', prod)).toEqual({ type: 'app' })
+  })
+
+  it('não confunde um domínio que só termina parecido', () => {
+    expect(parseHost('vercel.app.golpe.com', prod)).toEqual({ type: 'invalid' })
+  })
+
   it('hosts inválidos', () => {
     expect(parseHost(null, prod)).toEqual({ type: 'invalid' })
     expect(parseHost('outro.com', prod)).toEqual({ type: 'invalid' })

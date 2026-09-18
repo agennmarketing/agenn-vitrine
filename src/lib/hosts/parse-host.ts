@@ -23,6 +23,10 @@ export function parseHost(rawHost: string | null, config: HostConfig): HostResol
     }
   }
 
+  // Prévias da Vercel não têm subdomínio de vitrine: servem para testar o painel.
+  const withoutPort = host.split(':')[0]
+  if (withoutPort === 'vercel.app' || withoutPort.endsWith('.vercel.app')) return { type: 'app' }
+
   if (host === root || host === `www.${root}`) return { type: 'marketing' }
   if (!host.endsWith(`.${root}`)) return { type: 'invalid' }
 
