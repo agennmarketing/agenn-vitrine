@@ -72,7 +72,8 @@ export default async function AccountPage() {
           <h2 className="text-lg font-medium leading-tight">Excluir conta</h2>
           <p className="mt-1 text-sm leading-5 text-ink-muted">
             Cancela sua assinatura e apaga suas vitrines, itens, fotos e vídeos. Os links das suas vitrines param de
-            funcionar na hora. Não dá para desfazer.
+            funcionar na hora. Se você tem assinatura ativa, ela é encerrada na hora e o tempo restante do período já
+            pago não é devolvido. Não dá para desfazer.
           </p>
         </div>
         <DeleteAccountForm email={user.email ?? ''} />
