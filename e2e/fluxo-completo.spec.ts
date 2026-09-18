@@ -3,11 +3,14 @@ import {
   createConfirmedUser,
   makeTestImage,
   mediaOfItem,
+  seedItem,
+  seedVitrine,
   sendBunnyWebhook,
   signIn,
   uniqueSubdomain,
   uploadImage,
   videoFixture,
+  vitrineStatuses,
 } from './helpers'
 
 test('criar vitrine → cadastrar item com vídeo → vitrine pública → WhatsApp → simulador', async ({ page, request: api }) => {
@@ -119,4 +122,40 @@ test('Comida: vitrine → complementos pelo modelo → item → sacola → Whats
   await page.getByLabel('Código do pedido').fill(orderCode)
   await page.getByRole('button', { name: 'Consultar' }).click()
   await expect(page.getByText('R$ 26,00').first()).toBeVisible()
+})
+
+test('Pro: marca d’água some ao assinar e volta ao cancelar, congelando a segunda vitrine', async ({ page }) => {
+  const user = await createConfirmedUser('fluxo-pro')
+  const primeira = await seedVitrine(user.id, { name: 'Loja Pro', subdomain: uniqueSubdomain('fp-a') })
+  await seedItem(primeira, user.id, { name: 'Camiseta', priceCents: 5990 })
+  await signIn(page, user.email, user.password)
+
+  await page.goto(`http://${primeira.subdomain}.localhost:3000/`)
+  await expect(page.getByText('Feito com Agenn Vitrine')).toBeVisible()
+
+  await page.goto('/painel/plano')
+  await page.getByRole('button', { name: /Assinar por R\$.?149,90 por mês/ }).click()
+  await page.waitForURL(/\/painel\/plano\?assinatura=ok$/)
+  await expect(page.getByRole('heading', { name: 'Plano Pro' })).toBeVisible()
+
+  // A revalidação por tag acontece no webhook: a vitrine é gerada de novo sem marca d'água.
+  await page.goto(`http://${primeira.subdomain}.localhost:3000/`)
+  await expect(page.getByText('Feito com Agenn Vitrine')).toBeHidden()
+
+  const segunda = await seedVitrine(user.id, { name: 'Loja Dois', subdomain: uniqueSubdomain('fp-b') })
+  await page.goto(`http://${segunda.subdomain}.localhost:3000/`)
+  await expect(page.getByRole('heading', { name: 'Loja Dois' })).toBeVisible()
+
+  await page.goto('/painel/plano')
+  await page.getByRole('button', { name: 'Gerenciar assinatura' }).click()
+  await page.waitForURL(/\/api\/dev-billing\/portal/)
+  await page.getByRole('link', { name: 'Cancelar agora' }).click()
+  await page.waitForURL(/\/painel\/plano$/)
+
+  expect(await vitrineStatuses(user.id)).toEqual([`${primeira.subdomain}:active`, `${segunda.subdomain}:frozen`])
+  await page.goto(`http://${primeira.subdomain}.localhost:3000/`)
+  await expect(page.getByText('Feito com Agenn Vitrine')).toBeVisible()
+  // Spec 7.1: congelada responde 200 com o aviso no lugar do catálogo.
+  await page.goto(`http://${segunda.subdomain}.localhost:3000/`)
+  await expect(page.getByRole('heading', { name: 'Vitrine indisponível no momento' })).toBeVisible()
 })
