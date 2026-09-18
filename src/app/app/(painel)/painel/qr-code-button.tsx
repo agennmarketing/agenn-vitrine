@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Button } from '@/components/ui/button'
+import { Button, buttonClasses } from '@/components/ui/button'
 
 export function QrCodeButton({ url, name, subdomain }: { url: string; name: string; subdomain: string }) {
   const [open, setOpen] = useState(false)
@@ -77,7 +77,7 @@ export function QrCodeButton({ url, name, subdomain }: { url: string; name: stri
           <Button onClick={download} disabled={failed}>
             Baixar PNG
           </Button>
-          <button ref={closeRef} type="button" onClick={() => setOpen(false)} className="inline-flex h-11 select-none items-center justify-center gap-2 rounded-control px-4 text-[0.9375rem] font-semibold leading-none transition-[background-color,border-color,color,translate] duration-150 ease-out-quint focus-visible:outline-2 focus-visible:outline-offset-2 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-55 disabled:active:translate-y-0 border border-line-strong bg-surface text-ink shadow-control hover:border-ink-muted hover:bg-canvas active:bg-subtle focus-visible:outline-brand">
+          <button ref={closeRef} type="button" onClick={() => setOpen(false)} className={buttonClasses('secondary')}>
             Fechar
           </button>
         </div>
