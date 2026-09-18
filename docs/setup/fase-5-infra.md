@@ -54,6 +54,10 @@ Painel → Configurações → Faturamento → Portal do cliente:
 - Desligar: alterar quantidade
 - URL de retorno padrão: `https://app.agenn.com.br/painel/plano`
 
+- Opcional, depois que as páginas legais estiverem publicadas: apontar os links de Termos de
+  uso (`https://agenn.com.br/termos`) e Política de privacidade (`https://agenn.com.br/privacidade`)
+  nas configurações públicas da conta Stripe, para aparecerem no Checkout.
+
 ## 5. Variáveis na Vercel (`agenn-vitrine-v1`)
 
 | Key | Value | Type | Ambientes |
