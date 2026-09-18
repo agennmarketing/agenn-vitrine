@@ -32,15 +32,25 @@ export async function deleteAccount(userId: string): Promise<void> {
   if (mediaError) throw mediaError
   if (vitrinesError) throw vitrinesError
 
+  const paths = (mediaRows ?? []).flatMap((row) => storagePathList(row.storage_paths))
+  const guids = (mediaRows ?? []).flatMap((row) => (row.bunny_video_id ? [row.bunny_video_id] : []))
+
+  // Rastro para a limpeza diária de órfãos: se o processo morrer logo após apagar o
+  // usuário, a linha de `media` que apontava para esses arquivos no Bunny já não existe
+  // mais, e a limpeza (que parte das linhas de `media`) nunca os encontraria sozinha.
+  const trace = `Excluindo conta ${userId}: ${paths.length} arquivos, ${guids.length} vídeos`
+  Sentry.captureMessage(trace)
+  console.error(trace)
+
   // Apagar o usuário derruba, em cascata, perfil, vitrines, itens, mídias, códigos,
   // complementos, pedidos e assinatura (conferido em 11_account_deletion.test.sql).
   const { error } = await admin.auth.admin.deleteUser(userId)
   if (error) throw error
 
-  await Promise.all([
-    removeStoredFiles((mediaRows ?? []).flatMap((row) => storagePathList(row.storage_paths))),
-    removeStreamVideos((mediaRows ?? []).flatMap((row) => (row.bunny_video_id ? [row.bunny_video_id] : []))),
-  ])
+  // Revalida assim que o dono deixa de existir, antes de mexer no Bunny: se as chamadas
+  // de rede abaixo falharem, a vitrine já não continua servida do cache de um dono apagado.
   revalidateVitrine(...(vitrines ?? []).map((vitrine) => vitrine.subdomain))
+
+  await Promise.all([removeStoredFiles(paths), removeStreamVideos(guids)])
   Sentry.captureMessage(`Conta excluída: ${userId}`)
 }

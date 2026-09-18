@@ -86,8 +86,16 @@ export function createStripeBilling(config: BillingEnv): Billing {
       try {
         await stripe.subscriptions.cancel(subscriptionId)
       } catch (error) {
-        // Já cancelada ou inexistente: o objetivo (não cobrar mais) está cumprido.
-        if (error instanceof Stripe.errors.StripeInvalidRequestError && error.statusCode === 404) return
+        if (error instanceof Stripe.errors.StripeInvalidRequestError) {
+          // Já cancelada ou inexistente: o objetivo (não cobrar mais) está cumprido.
+          // - 404: a assinatura não existe mais no Stripe.
+          // - 400 com code "resource_missing" ou mensagem de "already been canceled":
+          //   acontece numa retentativa após falha parcial (Stripe cancelou, mas a
+          //   exclusão falhou depois) — o dono não pode ficar travado até o webhook
+          //   sincronizar o status.
+          const alreadyCanceled = error.code === 'resource_missing' || /already been canceled/i.test(error.message)
+          if (error.statusCode === 404 || (error.statusCode === 400 && alreadyCanceled)) return
+        }
         throw error
       }
     },
