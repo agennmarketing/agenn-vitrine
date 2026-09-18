@@ -322,6 +322,25 @@ export async function setCart(vitrineId: string, enabled: boolean) {
   await createAdminClient().from('vitrines').update({ cart_enabled: enabled }).eq('id', vitrineId).throwOnError()
 }
 
+// Soma as linhas do dono nas tabelas que devem cair junto com a conta.
+export async function countUserRows(userId: string) {
+  const admin = createAdminClient()
+  const tabelas = [
+    ['profiles', 'id'],
+    ['subscriptions', 'user_id'],
+    ['vitrines', 'owner_id'],
+    ['items', 'owner_id'],
+    ['media', 'owner_id'],
+    ['item_codes', 'owner_id'],
+  ] as const
+  let total = 0
+  for (const [tabela, coluna] of tabelas) {
+    const { count } = await admin.from(tabela).select('*', { count: 'exact', head: true }).eq(coluna, userId)
+    total += count ?? 0
+  }
+  return total
+}
+
 export async function setSubscription(
   userId: string,
   fields: {

@@ -1,5 +1,6 @@
 'use server'
 
+import * as Sentry from '@sentry/nextjs'
 import { redirect } from 'next/navigation'
 import { mapAuthError } from '@/lib/auth/auth-errors'
 import { changePasswordSchema, profileNameSchema } from '@/lib/auth/schemas'
@@ -7,6 +8,7 @@ import { hasPasswordLogin } from '@/lib/auth/session'
 import { fieldErrorsFromZod, type FormState } from '@/lib/forms/form-state'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseVerifierClient } from '@/lib/supabase/verifier'
+import { deleteAccount } from './delete-account'
 
 export async function updateNameAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const fields = { name: String(formData.get('name') ?? '') }
@@ -61,4 +63,29 @@ export async function signOutEverywhereAction(): Promise<void> {
   const supabase = await createSupabaseServerClient()
   await supabase.auth.signOut({ scope: 'global' })
   redirect('/entrar')
+}
+
+export async function deleteAccountAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  const supabase = await createSupabaseServerClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) redirect('/entrar')
+
+  const confirm = String(formData.get('confirm') ?? '').trim().toLowerCase()
+  if (!user.email || confirm !== user.email.toLowerCase()) {
+    return { fieldErrors: { confirm: 'Digite o e-mail da conta para confirmar.' } }
+  }
+
+  try {
+    await deleteAccount(user.id)
+  } catch (error) {
+    Sentry.captureException(error)
+    console.error('[conta] falha ao excluir', error)
+    return { error: 'Não foi possível excluir a conta agora. Tente de novo em instantes.' }
+  }
+
+  // O usuário já não existe; só limpamos os cookies desta sessão.
+  await supabase.auth.signOut({ scope: 'local' }).catch(() => {})
+  redirect('/entrar?motivo=conta-excluida')
 }

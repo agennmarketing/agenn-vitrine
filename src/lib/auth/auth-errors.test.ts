@@ -25,4 +25,11 @@ describe('loginNotice', () => {
     expect(loginNotice({ erro: 'sessao' })).toEqual({ kind: 'error', text: 'Não foi possível iniciar sua sessão. Tente novamente.' })
     expect(loginNotice({})).toBeNull()
   })
+
+  it('avisa quando a conta acabou de ser excluída', () => {
+    expect(loginNotice({ motivo: 'conta-excluida' })).toEqual({
+      kind: 'success',
+      text: 'Sua conta foi excluída. Sentiremos sua falta!',
+    })
+  })
 })

@@ -82,6 +82,16 @@ export function createStripeBilling(config: BillingEnv): Billing {
       }
     },
 
+    async cancelSubscription(subscriptionId) {
+      try {
+        await stripe.subscriptions.cancel(subscriptionId)
+      } catch (error) {
+        // Já cancelada ou inexistente: o objetivo (não cobrar mais) está cumprido.
+        if (error instanceof Stripe.errors.StripeInvalidRequestError && error.statusCode === 404) return
+        throw error
+      }
+    },
+
     // Cache no processo: reajuste no Stripe aparece em até 1 h, sem uma chamada por visita.
     async listPrices() {
       if (priceCache && Date.now() - priceCache.at < PRICE_TTL_MS) return priceCache.prices
