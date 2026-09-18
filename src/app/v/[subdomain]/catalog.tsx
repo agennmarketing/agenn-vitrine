@@ -53,7 +53,8 @@ export function Catalog({ vitrine, siteUrl }: { vitrine: PublicVitrine; siteUrl:
     vitrine.showPrices ? ` · ${formatOrderTotal(summary.total)}` : ''
   }`
   const [query, setQuery] = useState('')
-  const [activeCategory, setActiveCategory] = useState<string | null>(null)
+  // Começa na primeira categoria: a faixa já mostra onde o cliente está antes de rolar.
+  const [activeCategory, setActiveCategory] = useState<string | null>(vitrine.categories[0]?.id ?? null)
   const navRef = useRef<HTMLUListElement>(null)
 
   const search = fold(query.trim())
@@ -492,7 +493,7 @@ function FoodRow({ item, showMedia, showPrices, onOpen }: CardProps) {
             <Cover image={item.cover} sizes="(min-width: 640px) 128px, 112px" soldOut={item.soldOut} />
           </span>
           {item.soldOut && item.cover ? <SoldOut overlay /> : null}
-          {!item.soldOut ? <PlusBubble className="absolute -bottom-1.5 -right-1.5 size-10 ring-4 ring-canvas" /> : null}
+          {!item.soldOut ? <PlusBubble className="absolute bottom-1.5 right-1.5 size-10 ring-4 ring-canvas" /> : null}
         </span>
       ) : !item.soldOut ? (
         <PlusBubble className="mt-0.5 size-10 shrink-0" />

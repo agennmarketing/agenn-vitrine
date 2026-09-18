@@ -13,11 +13,11 @@ Modo: Operate. Público: lojista não técnico, quase sempre no celular. Tarefa:
 
 THESIS: Montar a vitrine é uma trilha com fim à vista — cada tela diz o próximo passo, um botão verde gordo o executa e o sistema comemora a entrega. Recusa o painel-admin cinza de tabelas e abas finas.
 
-OWN-WORLD: Claro. Fundo branco com leve tom verde; bordas de 2px; botões e opções selecionáveis prensáveis com lábio sólido embaixo (0 4px 0) que afunda ao tocar; ação em verde vivo com texto verde-escuro da logo; o verde-escuro #0B2A1C é a placa invertida do que é ativo/principal; dourado só para Pro e conquistas; ícones de tipo em quadrados coloridos (Comida laranja, Serviços rosa, Produtos azul). Tipografia arredondada e pesada (Nunito 800–900 nos títulos).
+OWN-WORLD: Claro. Fundo branco com leve tom lilás; bordas de 2px; botões e opções selecionáveis prensáveis com lábio sólido embaixo (0 4px 0) que afunda ao tocar; ação no roxo da Vitrimove #673DE6 com texto branco; índigo-escuro é a placa invertida do que é ativo/principal; verde só para confirmação; dourado só para Pro e conquistas; ícones de tipo em quadrados coloridos (Comida laranja, Serviços rosa, Produtos azul). Tipografia arredondada e pesada (Nunito 800–900 nos títulos). Marca: Vitrimove (lojinha sorridente roxa). Atualizado em 2026-09-18: troca do verde pelo roxo e do nome, a pedido do usuário.
 
 STORY: O lojista entende em 1 segundo onde está e quanto falta ("3 de 4"), acredita que termina hoje, e toca no próximo passo.
 
-FIRST VIEWPORT: Celular, /painel: saudação curta; cartão da vitrine com placa verde-escura (nome, endereço, Ativa), barra de progresso da trilha e o próximo passo como botão prensável; abaixo, atalhos Copiar link / QR Code / Ver vitrine. Navegação inferior fixa com 4 ícones rotulados (Vitrines, Simulador, Plano, Conta). Desktop: a mesma coluna central com barra lateral esquerda de navegação.
+FIRST VIEWPORT: Celular, /painel: título "Minhas vitrines" e o uso do plano em pílulas; cada vitrine é um cartão com placa índigo (ícone do tipo, nome, endereço, status) e, abaixo, "Editar" como botão roxo grande e três ladrilhos (Copiar link, QR Code, Ver vitrine). A trilha de progresso saiu do cartão a pedido do usuário. Navegação inferior fixa com 4 ícones rotulados (Vitrines, Simulador, Plano, Conta). Desktop: a mesma coluna com barra lateral esquerda.
 
 FORM: Trilha da Vitrine (candidato 1 da lista, escolha do usuário sobre o sorteio), seed 2a1432d9. Interação assinatura: botão prensável + barra de progresso que enche com leve sobressalto; comemoração (pop do check) ao criar a vitrine e ao salvar o primeiro item. Movimento: ease-out exponencial, degrau curto; respeita prefers-reduced-motion.
 

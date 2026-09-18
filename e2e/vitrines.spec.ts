@@ -21,7 +21,7 @@ test('cria vitrine pelo assistente e respeita o limite do gratuito', async ({ pa
   await page.getByLabel('Escuro').check()
   await page.getByRole('button', { name: 'Criar vitrine' }).click()
 
-  await expect(page).toHaveURL(/\/painel\/vitrines\/[0-9a-f-]+\/itens$/)
+  await expect(page).toHaveURL(/\/painel\/vitrines\/[0-9a-f-]+\/itens(\?criada=1)?$/)
   await expect(page.getByRole('heading', { name: 'Loja Teste' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Destaques' })).toBeVisible()
 

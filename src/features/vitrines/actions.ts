@@ -42,7 +42,8 @@ export async function createVitrineAction(_prev: FormState, formData: FormData):
 
   // Limpa um eventual "Vitrine não encontrada" em cache para este endereço.
   revalidateVitrine(input.subdomain)
-  redirect(`/painel/vitrines/${vitrineId}/itens`)
+  // ?criada=1: a lista de itens comemora a vitrine nova e aponta o próximo passo.
+  redirect(`/painel/vitrines/${vitrineId}/itens?criada=1`)
 }
 
 async function loadOwnedVitrine(vitrineId: string) {

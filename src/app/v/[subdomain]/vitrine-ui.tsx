@@ -2,7 +2,7 @@ import { Minus, Plus, X } from 'lucide-react'
 import type { ButtonHTMLAttributes, Ref } from 'react'
 
 /*
- * Peças visuais da vitrine pública. Nada do verde/Nunito do painel: aqui a cor é a do
+ * Peças visuais da vitrine pública. Nada do roxo/Nunito do painel: aqui a cor é a do
  * lojista (--color-brand, com --color-brand-ink por cima) e os traços de seleção usam
  * --color-accent (marca quando legível, senão a cor do texto).
  */

@@ -124,7 +124,7 @@ export function AppearanceForm({
 
         <ConfigBlock title="Marca" description="A cor dos botões e o banner no topo da vitrine." aside={<ProBadge />}>
           {allowBranding ? null : (
-            <div className="flex flex-col gap-3 rounded-control bg-sun-soft p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-3 border-b-2 border-dashed border-line pb-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-start gap-3">
                 <Lock aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-sun-ink" strokeWidth={2.5} />
                 <div className="flex flex-col gap-0.5">
@@ -156,7 +156,7 @@ export function AppearanceForm({
                   <span className="numeric font-extrabold text-ink-muted">{previewColor.toUpperCase()}</span>
                 </div>
                 {/* Prévia viva: o botão da vitrine na cor escolhida, com o texto no contraste que a vitrine usa. */}
-                <div className="flex min-w-0 flex-1 flex-col gap-1.5 rounded-control bg-canvas p-3" aria-hidden="true">
+                <div className="flex min-w-0 flex-1 flex-col gap-1.5" aria-hidden="true">
                   <span className="text-xs font-extrabold text-ink-muted">Na vitrine</span>
                   <span
                     className="flex h-11 items-center justify-center truncate rounded-control px-4 font-bold transition-colors duration-200"

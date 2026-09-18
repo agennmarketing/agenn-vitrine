@@ -39,7 +39,7 @@ export default async function PainelHome() {
 
       <ul
         aria-label="Uso do plano"
-        className="-mx-4 flex gap-2 overflow-x-auto whitespace-nowrap px-4 text-sm font-bold text-ink-muted [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0"
+        className="flex flex-wrap gap-2 text-sm font-bold text-ink-muted"
       >
         <li className="shrink-0 rounded-full border-2 border-line bg-surface px-3 py-1.5">
           Vitrines: {vitrines.length} de {plan.max_vitrines}
@@ -51,7 +51,6 @@ export default async function PainelHome() {
         <li className="shrink-0 rounded-full border-2 border-line bg-surface px-3 py-1.5">
           Franquia do mês: {formatGigabytes(usage.bytesDelivered)} de {plan.monthly_video_gb} GB
         </li>
-        <li className="shrink-0 rounded-full border-2 border-line bg-surface px-3 py-1.5">Plano {plan.name}</li>
       </ul>
 
       {atLimit ? (

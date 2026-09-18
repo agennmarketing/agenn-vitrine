@@ -77,7 +77,8 @@ export function VitrineWizard({ rootDomain }: { rootDomain: string }) {
   const last = step === STEPS.length - 1
 
   return (
-    <div className="mx-auto flex w-full max-w-xl flex-col gap-7">
+    // data-focus-mode: o layout do painel esconde cabeçalho e navegação enquanto a trilha está aberta.
+    <div data-focus-mode="" className="mx-auto flex w-full max-w-xl flex-col gap-7 pt-2 sm:pt-6">
       <div className="flex items-center gap-3">
         <Link
           href="/painel"
@@ -87,12 +88,13 @@ export function VitrineWizard({ rootDomain }: { rootDomain: string }) {
           <X aria-hidden="true" className="size-6" strokeWidth={3} />
         </Link>
         <ProgressBar value={step + 1} max={STEPS.length} label="Progresso da nova vitrine" />
+        <p className="numeric shrink-0 text-sm font-extrabold text-go-strong">
+          Passo {step + 1} de {STEPS.length}
+          <span className="sr-only"> · {current.label}</span>
+        </p>
       </div>
 
       <div className="flex flex-col gap-2">
-        <p className="text-sm font-extrabold text-go-strong">
-          Passo {step + 1} de {STEPS.length} · {current.label}
-        </p>
         <h1 key={step} className="animate-rise text-[1.75rem] font-black leading-[1.1] tracking-[-0.025em] sm:text-[2rem]">
           {current.question}
         </h1>

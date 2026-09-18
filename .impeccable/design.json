@@ -1,0 +1,676 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-18T14:24:31.477Z",
+  "title": "Design System: Vitrimove",
+  "extensions": {
+    "colorMeta": {
+      "go": {
+        "role": "primary",
+        "displayName": "Roxo Vitrimove",
+        "canonical": "#673de6",
+        "tonalRamp": [
+          "#22144a",
+          "#39227e",
+          "#502fb2",
+          "#673de6",
+          "#9577ee",
+          "#bba8f4",
+          "#ded4fa",
+          "#f3effd"
+        ]
+      },
+      "go-strong": {
+        "role": "primary",
+        "displayName": "Roxo Traço (foco, ativo)",
+        "canonical": "#5a2fdc",
+        "tonalRamp": [
+          "#1f1048",
+          "#331b79",
+          "#4625ab",
+          "#5a2fdc",
+          "#8c6de7",
+          "#b5a1ef",
+          "#dbd1f7",
+          "#f2eefc"
+        ]
+      },
+      "go-lip": {
+        "role": "primary",
+        "displayName": "Lábio Roxo",
+        "canonical": "#4a24b8",
+        "tonalRamp": [
+          "#1b0e3f",
+          "#2b1567",
+          "#3a1d90",
+          "#4a24b8",
+          "#8066cd",
+          "#ae9cdf",
+          "#d7cfef",
+          "#f1edf9"
+        ]
+      },
+      "go-soft": {
+        "role": "primary",
+        "displayName": "Placa Roxa Clara",
+        "canonical": "#efeafd",
+        "tonalRamp": [
+          "#443f50",
+          "#7d788a",
+          "#b6b1c3",
+          "#efeafd",
+          "#f4f0fe",
+          "#f8f6fe",
+          "#fbfaff",
+          "#fefdff"
+        ]
+      },
+      "brand": {
+        "role": "primary",
+        "displayName": "Cor do Lojista (padrão roxo)",
+        "canonical": "#673de6",
+        "tonalRamp": [
+          "#22144a",
+          "#39227e",
+          "#502fb2",
+          "#673de6",
+          "#9577ee",
+          "#bba8f4",
+          "#ded4fa",
+          "#f3effd"
+        ]
+      },
+      "deep": {
+        "role": "secondary",
+        "displayName": "Índigo Profundo",
+        "canonical": "#1d1147",
+        "tonalRamp": [
+          "#100922",
+          "#140c2f",
+          "#190e3b",
+          "#1d1147",
+          "#61587e",
+          "#9994ac",
+          "#cdcbd7",
+          "#edecf0"
+        ]
+      },
+      "deep-muted": {
+        "role": "secondary",
+        "displayName": "Lavanda sobre Índigo",
+        "canonical": "#b9aeeb",
+        "tonalRamp": [
+          "#37304b",
+          "#625a81",
+          "#8e84b6",
+          "#b9aeeb",
+          "#cec6f1",
+          "#e0dbf6",
+          "#f0edfb",
+          "#f9f9fd"
+        ]
+      },
+      "sun": {
+        "role": "tertiary",
+        "displayName": "Dourado Pro",
+        "canonical": "#ffc83d",
+        "tonalRamp": [
+          "#483720",
+          "#85672a",
+          "#c29833",
+          "#ffc83d",
+          "#ffd977",
+          "#ffe6a8",
+          "#fff3d4",
+          "#fffbef"
+        ]
+      },
+      "sun-ink": {
+        "role": "tertiary",
+        "displayName": "Tinta sobre Dourado",
+        "canonical": "#4a3500",
+        "tonalRamp": [
+          "#1b1211",
+          "#2b1e0b",
+          "#3a2906",
+          "#4a3500",
+          "#80724d",
+          "#aea48c",
+          "#d7d3c7",
+          "#f1efeb"
+        ]
+      },
+      "success": {
+        "role": "status",
+        "displayName": "Verde Confirmação",
+        "canonical": "#15803d",
+        "tonalRamp": [
+          "#0e2520",
+          "#10432a",
+          "#136233",
+          "#15803d",
+          "#5ba677",
+          "#96c6a8",
+          "#cce3d4",
+          "#ecf5ef"
+        ]
+      },
+      "danger": {
+        "role": "status",
+        "displayName": "Vermelho Perigo",
+        "canonical": "#c4291c",
+        "tonalRamp": [
+          "#390f18",
+          "#681819",
+          "#96201b",
+          "#c4291c",
+          "#d66960",
+          "#e49f99",
+          "#f2d0cd",
+          "#faeeed"
+        ]
+      },
+      "danger-fill": {
+        "role": "status",
+        "displayName": "Vermelho do Botão Destrutivo",
+        "canonical": "#e5483a",
+        "tonalRamp": [
+          "#42171f",
+          "#782728",
+          "#af3831",
+          "#e5483a",
+          "#ed7f75",
+          "#f3ada6",
+          "#f9d7d4",
+          "#fdf0ef"
+        ]
+      },
+      "type-comida": {
+        "role": "accent-icon",
+        "displayName": "Laranja Comida (só ícones)",
+        "canonical": "#ff6b2c",
+        "tonalRamp": [
+          "#481f1c",
+          "#853921",
+          "#c25227",
+          "#ff6b2c",
+          "#ff976b",
+          "#ffbca0",
+          "#ffded1",
+          "#fff3ee"
+        ]
+      },
+      "type-servicos": {
+        "role": "accent-icon",
+        "displayName": "Rosa Serviços (só ícones)",
+        "canonical": "#e83e8c",
+        "tonalRamp": [
+          "#421434",
+          "#7a2251",
+          "#b1306f",
+          "#e83e8c",
+          "#ef78af",
+          "#f5a8cb",
+          "#fad5e6",
+          "#fdf0f6"
+        ]
+      },
+      "type-produtos": {
+        "role": "accent-icon",
+        "displayName": "Azul Produtos (só ícones)",
+        "canonical": "#2f7deb",
+        "tonalRamp": [
+          "#14244b",
+          "#1d4281",
+          "#265fb6",
+          "#2f7deb",
+          "#6da4f1",
+          "#a1c5f6",
+          "#d1e2fb",
+          "#eef5fd"
+        ]
+      },
+      "canvas": {
+        "role": "neutral",
+        "displayName": "Tela Lilás",
+        "canonical": "#f7f6fb",
+        "tonalRamp": [
+          "#46424f",
+          "#817e89",
+          "#bcbac2",
+          "#f7f6fb",
+          "#f9f9fc",
+          "#fbfbfd",
+          "#fdfdfe",
+          "#fefeff"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Superfície",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#484450",
+          "#85838b",
+          "#c2c1c5",
+          "#ffffff",
+          "#ffffff",
+          "#ffffff",
+          "#ffffff",
+          "#ffffff"
+        ]
+      },
+      "subtle": {
+        "role": "neutral",
+        "displayName": "Lilás Suave",
+        "canonical": "#efedf7",
+        "tonalRamp": [
+          "#44404e",
+          "#7d7a87",
+          "#b6b3bf",
+          "#efedf7",
+          "#f4f2f9",
+          "#f8f7fb",
+          "#fbfbfd",
+          "#fefefe"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Tinta",
+        "canonical": "#17122b",
+        "tonalRamp": [
+          "#0e091b",
+          "#110c21",
+          "#140f26",
+          "#17122b",
+          "#5d596b",
+          "#9794a0",
+          "#cccbd0",
+          "#ececee"
+        ]
+      },
+      "ink-muted": {
+        "role": "neutral",
+        "displayName": "Tinta Apagada",
+        "canonical": "#5e5873",
+        "tonalRamp": [
+          "#201b2d",
+          "#352f45",
+          "#49445c",
+          "#5e5873",
+          "#8e8a9d",
+          "#b7b4c0",
+          "#dcdae0",
+          "#f2f2f4"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Linha",
+        "canonical": "#e6e2f0",
+        "tonalRamp": [
+          "#423d4d",
+          "#797483",
+          "#afabba",
+          "#e6e2f0",
+          "#eeebf5",
+          "#f4f2f8",
+          "#faf9fc",
+          "#fdfdfe"
+        ]
+      },
+      "line-strong": {
+        "role": "neutral",
+        "displayName": "Linha Forte (lábio neutro)",
+        "canonical": "#ccc5df",
+        "tonalRamp": [
+          "#3b3648",
+          "#6c667b",
+          "#9c95ad",
+          "#ccc5df",
+          "#dbd6e9",
+          "#e8e5f1",
+          "#f4f2f8",
+          "#fbfafc"
+        ]
+      },
+      "vitrine-light-canvas": {
+        "role": "neutral-vitrine",
+        "displayName": "Vitrine Clara: Fundo",
+        "canonical": "#f7f7f5",
+        "tonalRamp": [
+          "#46424e",
+          "#817f86",
+          "#bcbbbd",
+          "#f7f7f5",
+          "#f9f9f8",
+          "#fbfbfb",
+          "#fdfdfd",
+          "#fefefe"
+        ]
+      },
+      "vitrine-dark-canvas": {
+        "role": "neutral-vitrine",
+        "displayName": "Vitrine Escura: Fundo",
+        "canonical": "#0f0f11",
+        "tonalRamp": [
+          "#0c0815",
+          "#0d0b14",
+          "#0e0d12",
+          "#0f0f11",
+          "#575758",
+          "#939394",
+          "#cacacb",
+          "#ececec"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display (painel)",
+        "purpose": "Título de página no PageHeader; 1.75rem no celular, 2rem a partir de sm."
+      },
+      "headline": {
+        "displayName": "Headline (painel)",
+        "purpose": "Título de seção do editor (SectionIntro); 1.375rem, 1.5rem a partir de sm."
+      },
+      "title": {
+        "displayName": "Title (painel)",
+        "purpose": "Título de ConfigBlock, nome da vitrine no cartão, título da comemoração."
+      },
+      "body": {
+        "displayName": "Body (painel)",
+        "purpose": "Texto de apoio, até 65ch; nunca abaixo de 600."
+      },
+      "label": {
+        "displayName": "Label (painel)",
+        "purpose": "Rótulos de campo, botões e navegação em 800."
+      },
+      "caption": {
+        "displayName": "Caption (painel)",
+        "purpose": "Dicas, descrições de interruptor, erros de campo."
+      },
+      "vitrine-display": {
+        "displayName": "Nome da loja (vitrine)",
+        "purpose": "Nome da vitrine no cabeçalho; 1.5rem no celular."
+      },
+      "vitrine-headline": {
+        "displayName": "Categoria (vitrine)",
+        "purpose": "Título de categoria; 1.25rem no celular."
+      },
+      "vitrine-title": {
+        "displayName": "Nome do item (vitrine)",
+        "purpose": "Nome do item na lista de Comida; menor e mais leve em Serviços e Produtos."
+      },
+      "vitrine-body": {
+        "displayName": "Descrição (vitrine)",
+        "purpose": "Descrição da loja e dos itens, ink-muted."
+      },
+      "vitrine-label": {
+        "displayName": "Rótulo (vitrine)",
+        "purpose": "Pílulas de categoria, selos, rodapé."
+      }
+    },
+    "shadows": [
+      {
+        "name": "lip",
+        "value": "0 4px 0 var(--lip, var(--color-line-strong))",
+        "purpose": "Lábio sólido dos controles prensáveis; ao pressionar, translate 0 4px e o lábio vai a 0."
+      },
+      {
+        "name": "lip-short",
+        "value": "0 3px 0 var(--lip)",
+        "purpose": "Quadrado do TypeIcon e aba ativa do editor (lábio preto)."
+      },
+      {
+        "name": "lip-knob",
+        "value": "0 2px 0 rgb(29 17 71 / 0.18)",
+        "purpose": "Bolinha do interruptor."
+      },
+      {
+        "name": "shadow-control",
+        "value": "0 1px 2px rgb(29 17 71 / 0.06)",
+        "purpose": "Reserva discreta para controles."
+      },
+      {
+        "name": "shadow-float",
+        "value": "0 12px 32px -8px rgb(29 17 71 / 0.3), 0 2px 6px rgb(29 17 71 / 0.08)",
+        "purpose": "Só o que flutua: linha sendo arrastada, barra da sacola."
+      },
+      {
+        "name": "brand-edge",
+        "value": "inset 0 0 0 1.5px var(--color-brand-edge)",
+        "purpose": "Vitrine: contorno de preenchimentos na cor do lojista quando quase somem no fundo."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out-quint",
+        "value": "cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "Deslizes e trocas de estado (prensar, rise, sheet-up, cores)."
+      },
+      {
+        "name": "ease-out-back",
+        "value": "cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "purpose": "Sobressalto: pop, bump, interruptor, barra de progresso, \"+\" da vitrine."
+      },
+      {
+        "name": "press",
+        "value": "120ms ease-out-quint (translate, box-shadow)",
+        "purpose": "Afundar do lábio prensável."
+      },
+      {
+        "name": "animate-pop",
+        "value": "pop 420ms ease-out-back both (scale 0.4→1, opacity 0→1)",
+        "purpose": "Check da comemoração, da opção marcada e da mensagem de sucesso."
+      },
+      {
+        "name": "animate-rise",
+        "value": "rise 360ms ease-out-quint both (translateY 6px→0, sem opacidade)",
+        "purpose": "Entrada de cartões (escalonada 60ms), erros de campo, barra da sacola."
+      },
+      {
+        "name": "animate-bump",
+        "value": "bump 380ms ease-out-back (scale 1→1.22→1)",
+        "purpose": "Contador da sacola ao mudar."
+      },
+      {
+        "name": "animate-sheet-up",
+        "value": "sheet-up 320ms ease-out-quint both (translateY 24px→0, opacity)",
+        "purpose": "Bottom sheets da vitrine."
+      },
+      {
+        "name": "animate-fade",
+        "value": "fade 200ms ease-out both",
+        "purpose": "Véus e fundos de folha."
+      },
+      {
+        "name": "progress-fill",
+        "value": "width 700ms ease-out-back",
+        "purpose": "Preenchimento da ProgressBar."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "animation-duration e transition-duration 0.01ms; iteration-count 1",
+        "purpose": "prefers-reduced-motion: reduce em todo o app; anel da comemoração e rolagem suave só com movimento permitido."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      },
+      {
+        "name": "xl",
+        "value": "1280px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botão primário",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "A ação da tela, em roxo com lábio que afunda. Uma por contexto.",
+      "html": "<button class=\"ds-btn-primary\">Salvar</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 48px; padding: 0 20px; border-radius: var(--radius-control, 0.875rem); font-family: Nunito, ui-sans-serif, system-ui, sans-serif; font-weight: 800; font-size: 1rem; line-height: 1; letter-spacing: -0.01em; border: 0; cursor: pointer; background: var(--color-go, #673de6); color: #fff; box-shadow: 0 4px 0 var(--color-go-lip, #4a24b8); transition: translate 120ms var(--ease-out-quint, cubic-bezier(0.22,1,0.36,1)), box-shadow 120ms var(--ease-out-quint, cubic-bezier(0.22,1,0.36,1)), background-color 150ms; } .ds-btn-primary:hover { background: var(--color-go-hover, #7652ee); } .ds-btn-primary:active { translate: 0 4px; box-shadow: 0 0 0 var(--color-go-lip, #4a24b8); } .ds-btn-primary:focus-visible { outline: 3px solid var(--color-go-strong, #5a2fdc); outline-offset: 2px; }"
+    },
+    {
+      "name": "Botão secundário",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Ações de apoio: branco, borda 2px e lábio neutro.",
+      "html": "<button class=\"ds-btn-secondary\">Cancelar</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 48px; padding: 0 20px; border-radius: var(--radius-control, 0.875rem); font-family: Nunito, ui-sans-serif, system-ui, sans-serif; font-weight: 800; font-size: 1rem; line-height: 1; letter-spacing: -0.01em; border: 0; cursor: pointer; background: #fff; color: var(--color-ink, #17122b); border: 2px solid var(--color-line-strong, #ccc5df); box-shadow: 0 4px 0 var(--color-line-strong, #ccc5df); transition: translate 120ms var(--ease-out-quint, cubic-bezier(0.22,1,0.36,1)), box-shadow 120ms var(--ease-out-quint, cubic-bezier(0.22,1,0.36,1)), background-color 150ms; } .ds-btn-secondary:hover { background: var(--color-canvas, #f7f6fb); } .ds-btn-secondary:active { translate: 0 4px; box-shadow: 0 0 0 var(--color-line-strong, #ccc5df); } .ds-btn-secondary:focus-visible { outline: 3px solid var(--color-go-strong, #5a2fdc); outline-offset: 2px; }"
+    },
+    {
+      "name": "Botão Pro",
+      "kind": "button",
+      "refersTo": "button-sun",
+      "description": "Só para o plano Pro: dourado com tinta marrom.",
+      "html": "<button class=\"ds-btn-sun\">Ver o plano Pro</button>",
+      "css": ".ds-btn-sun { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 48px; padding: 0 20px; border-radius: var(--radius-control, 0.875rem); font-family: Nunito, ui-sans-serif, system-ui, sans-serif; font-weight: 800; font-size: 1rem; line-height: 1; letter-spacing: -0.01em; border: 0; cursor: pointer; background: var(--color-sun, #ffc83d); color: var(--color-sun-ink, #4a3500); box-shadow: 0 4px 0 var(--color-sun-lip, #d9a110); transition: translate 120ms var(--ease-out-quint, cubic-bezier(0.22,1,0.36,1)), box-shadow 120ms var(--ease-out-quint, cubic-bezier(0.22,1,0.36,1)), background-color 150ms; } .ds-btn-sun:hover { filter: brightness(1.05); } .ds-btn-sun:active { translate: 0 4px; box-shadow: 0 0 0 var(--color-sun-lip, #d9a110); } .ds-btn-sun:focus-visible { outline: 3px solid var(--color-go-strong, #5a2fdc); outline-offset: 2px; }"
+    },
+    {
+      "name": "Ladrilho",
+      "kind": "button",
+      "refersTo": "button-tile",
+      "description": "Ação secundária em trio no cartão de vitrine: ícone sobre o rótulo no celular.",
+      "html": "<button class=\"ds-tile\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M15 3h6v6\"/><path d=\"M10 14 21 3\"/><path d=\"M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6\"/></svg>Ver vitrine</button>",
+      "css": ".ds-tile { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; height: 64px; min-width: 104px; padding: 0 8px; border-radius: var(--radius-control, 0.875rem); background: #fff; color: var(--color-ink, #17122b); border: 2px solid var(--color-line-strong, #ccc5df); font-family: Nunito, ui-sans-serif, system-ui, sans-serif; font-weight: 800; font-size: 0.8125rem; cursor: pointer; box-shadow: 0 4px 0 var(--color-line-strong, #ccc5df); transition: translate 120ms var(--ease-out-quint, cubic-bezier(0.22,1,0.36,1)), box-shadow 120ms var(--ease-out-quint, cubic-bezier(0.22,1,0.36,1)), background-color 150ms; } .ds-tile:hover { background: var(--color-canvas, #f7f6fb); } .ds-tile:active { translate: 0 4px; box-shadow: 0 0 0 var(--color-line-strong, #ccc5df); } .ds-tile:focus-visible { outline: 3px solid var(--color-go-strong, #5a2fdc); outline-offset: 2px; }"
+    },
+    {
+      "name": "Campo",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Campo de 48px com rótulo visível acima; foco troca a borda para o roxo.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Nome da vitrine</span><input class=\"ds-input\" placeholder=\"Ex.: Burger do Zé\"></label>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 8px; font-family: Nunito, ui-sans-serif, system-ui, sans-serif; } .ds-field-label { font-size: 0.9375rem; font-weight: 800; color: var(--color-ink, #17122b); } .ds-input { height: 48px; padding: 0 16px; border-radius: var(--radius-control, 0.875rem); border: 2px solid var(--color-line-strong, #ccc5df); background: #fff; color: var(--color-ink, #17122b); font: inherit; font-size: 1rem; font-weight: 600; transition: border-color 150ms cubic-bezier(0.22,1,0.36,1); } .ds-input::placeholder { font-weight: 500; color: rgb(94 88 115 / 0.8); } .ds-input:hover { border-color: rgb(94 88 115 / 0.6); } .ds-input:focus-visible { outline: none; border-color: var(--color-go-strong, #5a2fdc); }"
+    },
+    {
+      "name": "Selo",
+      "kind": "chip",
+      "refersTo": "badge-success",
+      "description": "Pílula de 24px em tom suave: verde confirma, dourado é Pro, neutro informa.",
+      "html": "<span class=\"ds-badge ds-badge-success\">Ativa</span> <span class=\"ds-badge ds-badge-sun\">Plano Pro</span> <span class=\"ds-badge ds-badge-neutral\">Plano Gratuito</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 9999px; font-family: Nunito, ui-sans-serif, system-ui, sans-serif; font-size: 0.75rem; font-weight: 800; line-height: 1; } .ds-badge-success { background: var(--color-success-soft, #e4f8ea); color: var(--color-success, #15803d); } .ds-badge-sun { background: var(--color-sun-soft, #fff5d6); color: var(--color-sun-ink, #4a3500); } .ds-badge-neutral { background: var(--color-subtle, #efedf7); color: var(--color-ink-muted, #5e5873); }"
+    },
+    {
+      "name": "Abas do editor",
+      "kind": "nav",
+      "refersTo": "editor-tab-active",
+      "description": "Pílulas de 44px; a ativa vira placa índigo com lábio preto.",
+      "html": "<nav class=\"ds-tabs\"><a class=\"ds-tab ds-tab-active\" href=\"#\" aria-current=\"page\">Itens</a><a class=\"ds-tab\" href=\"#\">Aparência</a><a class=\"ds-tab\" href=\"#\">WhatsApp</a></nav>",
+      "css": ".ds-tabs { display: flex; gap: 8px; font-family: Nunito, ui-sans-serif, system-ui, sans-serif; } .ds-tab { display: flex; align-items: center; height: 44px; padding: 0 16px; border-radius: 9999px; border: 2px solid var(--color-line, #e6e2f0); background: #fff; color: var(--color-ink-muted, #5e5873); font-size: 0.9375rem; font-weight: 800; text-decoration: none; transition: border-color 150ms, color 150ms; } .ds-tab:hover { border-color: var(--color-line-strong, #ccc5df); color: var(--color-ink, #17122b); } .ds-tab-active, .ds-tab-active:hover { background: var(--color-deep, #1d1147); border-color: var(--color-deep, #1d1147); color: #fff; box-shadow: 0 3px 0 #000; } .ds-tab:focus-visible { outline: 3px solid var(--color-go-strong, #5a2fdc); outline-offset: 2px; }"
+    },
+    {
+      "name": "Opção grande (ChoiceCard)",
+      "kind": "custom",
+      "refersTo": "choice-card-checked",
+      "description": "Resposta prensável no molde do Duolingo; marcada fica roxa-clara com check que salta.",
+      "html": "<label class=\"ds-choice ds-choice-checked\"><span class=\"ds-choice-text\"><strong>Comida</strong><span>Cardápio com botão Pedir</span></span><span class=\"ds-choice-mark\"><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M20 6 9 17l-5-5\"/></svg></span></label>",
+      "css": ".ds-choice { display: flex; align-items: center; gap: 16px; min-height: 64px; padding: 16px; border-radius: var(--radius-card, 1rem); border: 2px solid var(--color-line-strong, #ccc5df); background: #fff; box-shadow: 0 4px 0 var(--color-line-strong, #ccc5df); font-family: Nunito, ui-sans-serif, system-ui, sans-serif; cursor: pointer; transition: translate 120ms, box-shadow 120ms, background-color 150ms; } .ds-choice:active { translate: 0 4px; box-shadow: none; } .ds-choice-text { display: flex; flex-direction: column; gap: 2px; flex: 1; } .ds-choice-text strong { font-size: 1.0625rem; font-weight: 800; color: var(--color-ink, #17122b); } .ds-choice-text span { font-size: 0.875rem; font-weight: 600; color: var(--color-ink-muted, #5e5873); } .ds-choice-mark { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 9999px; border: 2px solid var(--color-line-strong, #ccc5df); color: transparent; font-weight: 900; } .ds-choice-checked { border-color: var(--color-go, #673de6); background: var(--color-go-soft, #efeafd); box-shadow: 0 4px 0 var(--color-go, #673de6); } .ds-choice-checked .ds-choice-mark { background: var(--color-go, #673de6); border-color: var(--color-go, #673de6); color: #fff; }"
+    },
+    {
+      "name": "Cartão de vitrine",
+      "kind": "card",
+      "refersTo": "vitrine-card-header",
+      "description": "Placa índigo com ícone de tipo, nome e status; Editar grande embaixo, seguido dos três ladrilhos.",
+      "html": "<article class=\"ds-vcard\"><header class=\"ds-vcard-head\"><span class=\"ds-type\"><svg viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m16 2-2.3 2.3a3 3 0 0 0 0 4.2l1.8 1.8a3 3 0 0 0 4.2 0L22 8\"/><path d=\"M15 15 3.3 3.3a4.2 4.2 0 0 0 0 6l7.3 7.3c.7.7 2 .7 2.8 0L15 15Zm0 0 7 7\"/><path d=\"m2.1 21.8 6.4-6.3\"/><path d=\"m19 5-7 7\"/></svg></span><span class=\"ds-vcard-name\"><strong>Burger do Zé</strong><span>burgerdoze.agenn.com.br</span></span><span class=\"ds-vcard-status\">Ativa</span></header><div class=\"ds-vcard-body\"><button class=\"ds-vcard-edit\">Editar</button></div></article>",
+      "css": ".ds-vcard { overflow: hidden; border-radius: var(--radius-card, 1rem); border: 2px solid var(--color-line, #e6e2f0); background: #fff; font-family: Nunito, ui-sans-serif, system-ui, sans-serif; max-width: 420px; } .ds-vcard-head { display: flex; align-items: center; gap: 14px; padding: 16px 20px; background: var(--color-deep, #1d1147); color: #fff; } .ds-type { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: var(--radius-control, 0.875rem); background: var(--color-type-comida, #ff6b2c); box-shadow: 0 3px 0 #c94a14; color: #fff; } .ds-vcard-name { display: flex; flex-direction: column; flex: 1; min-width: 0; } .ds-vcard-name strong { font-size: 1.25rem; font-weight: 900; letter-spacing: -0.02em; } .ds-vcard-name span { font-size: 0.875rem; font-weight: 700; color: var(--color-deep-muted, #b9aeeb); text-decoration: underline; } .ds-vcard-status { height: 24px; padding: 0 10px; display: inline-flex; align-items: center; border-radius: 9999px; background: var(--color-success-soft, #e4f8ea); color: var(--color-success, #15803d); font-size: 0.75rem; font-weight: 800; } .ds-vcard-body { padding: 16px; } .ds-vcard-edit { width: 100%; height: 56px; border: 0; border-radius: var(--radius-card, 1rem); background: var(--color-go, #673de6); color: #fff; font: inherit; font-size: 1.0625rem; font-weight: 800; box-shadow: 0 4px 0 var(--color-go-lip, #4a24b8); cursor: pointer; transition: translate 120ms, box-shadow 120ms; } .ds-vcard-edit:hover { background: var(--color-go-hover, #7652ee); } .ds-vcard-edit:active { translate: 0 4px; box-shadow: none; } .ds-vcard-edit:focus-visible { outline: 3px solid var(--color-go-strong, #5a2fdc); outline-offset: 2px; }"
+    },
+    {
+      "name": "Botão da marca (vitrine)",
+      "kind": "button",
+      "refersTo": "vitrine-brand-button",
+      "description": "Vitrine pública: pílula de 56px na cor do lojista, sem lábio; encolhe levemente ao tocar.",
+      "html": "<button class=\"ds-brand-btn\">Agendar</button>",
+      "css": ".ds-brand-btn { display: inline-flex; align-items: center; justify-content: center; height: 56px; padding: 0 24px; border: 0; border-radius: 9999px; background: var(--color-brand, #673de6); color: var(--color-brand-ink, #fff); font-family: Figtree, ui-sans-serif, system-ui, sans-serif; font-size: 1rem; font-weight: 700; cursor: pointer; transition: transform 150ms cubic-bezier(0.22,1,0.36,1); } .ds-brand-btn:active { transform: scale(0.98); } .ds-brand-btn:focus-visible { outline: 3px solid var(--color-accent, #673de6); outline-offset: 2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Trilha da Vitrine",
+    "overview": "Montar a vitrine é uma trilha com fim à vista. O painel (Acesso e Painel, em app.agenn.com.br) fala com um lojista não técnico, quase sempre no celular: cada tela diz o próximo passo, um botão roxo gordo o executa e o sistema comemora a entrega. O mundo é claro, com neutros levemente puxados para o roxo da marca (nunca cinza puro), bordas de 2px, tipografia arredondada e pesada (Nunito 800–900) e controles prensáveis com um lábio sólido embaixo que afunda ao toque. A referência declarada é o Duolingo: simples, passos claros, retorno forte. Recusa o painel-admin cinza de tabelas e abas finas.\n\nA vitrine pública ({subdominio}.agenn.com.br) é outro mundo, de propósito: é do lojista. Base neutra própria (clara ou escura, escolha do lojista), Figtree neutra, a cor do lojista (brand) só em preenchimentos, e um layout por segmento (Comida, Serviços, Produtos). A Vitrimove fica discreta: só o \"Feito com Vitrimove\" no rodapé do plano Gratuito. Nada do lábio prensável nem da Nunito aqui.\n\nAcordo com o usuário (2026-09-18). O visual do painel e das vitrines mergeado nos PRs #44 e #45, mais os acabamentos seguintes (marca Vitrimove, roxo #673DE6, cartão de vitrine enxuto, reordenar por alça, comemorações), foi aprovado. Este é o sistema. Mudanças futuras refinam o que está aqui; não recomeçam, não trocam o mundo e não removem funcionalidade.",
+    "keyCharacteristics": [
+      "Painel claro com neutros lilás; roxo de ação com texto branco; índigo como placa invertida do que é ativo ou principal.",
+      "Volume só nos controles: lábio sólido de 4px que some ao pressionar. Cartões são planos, delimitados por borda de 2px.",
+      "Nunito 800–900 com tracking negativo nos títulos; corpo em 600, nunca fino.",
+      "Progresso visível (\"Passo 2 de 4\"), comemoração nos marcos, movimento curto com sobressalto e respeito a prefers-reduced-motion.",
+      "Vitrine pública com tema derivado da cor do lojista e três layouts por segmento."
+    ],
+    "rules": [
+      {
+        "name": "The One Job Rule",
+        "body": "Roxo age, índigo marca o ativo, verde confirma, dourado é Pro. Uma cor fora do seu papel é um erro, mesmo que \"combine\".",
+        "section": "colors"
+      },
+      {
+        "name": "The Type Colors Stay Small Rule",
+        "body": "As cores de Comida, Serviços e Produtos vivem dentro do quadrado do ícone. Se ocupam mais que um ícone, estão erradas.",
+        "section": "colors"
+      },
+      {
+        "name": "The Merchant Owns the Vitrine Rule",
+        "body": "Na vitrine pública a cor é a do lojista e os neutros são da vitrine; nenhum token do painel (roxo fixo, índigo, dourado, Nunito) atravessa para lá.",
+        "section": "colors"
+      },
+      {
+        "name": "The Heavy Headings Rule",
+        "body": "No painel, títulos são 900 com tracking negativo; nada abaixo de 600 em texto de corpo. Leveza tipográfica não faz parte deste mundo.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tabular Numbers Rule",
+        "body": "Todo preço, contagem e código usa o utilitário numeric (tabular-nums) para os algarismos não dançarem.",
+        "section": "typography"
+      },
+      {
+        "name": "The Lip Not Shadow Rule",
+        "body": "Controles ganham volume pelo lábio sólido, nunca por sombra difusa. Cartões nunca têm sombra: só borda de 2px.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Only Floaters Float Rule",
+        "body": "Sombra difusa só em algo que está de fato acima da página (item sendo arrastado, barra da sacola, botões sobre o banner).",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do usar uma única ação primária roxa por contexto, grande e com rótulo explícito (\"Editar\", \"Salvar\", \"Criar vitrine\").",
+      "Do dar lábio (pressable, 4px) a todo botão e opção selecionável do painel, com o --lip da variante.",
+      "Do separar superfícies com borda de 2px e troca de tom, nunca com sombra.",
+      "Do mostrar onde o lojista está e quanto falta: \"Passo N de M\" com ProgressBar, abas em pílula com a ativa em índigo.",
+      "Do usar SaveBar em todo formulário de configuração, para \"Salvar\" ficar sempre ao alcance do polegar no celular.",
+      "Do comemorar só marcos reais (vitrine criada, primeiro item) com Celebration.",
+      "Do manter todo alvo de toque com pelo menos 44px (controles de 44–64px; a alça de arrasto expande a área para 44px).",
+      "Do manter o foco visível: contorno de 3px go-strong com afastamento de 2px (na vitrine, em accent).",
+      "Do respeitar prefers-reduced-motion: animações e transições caem para 0,01ms; o anel da comemoração e a rolagem suave das categorias só rodam com movimento permitido.",
+      "Do animar com ease-out-quint para deslizes e ease-out-back para sobressaltos (pop, bump, interruptor, barra de progresso), em degraus curtos (120–420ms).",
+      "Do fazer entradas partirem do estado visível (rise só desliza 6px, sem começar transparente).",
+      "Do usar numeric em todo preço, contagem e código.",
+      "Do na vitrine, usar a cor do lojista só como preenchimento e --color-accent para traço e texto."
+    ],
+    "donts": [
+      "Don't recomeçar o visual: ele foi aprovado em 2026-09-18. Refinar, sim; trocar o mundo, a paleta ou a fonte, não.",
+      "Don't usar verde em ação: verde é só confirmação.",
+      "Don't usar dourado fora de Pro e conquistas.",
+      "Don't pintar áreas grandes com as cores de tipo (Comida, Serviços, Produtos); elas ficam no quadrado do ícone.",
+      "Don't usar cinza puro nos neutros do painel; eles são puxados para o lilás.",
+      "Don't pôr sombra difusa em cartões nem no lugar do lábio.",
+      "Don't usar texto em caixa alta espaçada como sobretítulo (\"eyebrow\"/\"kicker\") acima de títulos; caixa alta fica só para códigos de item e pedido.",
+      "Don't depender só de ícone: todo ícone de navegação e ladrilho tem rótulo visível (no celular, \"Sair\" é a única exceção, com nome acessível mantido).",
+      "Don't levar Nunito, roxo fixo, índigo, dourado ou lábio prensável para a vitrine pública.",
+      "Don't inventar na vitrine avaliações, \"seguir\", selo de verificado, tempo de entrega ou métricas que o produto não tem.",
+      "Don't usar texto de corpo abaixo de 600 no painel nem títulos abaixo de 900.",
+      "Don't trocar os textos visíveis sem atualizar os testes e2e que dependem deles."
+    ]
+  }
+}
