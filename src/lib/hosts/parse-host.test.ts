@@ -56,4 +56,16 @@ describe('internalPathFor', () => {
     expect(internalPathFor({ type: 'invalid' }, '/qualquer')).toBe('/host-invalido')
     expect(internalPathFor({ type: 'redirect', host: 'x' }, '/qualquer')).toBe('/host-invalido')
   })
+
+  it('desvia /sitemap.xml do nome reservado pelo Next, sem afetar outros caminhos', () => {
+    expect(internalPathFor({ type: 'vitrine', subdomain: 'burgerdoze' }, '/sitemap.xml')).toBe(
+      '/v/burgerdoze/sitemap',
+    )
+    expect(internalPathFor({ type: 'marketing' }, '/sitemap.xml')).toBe('/site/sitemap')
+    // robots.txt não é nome reservado: continua mapeado 1:1, como antes.
+    expect(internalPathFor({ type: 'vitrine', subdomain: 'burgerdoze' }, '/robots.txt')).toBe(
+      '/v/burgerdoze/robots.txt',
+    )
+    expect(internalPathFor({ type: 'marketing' }, '/robots.txt')).toBe('/site/robots.txt')
+  })
 })

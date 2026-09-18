@@ -26,7 +26,11 @@ entregue aqui é um rascunho, não um parecer jurídico.
    `agenn.com.br/robots.txt` traz `Allow: /` e o link do sitemap;
    `{vitrine}.agenn.com.br/robots.txt` traz o sitemap da vitrine.
 5. **sitemap.xml:** `{vitrine}.agenn.com.br/sitemap.xml` lista a vitrine e um `?item=CÓDIGO`
-   por item. Numa vitrine congelada, responde 404.
+   por item. Numa vitrine congelada, responde 404. Essa checagem **precisa ser feita no domínio
+   de produção** (não em `next start` local nem no CI): como `sitemap.xml` é nome reservado pelo
+   Next, um build antigo podia gerar uma página estática com parâmetro placeholder em vez da
+   rota dinâmica — `next start` ainda respondia 200 nesse cenário quebrado, mas a Vercel servia
+   404 pelo CDN. Confirme sempre com `curl` no domínio real.
 6. **Disponibilidade:** no assistente e nas configurações, digitar um endereço já usado mostra
    "Este endereço já está em uso"; digitar rápido e sair da página não deve gerar
    "Failed to find Server Action" nos logs da Vercel. As checagens de disponibilidade agora são
