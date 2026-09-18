@@ -41,10 +41,15 @@ export function internalPathFor(resolution: HostResolution, pathname: string): s
   const suffix = pathname === '/' ? '' : pathname
   switch (resolution.type) {
     case 'marketing':
+      // `sitemap.xml` é nome reservado pelo Next (convenção de rota de metadados); a rota
+      // interna mora em `/site/sitemap` para o build gerar uma rota explícita.
+      if (suffix === '/sitemap.xml') return '/site/sitemap'
       return `/site${suffix}`
     case 'app':
       return `/app${suffix}`
     case 'vitrine':
+      // Mesmo motivo acima: `/v/{subdomain}/sitemap.xml` seria tratado como nome reservado.
+      if (suffix === '/sitemap.xml') return `/v/${resolution.subdomain}/sitemap`
       return `/v/${resolution.subdomain}${suffix}`
     default:
       return '/host-invalido'
