@@ -1,4 +1,6 @@
 import { redirect } from 'next/navigation'
+import { env } from '@/lib/env'
+import { originFor } from '@/lib/hosts/urls'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Field } from '@/components/ui/field'
@@ -18,6 +20,7 @@ export default async function AccountPage() {
   } = await supabase.auth.getUser()
   if (!user) redirect('/entrar')
   const { data: profile } = await supabase.from('profiles').select('name').eq('id', user.id).single()
+  const siteUrl = originFor(env.NEXT_PUBLIC_ROOT_DOMAIN)
 
   return (
     <div className="flex max-w-2xl flex-col gap-6">
@@ -62,6 +65,16 @@ export default async function AccountPage() {
           </Button>
         </form>
       </Card>
+
+      <p className="text-sm text-ink-muted">
+        <a href={`${siteUrl}/termos`} className="underline">
+          Termos de uso
+        </a>
+        {' · '}
+        <a href={`${siteUrl}/privacidade`} className="underline">
+          Política de privacidade
+        </a>
+      </p>
     </div>
   )
 }

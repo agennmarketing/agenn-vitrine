@@ -4,6 +4,7 @@ import dotenv from 'dotenv'
 dotenv.config({ path: '.env.local' })
 
 export const APP_URL = 'http://app.localhost:3000'
+export const SITE_URL = 'http://localhost:3000'
 
 export default defineConfig({
   testDir: 'e2e',
