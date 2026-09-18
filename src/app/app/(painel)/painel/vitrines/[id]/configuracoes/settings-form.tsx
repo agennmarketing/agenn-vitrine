@@ -1,11 +1,13 @@
 'use client'
 
+import { TriangleAlert } from 'lucide-react'
 import { useActionState, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
+import { ConfigBlock, SaveBar } from '@/components/ui/config-section'
 import { Field } from '@/components/ui/field'
 import { FormMessage } from '@/components/ui/form-message'
-import { Input } from '@/components/ui/input'
+import { Input, Textarea } from '@/components/ui/input'
+import { Spinner } from '@/components/ui/submit-button'
 import { UnsavedChangesGuard } from '@/components/ui/unsaved-changes'
 import { updateSettingsAction } from '@/features/vitrines/actions'
 import { fetchAvailability } from '@/lib/forms/availability'
@@ -57,61 +59,80 @@ export function SettingsForm({ vitrineId, rootDomain, initial }: { vitrineId: st
   const changingSubdomain = typedSubdomain.trim().toLowerCase() !== savedSubdomain
 
   return (
-    <Card className="p-5">
-      <form id="settings-form" action={formAction} noValidate className="flex flex-col gap-4">
-        <h2 className="text-lg font-medium">Configurações</h2>
-        <Field label="Nome da vitrine" htmlFor="name" error={errors.name}>
-          <Input id="name" name="name" defaultValue={values.name} maxLength={60} invalid={!!errors.name} />
-        </Field>
-        <Field label="Descrição" htmlFor="description" error={errors.description}>
-          <textarea
-            id="description"
-            name="description"
-            defaultValue={values.description}
-            maxLength={300}
-            rows={3}
-            className="w-full rounded-control border border-line-strong bg-surface px-3.5 py-2.5 text-base"
-          />
-        </Field>
-        <Field label="Endereço da vitrine" htmlFor="subdomain" error={errors.subdomain}>
-          <div className="flex items-center gap-2">
-            <Input
-              id="subdomain"
-              name="subdomain"
-              defaultValue={values.subdomain}
-              maxLength={30}
-              autoCapitalize="none"
-              invalid={!!errors.subdomain}
-              onChange={(event) => onSubdomainChange(event.target.value)}
+    <>
+      <form id="settings-form" action={formAction} noValidate className="flex flex-col gap-5">
+        <ConfigBlock title="Nome e descrição" description="Aparecem no topo da vitrine e quando o link é compartilhado.">
+          <Field label="Nome da vitrine" htmlFor="name" error={errors.name}>
+            <Input id="name" name="name" defaultValue={values.name} maxLength={60} invalid={!!errors.name} />
+          </Field>
+          <Field label="Descrição" htmlFor="description" error={errors.description}>
+            <Textarea
+              id="description"
+              name="description"
+              defaultValue={values.description}
+              maxLength={300}
+              rows={3}
+              invalid={!!errors.description}
             />
-            <span className="shrink-0 text-sm text-ink-muted">.{rootDomain}</span>
-          </div>
-        </Field>
-        {availability ? (
-          <p className={`text-sm ${availability.ok ? 'text-brand' : 'text-danger'}`} aria-live="polite">
-            {availability.message}
-          </p>
-        ) : null}
-        {changingSubdomain ? (
-          <div className="flex flex-col gap-2 rounded-control bg-subtle p-3 text-sm">
-            <p>O endereço antigo deixará de funcionar imediatamente.</p>
-            <label className="flex items-center gap-2">
-              <input type="checkbox" name="confirmSubdomainChange" />
-              Entendi que o link antigo vai parar de funcionar
-            </label>
-            {errors.confirmSubdomainChange ? (
-              <p role="alert" className="text-danger">
-                {errors.confirmSubdomainChange}
+          </Field>
+        </ConfigBlock>
+
+        <ConfigBlock title="Endereço" description="O link que você divulga para os clientes.">
+          <Field label="Endereço da vitrine" htmlFor="subdomain" error={errors.subdomain}>
+            <div className="flex items-stretch overflow-hidden rounded-control border-2 border-line-strong bg-surface focus-within:border-go-strong has-[[aria-invalid]]:border-danger">
+              <Input
+                id="subdomain"
+                name="subdomain"
+                defaultValue={values.subdomain}
+                maxLength={30}
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                invalid={!!errors.subdomain}
+                className="rounded-none border-0 bg-transparent"
+                onChange={(event) => onSubdomainChange(event.target.value)}
+              />
+              <span className="flex max-w-[45%] shrink-0 items-center truncate bg-subtle px-3 text-sm font-extrabold text-ink-muted">
+                .{rootDomain}
+              </span>
+            </div>
+          </Field>
+          {availability ? (
+            <p
+              className={`-mt-2 animate-rise text-sm font-extrabold ${availability.ok ? 'text-go-strong' : 'text-danger'}`}
+              aria-live="polite"
+            >
+              {availability.message}
+            </p>
+          ) : null}
+          {changingSubdomain ? (
+            <div className="flex animate-rise flex-col gap-3 rounded-control border-2 border-sun-lip/40 bg-sun-soft p-4 text-sun-ink">
+              <p className="flex items-start gap-2.5 font-bold">
+                <TriangleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" strokeWidth={2.5} />
+                O endereço antigo deixará de funcionar imediatamente.
               </p>
-            ) : null}
-          </div>
-        ) : null}
-        <FormMessage error={state.error} success={state.success} />
-        <Button type="submit" disabled={pending} className="self-start">
-          Salvar configurações
-        </Button>
+              <label className="flex cursor-pointer items-center gap-3 font-extrabold">
+                <input type="checkbox" name="confirmSubdomainChange" className="size-5 shrink-0 accent-go-strong" />
+                Entendi que o link antigo vai parar de funcionar
+              </label>
+              {errors.confirmSubdomainChange ? (
+                <p role="alert" className="text-sm font-bold text-danger">
+                  {errors.confirmSubdomainChange}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+        </ConfigBlock>
+
+        <SaveBar>
+          <FormMessage error={state.error} success={state.success} />
+          <Button type="submit" size="lg" disabled={pending} aria-busy={pending} className="w-full lg:w-auto lg:self-start">
+            {pending ? <Spinner /> : null}
+            Salvar configurações
+          </Button>
+        </SaveBar>
       </form>
       <UnsavedChangesGuard formId="settings-form" />
-    </Card>
+    </>
   )
 }

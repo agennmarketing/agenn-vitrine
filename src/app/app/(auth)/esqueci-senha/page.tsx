@@ -10,7 +10,7 @@ export default function ForgotPasswordPage() {
       title="Esqueci minha senha"
       description="Informe seu e-mail e enviaremos um link para criar uma nova senha."
       footer={
-        <Link href="/entrar" className="font-medium text-ink underline">
+        <Link href="/entrar" className="hover:underline">
           Voltar para entrar
         </Link>
       }

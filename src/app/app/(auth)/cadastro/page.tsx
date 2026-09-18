@@ -12,7 +12,7 @@ export default function SignUpPage() {
       footer={
         <>
           Já tem conta?{' '}
-          <Link href="/entrar" className="font-medium text-ink underline">
+          <Link href="/entrar" className="hover:underline">
             Entrar
           </Link>
         </>

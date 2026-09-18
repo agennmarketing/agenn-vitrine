@@ -42,7 +42,7 @@ export const TERMS: LegalSection[] = [
     title: '5. O que acontece ao voltar para o Gratuito',
     paragraphs: [
       'Nada é apagado na hora. As vitrines que passam do limite do Gratuito ficam congeladas (fora do ar) e você escolhe qual continua ativa; as demais voltam assim que você assinar o Pro de novo.',
-      'Na vitrine ativa, o Gratuito mostra os 10 primeiros itens e 1 vídeo, sem logo, cor da marca e banner, e com a marca d\'água "Feito com Agenn Vitrine". Os itens e as configurações continuam guardados.',
+      'Na vitrine ativa, o Gratuito mostra os 10 primeiros itens e 1 vídeo, sem logo, cor da marca e banner, e com a marca d’água “Feito com Agenn Vitrine”. Os itens e as configurações continuam guardados.',
       'Os vídeos que passam do limite do Gratuito são apagados definitivamente 90 dias depois do fim do Pro. Avisamos por e-mail 7 dias antes.',
     ],
   },

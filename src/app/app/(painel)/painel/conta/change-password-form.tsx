@@ -1,11 +1,12 @@
 'use client'
 
 import { useActionState, useEffect, useRef } from 'react'
+import { PasswordInput } from '@/components/auth/password-input'
 import { Turnstile } from '@/components/auth/turnstile'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { FormMessage } from '@/components/ui/form-message'
-import { Input } from '@/components/ui/input'
+import { Spinner } from '@/components/ui/submit-button'
 import { changePasswordAction } from '@/features/account/actions'
 import { initialFormState } from '@/lib/forms/form-state'
 
@@ -19,19 +20,20 @@ export function ChangePasswordForm() {
   }, [state])
 
   return (
-    <form ref={formRef} action={formAction} noValidate className="flex flex-col gap-3">
+    <form ref={formRef} action={formAction} noValidate className="flex flex-col gap-4">
       <Field label="Senha atual" htmlFor="currentPassword" error={errors.currentPassword}>
-        <Input id="currentPassword" name="currentPassword" type="password" autoComplete="current-password" invalid={!!errors.currentPassword} />
+        <PasswordInput id="currentPassword" name="currentPassword" autoComplete="current-password" invalid={!!errors.currentPassword} />
       </Field>
       <Field label="Nova senha" htmlFor="password" error={errors.password} hint="Mínimo de 8 caracteres.">
-        <Input id="password" name="password" type="password" autoComplete="new-password" invalid={!!errors.password} />
+        <PasswordInput id="password" name="password" autoComplete="new-password" invalid={!!errors.password} />
       </Field>
       <Field label="Confirmar nova senha" htmlFor="confirmPassword" error={errors.confirmPassword}>
-        <Input id="confirmPassword" name="confirmPassword" type="password" autoComplete="new-password" invalid={!!errors.confirmPassword} />
+        <PasswordInput id="confirmPassword" name="confirmPassword" autoComplete="new-password" invalid={!!errors.confirmPassword} />
       </Field>
       <Turnstile resetSignal={state} />
       <FormMessage error={state.error} success={state.success} />
-      <Button type="submit" disabled={pending} className="self-start">
+      <Button type="submit" disabled={pending} aria-busy={pending} className="w-full sm:w-auto sm:self-start">
+        {pending ? <Spinner /> : null}
         Trocar senha
       </Button>
     </form>

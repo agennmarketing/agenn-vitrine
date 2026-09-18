@@ -1,6 +1,7 @@
 import { getItemForEdit, getItemFormOptions } from '@/features/items/queries'
 import { getMyVitrine, getVideoLimits } from '@/features/vitrines/queries'
 import { ItemForm } from '../item-form'
+import { ItemPageHeader } from '../item-page-header'
 
 export const metadata = { title: 'Editar item' }
 
@@ -14,8 +15,8 @@ export default async function EditarItemPage({ params }: { params: Promise<{ id:
   ])
 
   return (
-    <div className="flex flex-col gap-4">
-      <h2 className="text-xl font-semibold">Editar item</h2>
+    <div className="flex flex-col gap-5">
+      <ItemPageHeader vitrineId={id} title="Editar item" />
       <ItemForm
         addonGroups={options.addonGroups}
         key={item.updated_at}

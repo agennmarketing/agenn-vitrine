@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { ChevronLeft, ChevronRight, CircleAlert, Clock } from 'lucide-react'
+import { useEffect, useId, useRef, useState } from 'react'
 import type { PublicItem, PublicVitrine } from '@/features/public/build-catalog'
 import { validateAddonSelections, type AddonSelection } from '@/lib/addons/addons'
 import type { CartLine, NewCartLine } from '@/lib/cart/cart'
@@ -10,6 +11,18 @@ import { formatPriceLabel, priceLabel } from '@/lib/pricing/price'
 import { AddonPicker } from './addon-picker'
 import { sendDirect } from './send-direct'
 import { VideoPlayer } from './video-player'
+import {
+  brandButtonClass,
+  CloseButton,
+  fieldClass,
+  GroupBadge,
+  OptionMark,
+  optionCardClass,
+  optionInputClass,
+  StepButton,
+  TagList,
+  WhatsAppIcon,
+} from './vitrine-ui'
 
 export type ItemSheetProps = {
   vitrine: PublicVitrine
@@ -29,6 +42,8 @@ export default function ItemSheet({ vitrine, item, onClose, cart }: ItemSheetPro
   const [activeIndex, setActiveIndex] = useState(0)
   const closeRef = useRef<HTMLButtonElement>(null)
   const choicesRef = useRef<HTMLFieldSetElement>(null)
+  const galleryRef = useRef<HTMLDivElement>(null)
+  const noteId = useId()
 
   useEffect(() => {
     closeRef.current?.focus()
@@ -51,7 +66,11 @@ export default function ItemSheet({ vitrine, item, onClose, cart }: ItemSheetPro
   const unitCents = lineUnitCents(line, item)
   const hasChoice = variation !== null || addons.length > 0
   const showPrice = vitrine.showPrices && !(variation && item.priceType === 'on_request')
-  const headerPrice = hasChoice && unitCents !== null ? formatBRL(unitCents) : formatPriceLabel(priceLabel(item, item.variations))
+  const baseLabel = priceLabel(item, item.variations)
+  const headerPrice = hasChoice && unitCents !== null ? formatBRL(unitCents) : formatPriceLabel(baseLabel)
+  const originalCents = !hasChoice && baseLabel.kind === 'price' ? baseLabel.originalCents : null
+  const hasMedia = vitrine.showMedia && (item.video !== null || images.length > 0)
+  const slideCount = (item.video ? 1 : 0) + images.length
 
   function validate(): boolean {
     if (item.variations.length > 0 && !variation) {
@@ -89,6 +108,12 @@ export default function ItemSheet({ vitrine, item, onClose, cart }: ItemSheetPro
     setTimeout(() => setSending(false), 3000)
   }
 
+  function goToSlide(delta: number) {
+    const el = galleryRef.current
+    if (!el) return
+    el.scrollBy({ left: delta * el.clientWidth, behavior: 'smooth' })
+  }
+
   let buttonLabel: string
   if (cart) {
     const verb = cart.initial ? 'Salvar alterações' : 'Adicionar'
@@ -106,26 +131,40 @@ export default function ItemSheet({ vitrine, item, onClose, cart }: ItemSheetPro
   } else if (sending) {
     buttonLabel = 'Abrindo o WhatsApp…'
   }
+  const showWhatsAppIcon = !cart && !item.soldOut && Boolean(phone)
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 md:items-center" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex animate-fade items-end justify-center bg-black/55 md:items-center md:p-6"
+      onClick={onClose}
+    >
       <div
         role="dialog"
         aria-modal="true"
         aria-label={item.name}
         onClick={(event) => event.stopPropagation()}
-        className="flex max-h-[90dvh] w-full flex-col overflow-hidden rounded-t-card bg-surface text-ink md:max-w-[640px] md:rounded-card"
+        className={`relative flex max-h-[92dvh] w-full animate-sheet-up flex-col overflow-y-auto overscroll-contain rounded-t-[1.75rem] bg-surface text-ink shadow-float md:overflow-hidden md:rounded-[1.75rem] ${
+          hasMedia
+            ? 'md:grid md:h-[min(88dvh,720px)] md:max-h-none md:max-w-[960px] md:grid-cols-2 md:grid-rows-[minmax(0,1fr)_auto]'
+            : 'md:max-h-[min(88dvh,760px)] md:max-w-[560px]'
+        }`}
       >
-        <div className="flex justify-end p-2">
-          <button ref={closeRef} type="button" onClick={onClose} className="rounded-control px-3 py-2 text-sm">
-            Fechar
-          </button>
+        {/* Alça e botão de fechar ficam presos ao topo enquanto o conteúdo rola. */}
+        <div className="sticky top-0 z-20 h-0 md:absolute md:inset-x-0">
+          <span
+            aria-hidden="true"
+            className={`absolute left-1/2 top-2 h-1.5 w-10 -translate-x-1/2 rounded-full md:hidden ${
+              hasMedia ? 'bg-white/85 shadow-[0_1px_4px_rgb(0_0_0/0.3)]' : 'bg-line-strong'
+            }`}
+          />
+          <CloseButton buttonRef={closeRef} onClick={onClose} className="absolute right-3 top-3.5" />
         </div>
 
-        <div className="flex-1 overflow-y-auto px-4 pb-4">
-          {vitrine.showMedia && (item.video || images.length > 0) ? (
+        {hasMedia ? (
+          <div className="relative shrink-0 bg-black md:row-span-2 md:h-full md:min-h-0">
             <div
-              className="-mx-4 mb-4 flex snap-x snap-mandatory overflow-x-auto"
+              ref={galleryRef}
+              className="flex h-full snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
               onScroll={(event) => {
                 const el = event.currentTarget
                 setActiveIndex(el.clientWidth ? Math.round(el.scrollLeft / el.clientWidth) : 0)
@@ -133,14 +172,14 @@ export default function ItemSheet({ vitrine, item, onClose, cart }: ItemSheetPro
             >
               {/* Spec 6.3: vídeo primeiro. Fora da vista, o player desmonta (pausa e destrói). */}
               {item.video ? (
-                <div className="w-full shrink-0 snap-center md:w-1/2">
+                <div className="aspect-[4/5] max-h-[46dvh] w-full shrink-0 snap-center md:aspect-auto md:h-full md:max-h-none">
                   {activeIndex === 0 ? (
-                    <VideoPlayer video={item.video} className="aspect-[4/5] w-full bg-black object-cover" />
+                    <VideoPlayer video={item.video} wrapperClassName="size-full" className="size-full bg-black object-cover" />
                   ) : item.video.posterUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={item.video.posterUrl} alt="" className="aspect-[4/5] w-full object-cover" />
+                    <img src={item.video.posterUrl} alt="" className="size-full object-cover" />
                   ) : (
-                    <div className="aspect-[4/5] w-full bg-black" />
+                    <div className="size-full bg-black" />
                   )}
                 </div>
               ) : null}
@@ -150,59 +189,117 @@ export default function ItemSheet({ vitrine, item, onClose, cart }: ItemSheetPro
                   key={image.large}
                   src={image.large}
                   srcSet={`${image.small} ${image.smallWidth}w, ${image.large} ${image.largeWidth}w`}
-                  sizes="(min-width: 768px) 640px, 100vw"
+                  sizes="(min-width: 768px) 480px, 100vw"
                   alt=""
-                  className="aspect-[4/5] w-full shrink-0 snap-center object-cover md:w-1/2"
+                  className={`aspect-[4/5] max-h-[46dvh] w-full shrink-0 snap-center object-cover md:aspect-auto md:h-full md:max-h-none ${
+                    item.soldOut ? 'grayscale' : ''
+                  }`}
                 />
               ))}
             </div>
-          ) : null}
 
-          <h2 className="text-xl font-semibold">{item.name}</h2>
-          {showPrice ? <p className="mt-1 text-lg">{headerPrice}</p> : null}
-          {item.durationMinutes ? <p className="text-sm text-ink-muted">{item.durationMinutes} min</p> : null}
-          {item.description ? <p className="mt-3 whitespace-pre-line text-ink-muted">{item.description}</p> : null}
-          {item.tags.length > 0 ? (
-            <div className="mt-3 flex flex-wrap gap-1">
-              {item.tags.map((tag) => (
-                <span key={tag} className="rounded-full bg-subtle px-2 py-0.5 text-xs">
-                  {tag}
-                </span>
-              ))}
-            </div>
+            {slideCount > 1 ? (
+              <>
+                <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center gap-1.5">
+                  {Array.from({ length: slideCount }, (_, index) => (
+                    <span
+                      key={index}
+                      className={`h-1.5 rounded-full bg-white shadow-[0_1px_3px_rgb(0_0_0/0.35)] transition-[width,opacity] duration-300 ease-out-quint ${
+                        index === activeIndex ? 'w-5 opacity-100' : 'w-1.5 opacity-60'
+                      }`}
+                    />
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  aria-label="Foto anterior"
+                  disabled={activeIndex === 0}
+                  onClick={() => goToSlide(-1)}
+                  className="absolute left-3 top-1/2 hidden size-10 -translate-y-1/2 items-center justify-center rounded-full bg-surface/90 text-ink shadow-[0_2px_10px_rgb(0_0_0/0.2)] transition-opacity duration-150 disabled:opacity-0 md:flex"
+                >
+                  <ChevronLeft aria-hidden="true" className="size-5" strokeWidth={2.5} />
+                </button>
+                <button
+                  type="button"
+                  aria-label="Próxima foto"
+                  disabled={activeIndex >= slideCount - 1}
+                  onClick={() => goToSlide(1)}
+                  className="absolute right-3 top-1/2 hidden size-10 -translate-y-1/2 items-center justify-center rounded-full bg-surface/90 text-ink shadow-[0_2px_10px_rgb(0_0_0/0.2)] transition-opacity duration-150 disabled:opacity-0 md:flex"
+                >
+                  <ChevronRight aria-hidden="true" className="size-5" strokeWidth={2.5} />
+                </button>
+              </>
+            ) : null}
+          </div>
+        ) : null}
+
+        <div className={`flex flex-col px-5 pb-6 md:col-start-2 md:min-h-0 md:overflow-y-auto md:px-7 md:pt-7 ${hasMedia ? 'pt-5' : 'pt-8'}`}>
+          <h2 className="pr-12 text-2xl font-extrabold leading-tight tracking-[-0.02em] md:text-[1.75rem]">{item.name}</h2>
+          {showPrice ? (
+            <p className="numeric mt-2 flex flex-wrap items-baseline gap-x-2 text-2xl font-extrabold tracking-[-0.01em]">
+              {originalCents !== null ? <s className="text-base font-medium text-ink-muted">{formatBRL(originalCents)}</s> : null}
+              <span>{headerPrice}</span>
+            </p>
           ) : null}
+          {item.durationMinutes ? (
+            <p className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-ink-muted">
+              <Clock aria-hidden="true" className="size-4" strokeWidth={2.5} />
+              {item.durationMinutes} min
+            </p>
+          ) : null}
+          {item.soldOut ? (
+            <p className="mt-3 w-fit rounded-full bg-ink px-3 py-1 text-sm font-bold text-canvas">Item esgotado no momento</p>
+          ) : null}
+          {item.description ? <p className="mt-3 whitespace-pre-line leading-relaxed text-ink-muted">{item.description}</p> : null}
+          <TagList tags={item.tags} className="mt-3" />
 
           {item.variations.length > 0 ? (
-            <fieldset
-              ref={choicesRef}
-              className={`mt-5 flex flex-col gap-2 rounded-control border p-3 ${missingVariation ? 'border-danger' : 'border-line'}`}
-            >
-              <legend className="px-1 font-medium">Escolha uma opção</legend>
-              <p className="text-xs text-ink-muted">Obrigatório · escolha 1</p>
-              {item.variations.map((option) => (
-                <label key={option.id} className={`flex items-center gap-2 ${option.soldOut ? 'opacity-60' : ''}`}>
-                  <input
-                    type="radio"
-                    name="variation"
-                    value={option.id}
-                    disabled={option.soldOut}
-                    checked={variationId === option.id}
-                    onChange={() => {
-                      setVariationId(option.id)
-                      setMissingVariation(false)
-                    }}
-                  />
-                  <span>
-                    {option.name}
-                    {vitrine.showPrices && item.priceType !== 'on_request'
-                      ? ` · ${formatBRL(option.promoPriceCents ?? option.priceCents)}`
-                      : ''}
-                    {option.soldOut ? ' · Esgotado' : ''}
-                  </span>
-                </label>
-              ))}
+            <fieldset ref={choicesRef} className="mt-7 min-w-0">
+              <legend className="float-left mb-3 flex w-full items-center justify-between gap-3">
+                <span className="text-lg font-extrabold tracking-[-0.01em]">Escolha uma opção</span>
+                <GroupBadge required>Obrigatório · escolha 1</GroupBadge>
+              </legend>
+              <div
+                className={`clear-both flex flex-col gap-2 rounded-2xl transition-shadow duration-200 ${
+                  missingVariation ? 'ring-2 ring-danger ring-offset-4 ring-offset-surface' : ''
+                }`}
+              >
+                {item.variations.map((option) => {
+                  const promo = option.promoPriceCents !== null && option.promoPriceCents < option.priceCents
+                  return (
+                    <label key={option.id} className={optionCardClass}>
+                      <input
+                        type="radio"
+                        name="variation"
+                        value={option.id}
+                        disabled={option.soldOut}
+                        checked={variationId === option.id}
+                        onChange={() => {
+                          setVariationId(option.id)
+                          setMissingVariation(false)
+                        }}
+                        className={optionInputClass}
+                      />
+                      <OptionMark type="radio" />
+                      <span className="flex min-w-0 flex-1 flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+                        <span className="font-semibold">
+                          {option.name}
+                          {option.soldOut ? <span className="font-medium text-ink-muted"> · Esgotado</span> : null}
+                        </span>
+                        {vitrine.showPrices && item.priceType !== 'on_request' ? (
+                          <span className="numeric flex items-baseline gap-1.5 text-[0.9375rem] font-semibold">
+                            {promo ? <s className="text-sm font-medium text-ink-muted">{formatBRL(option.priceCents)}</s> : null}
+                            {formatBRL(option.promoPriceCents ?? option.priceCents)}
+                          </span>
+                        ) : null}
+                      </span>
+                    </label>
+                  )
+                })}
+              </div>
               {missingVariation ? (
-                <p role="alert" className="text-sm text-danger">
+                <p role="alert" className="mt-3 flex items-center gap-1.5 text-sm font-semibold text-danger">
+                  <CircleAlert aria-hidden="true" className="size-4 shrink-0" strokeWidth={2.5} />
                   Escolha uma opção.
                 </p>
               ) : null}
@@ -223,54 +320,57 @@ export default function ItemSheet({ vitrine, item, onClose, cart }: ItemSheetPro
             />
           ) : null}
           {addonError && !addonError.groupId ? (
-            <p role="alert" className="mt-2 text-sm text-danger">
+            <p role="alert" className="mt-3 flex items-center gap-1.5 text-sm font-semibold text-danger">
+              <CircleAlert aria-hidden="true" className="size-4 shrink-0" strokeWidth={2.5} />
               {addonError.message}
             </p>
           ) : null}
 
-          <label className="mt-5 flex flex-col gap-1 text-sm">
-            Observação
+          <div className="mt-7 flex flex-col gap-2">
+            <label htmlFor={noteId} className="text-lg font-extrabold tracking-[-0.01em]">
+              Observação
+            </label>
             <textarea
+              id={noteId}
               value={note}
               maxLength={140}
               rows={2}
+              placeholder="Algum detalhe? Escreva aqui."
               onChange={(event) => setNote(event.target.value)}
-              className="rounded-control border border-line-strong bg-surface px-3 py-2 text-base"
+              className={`${fieldClass} h-auto resize-none py-3 leading-snug`}
             />
-            <span className="self-end text-xs text-ink-muted">{note.length}/140</span>
-          </label>
+            <span className="numeric self-end text-xs text-ink-muted">{note.length}/140</span>
+          </div>
         </div>
 
-        <div className="flex items-center gap-3 border-t border-line p-4">
+        <div className="sticky bottom-0 z-10 mt-auto flex items-center gap-3 border-t border-line bg-surface px-4 pb-[calc(0.875rem+env(safe-area-inset-bottom))] pt-3.5 md:static md:col-start-2 md:px-7 md:pb-5 md:pt-4">
           {cart ? (
-            <div className="flex items-center gap-2" aria-label="Quantidade" role="group">
-              <button
-                type="button"
+            <div className="flex shrink-0 items-center gap-1 rounded-full bg-subtle p-1" aria-label="Quantidade" role="group">
+              <StepButton
+                kind="minus"
                 aria-label="Diminuir quantidade"
                 disabled={qty <= 1}
                 onClick={() => setQty((value) => Math.max(1, value - 1))}
-                className="size-10 rounded-full border border-line-strong disabled:opacity-40"
-              >
-                −
-              </button>
-              <span aria-live="polite" className="w-6 text-center">{qty}</span>
-              <button
-                type="button"
+              />
+              <span aria-live="polite" className="numeric w-7 text-center text-lg font-bold">
+                {qty}
+              </span>
+              <StepButton
+                kind="plus"
+                tone="neutral"
                 aria-label="Aumentar quantidade"
                 disabled={qty >= 99}
                 onClick={() => setQty((value) => Math.min(99, value + 1))}
-                className="size-10 rounded-full border border-line-strong disabled:opacity-40"
-              >
-                +
-              </button>
+              />
             </div>
           ) : null}
           <button
             type="button"
             disabled={disabled}
             onClick={onPrimary}
-            className="h-12 flex-1 rounded-control bg-brand font-semibold text-brand-ink disabled:opacity-60"
+            className={`${brandButtonClass} numeric min-w-0 flex-1 px-4 text-[0.9375rem] leading-tight sm:text-base`}
           >
+            {showWhatsAppIcon ? <WhatsAppIcon className="size-5 shrink-0" /> : null}
             {buttonLabel}
           </button>
         </div>
