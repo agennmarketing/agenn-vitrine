@@ -404,8 +404,8 @@ export const PRIVACY: LegalSection[] = [
     paragraphs: [
       'Da pessoa que cria a conta: nome, e-mail e senha (guardada apenas de forma criptografada pelo Supabase). Se você entra com o Google, recebemos nome e e-mail da sua conta Google.',
       'Do uso do serviço: vitrines, itens, fotos, vídeos, textos e configurações que você cria, além de registros técnicos como data de acesso e erros.',
-      'De pagamento: a assinatura é processada pela Stripe. Guardamos apenas identificadores da assinatura e do cliente, o status, o intervalo e a data de renovação. **Não guardamos** número de cartão.',
-      'Do visitante da vitrine: **não guardamos** nome, telefone, endereço nem forma de pagamento. Esses dados são digitados no navegador do visitante e seguem direto na mensagem do WhatsApp para você. O que fica salvo é o resumo do pedido (itens, quantidades e preços do momento), sem dados pessoais.',
+      'De pagamento: a assinatura é processada pela Stripe. Guardamos apenas identificadores da assinatura e do cliente, o status, o intervalo e a data de renovação. Não guardamos número de cartão.',
+      'Do visitante da vitrine: não guardamos nome, telefone, endereço nem forma de pagamento. Esses dados são digitados no navegador do visitante e seguem direto na mensagem do WhatsApp para você. O que fica salvo é o resumo do pedido (itens, quantidades e preços do momento), sem dados pessoais.',
       'Para limitar abuso, guardamos o endereço IP do visitante apenas em forma de código embaralhado (hash), que não permite voltar ao IP original, por até 2 dias.',
     ],
   },
@@ -1580,16 +1580,21 @@ test('cada host tem seu robots.txt e a vitrine tem sitemap', async ({ request })
   expect(xml).toContain(`<loc>${base}/</loc>`)
   expect(xml).toContain(`?item=${item.code}`)
 
-  // Congelada some dos buscadores.
-  await createAdminClient().from('vitrines').update({ status: 'frozen' }).eq('id', vitrine.id).throwOnError()
-  await expect
-    .poll(async () => (await request.get(`${base}/robots.txt`)).text())
-    .toContain('Disallow: /')
-  expect((await request.get(`${base}/sitemap.xml`)).status()).toBe(404)
+  // Congelada some dos buscadores. Uma vitrine nova, já congelada, nunca foi gerada
+  // antes: o primeiro acesso já mostra o estado certo, sem depender de revalidação.
+  const congelada = await seedVitrine(user.id, { subdomain: uniqueSubdomain('rb-frozen') })
+  await createAdminClient().from('vitrines').update({ status: 'frozen' }).eq('id', congelada.id).throwOnError()
+  const baseCongelada = `http://${congelada.subdomain}.localhost:3000`
+  expect(await (await request.get(`${baseCongelada}/robots.txt`)).text()).toContain('Disallow: /')
+  expect((await request.get(`${baseCongelada}/sitemap.xml`)).status()).toBe(404)
 })
 ```
 
-Observação: `loadPublicVitrine` é cacheado por tag; o `expect.poll` cobre o intervalo entre a mudança no banco e a revalidação.
+Observações:
+- A segunda vitrine só é permitida com a conta no Pro (trava do banco). Antes de semeá-la, chame
+  `await setSubscription(user.id, { status: 'active' })` e acrescente `setSubscription` aos imports.
+- `loadPublicVitrine` é cacheado por tag: escrever direto no banco **não** revalida. Por isso o teste
+  usa uma vitrine nova em vez de congelar a que já foi acessada.
 
 - [ ] **Step 8: Verificação e PR**
 
