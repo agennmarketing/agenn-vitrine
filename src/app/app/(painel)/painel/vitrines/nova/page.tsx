@@ -1,5 +1,6 @@
+import { Crown } from 'lucide-react'
 import Link from 'next/link'
-import { Card } from '@/components/ui/card'
+import { buttonClasses } from '@/components/ui/button'
 import { getEntitlements, listMyVitrines } from '@/features/vitrines/queries'
 import { env } from '@/lib/env'
 import { mapDbError } from '@/lib/vitrines/db-errors'
@@ -11,16 +12,24 @@ export default async function NovaVitrinePage() {
   const [vitrines, plan] = await Promise.all([listMyVitrines(), getEntitlements()])
   if (vitrines.length >= plan.max_vitrines) {
     return (
-      <Card className="flex flex-col gap-3 p-6">
-        <h1 className="text-xl font-semibold">Nova vitrine</h1>
-        <p>{mapDbError({ message: 'plan_limit:vitrines', hint: String(plan.max_vitrines) })}</p>
-        <Link href="/painel/plano" className="underline">
+      <section className="mx-auto flex w-full max-w-md flex-col items-center gap-5 py-6 text-center">
+        <span
+          aria-hidden="true"
+          className="flex size-16 items-center justify-center rounded-card bg-sun text-sun-ink shadow-[0_4px_0_var(--color-sun-lip)]"
+        >
+          <Crown className="size-8" strokeWidth={2.5} />
+        </span>
+        <h1 className="text-[1.75rem] font-black tracking-[-0.025em]">Nova vitrine</h1>
+        <p className="font-semibold text-ink-muted">
+          {mapDbError({ message: 'plan_limit:vitrines', hint: String(plan.max_vitrines) })}
+        </p>
+        <Link href="/painel/plano" className={buttonClasses('sun', 'w-full', 'lg')}>
           Ver o plano Pro
         </Link>
-        <Link href="/painel" className="underline">
+        <Link href="/painel" className={buttonClasses('ghost', 'w-full')}>
           Voltar para Minhas vitrines
         </Link>
-      </Card>
+      </section>
     )
   }
   return <VitrineWizard rootDomain={env.NEXT_PUBLIC_ROOT_DOMAIN} />

@@ -50,3 +50,9 @@ banco de imagens/
 
 # vídeos de teste gerados no CI
 e2e/fixtures/*.webm
+
+# impeccable: capturas locais de revisão
+.impeccable/review/
+.impeccable/mocks/
+.impeccable/build/
+.impeccable/questions/

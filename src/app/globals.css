@@ -1,37 +1,137 @@
 @import "tailwindcss";
 
 /*
- * Agenn Vitrine: painel do lojista.
- * Neutros puxados para o verde da marca (#0B2A1C), nunca cinza puro.
- * A cor da marca fica para ações primárias, foco e seleção.
+ * Agenn Vitrine: "Trilha da Vitrine".
+ * Painel claro, neutros puxados para o verde da logo (#0B2A1C), nunca cinza puro.
+ * - go: verde vivo das ações (texto em verde-escuro, não branco: contraste 7,8:1).
+ * - deep: o verde-escuro da logo, a "placa invertida" do que é ativo ou principal.
+ * - sun: dourado, só para Pro e conquistas.
+ * - brand: na vitrine pública é a cor do lojista; no painel é o verde da logo (foco e seleção).
+ * Controles prensáveis têm um lábio sólido embaixo (--lip) que afunda ao tocar.
  */
 @theme {
-  --color-canvas: #f3f5f1;
+  --color-canvas: #f5f8f4;
   --color-surface: #ffffff;
-  --color-subtle: #eaeee8;
-  --color-ink: #0f1a14;
-  --color-ink-muted: #56615a;
-  --color-line: #dde2db;
-  --color-line-strong: #b3bcb5;
+  --color-subtle: #edf2eb;
+  --color-ink: #10231a;
+  --color-ink-muted: #56675e;
+  --color-line: #e1e8de;
+  --color-line-strong: #c7d2c3;
+
   --color-brand: #0b2a1c;
   --color-brand-hover: #15432f;
   --color-brand-active: #061a11;
   --color-brand-ink: #ffffff;
   --color-brand-soft: #e3ede6;
-  --color-danger: #b42318;
-  --color-danger-hover: #93190f;
-  --color-danger-soft: #fdecea;
-  --color-success: #166b40;
-  --color-success-soft: #e5f4eb;
 
-  --radius-control: 0.625rem;
+  --color-go: #2fd36b;
+  --color-go-hover: #45dc7c;
+  --color-go-lip: #1ea354;
+  --color-go-ink: #0b2a1c;
+  --color-go-soft: #e4f8ea;
+  --color-go-strong: #15803d;
+
+  --color-deep: #0b2a1c;
+  --color-deep-raised: #143a28;
+  --color-deep-ink: #ffffff;
+  --color-deep-muted: #a9c7b5;
+
+  --color-sun: #ffc83d;
+  --color-sun-lip: #d9a110;
+  --color-sun-soft: #fff5d6;
+  --color-sun-ink: #4a3500;
+
+  --color-danger: #c4291c;
+  --color-danger-fill: #e5483a;
+  --color-danger-hover: #93190f;
+  --color-danger-lip: #a8231a;
+  --color-danger-soft: #fdecea;
+  --color-success: #15803d;
+  --color-success-soft: #e4f8ea;
+
+  /* Cores dos três tipos de vitrine: só em ícones e marcadores, nunca em áreas grandes. */
+  --color-type-comida: #ff6b2c;
+  --color-type-comida-soft: #ffeee5;
+  --color-type-servicos: #e83e8c;
+  --color-type-servicos-soft: #fde8f1;
+  --color-type-produtos: #2f7deb;
+  --color-type-produtos-soft: #e6f0fd;
+
+  --radius-control: 0.875rem;
   --radius-card: 1rem;
+  --radius-sheet: 1.5rem;
 
   --shadow-control: 0 1px 2px rgb(11 42 28 / 0.06);
+  --shadow-float: 0 12px 32px -8px rgb(11 42 28 / 0.28), 0 2px 6px rgb(11 42 28 / 0.08);
 
   --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);
 
-  --font-sans: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
+  /* A fonte real entra por next/font em cada área (painel: Nunito; vitrine: Figtree). */
+  --font-sans: ui-sans-serif, system-ui, sans-serif;
+
+  --animate-pop: pop 420ms var(--ease-out-back) both;
+  --animate-rise: rise 360ms var(--ease-out-quint) both;
+  --animate-bump: bump 380ms var(--ease-out-back);
+  --animate-sheet-up: sheet-up 320ms var(--ease-out-quint) both;
+  --animate-fade: fade 200ms ease-out both;
+
+  @keyframes pop {
+    0% { transform: scale(0.4); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  @keyframes rise {
+    0% { transform: translateY(8px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+  @keyframes bump {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.22); }
+    100% { transform: scale(1); }
+  }
+  @keyframes sheet-up {
+    0% { transform: translateY(24px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+  @keyframes fade {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+}
+
+/*
+ * Controle prensável: lábio sólido de 4px embaixo, que some quando o dedo afunda o botão.
+ * A cor do lábio vem de --lip (cada variante define a sua).
+ */
+@utility pressable {
+  box-shadow: 0 4px 0 var(--lip, var(--color-line-strong));
+  transition:
+    translate 120ms var(--ease-out-quint),
+    box-shadow 120ms var(--ease-out-quint),
+    background-color 150ms var(--ease-out-quint),
+    border-color 150ms var(--ease-out-quint),
+    color 150ms var(--ease-out-quint);
+  &:active:not(:disabled) {
+    translate: 0 4px;
+    box-shadow: 0 0 0 var(--lip, var(--color-line-strong));
+  }
+  &:disabled {
+    box-shadow: 0 4px 0 var(--color-line);
+  }
+}
+
+/* Seta do <select> desenhada no traço dos ícones (lucide chevron-down, 2.5). */
+@utility select-chevron {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2356675e' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: 1.25rem;
+  background-position: right 0.875rem center;
+}
+
+/* Algarismos de preço e contagem alinhados. */
+@utility numeric {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
 }
 
 @layer base {
@@ -39,6 +139,7 @@
     color-scheme: light;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
   }
 
   html,
@@ -52,14 +153,14 @@
 
   body {
     min-height: 100dvh;
-    caret-color: var(--color-brand);
-    accent-color: var(--color-brand);
+    caret-color: var(--color-go-strong);
+    accent-color: var(--color-go-strong);
     scrollbar-color: var(--color-line-strong) transparent;
   }
 
   ::selection {
-    background: var(--color-brand-soft);
-    color: var(--color-brand);
+    background: var(--color-go-soft);
+    color: var(--color-go-ink);
   }
 
   h1,
@@ -73,14 +174,17 @@
   }
 
   a {
-    text-decoration-thickness: 1px;
+    text-decoration-thickness: 2px;
     text-underline-offset: 0.2em;
   }
 
-  :where(a, summary):focus-visible {
-    outline: 2px solid var(--color-brand);
+  :where(a, summary, button, [role="button"], input, select, textarea):focus-visible {
+    outline: 3px solid var(--color-go-strong);
     outline-offset: 2px;
-    border-radius: 0.25rem;
+  }
+
+  :where(a, summary):focus-visible {
+    border-radius: 0.375rem;
   }
 
   @media (prefers-reduced-motion: reduce) {
