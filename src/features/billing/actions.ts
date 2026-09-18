@@ -1,7 +1,6 @@
 'use server'
 
 import * as Sentry from '@sentry/nextjs'
-import { redirect } from 'next/navigation'
 import { requireActionUser } from '@/lib/auth/action-user'
 import { getBilling } from '@/lib/billing/billing'
 import type { BillingInterval } from '@/lib/billing/types'
@@ -16,7 +15,15 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const CHECKOUT_FAILED = 'Não foi possível abrir o pagamento. Tente de novo em instantes.'
 const PORTAL_FAILED = 'Não foi possível abrir o gerenciamento da assinatura. Tente de novo em instantes.'
 
-export async function startCheckoutAction(_prev: FormState, formData: FormData): Promise<FormState> {
+// O destino é o Stripe (ou, no CI, a rota que faz o papel dele). A ação devolve a
+// URL e quem navega é o navegador: `redirect()` de Server Action para o mesmo
+// domínio vira navegação do roteador do Next, que não sabe ler uma rota de API.
+export type BillingRedirectState = { error?: string; url?: string }
+
+export async function startCheckoutAction(
+  _prev: BillingRedirectState,
+  formData: FormData,
+): Promise<BillingRedirectState> {
   const interval: BillingInterval = formData.get('interval') === 'year' ? 'year' : 'month'
   const { supabase, user } = await requireActionUser()
 
@@ -53,11 +60,11 @@ export async function startCheckoutAction(_prev: FormState, formData: FormData):
     Sentry.captureException(error)
     return { error: CHECKOUT_FAILED }
   }
-  redirect(url)
+  return { url }
 }
 
 // Sem parâmetros: o portal não tem campos, e useActionState aceita uma ação mais curta.
-export async function openPortalAction(): Promise<FormState> {
+export async function openPortalAction(): Promise<BillingRedirectState> {
   const { user } = await requireActionUser()
 
   let url: string
@@ -79,7 +86,7 @@ export async function openPortalAction(): Promise<FormState> {
     Sentry.captureException(error)
     return { error: PORTAL_FAILED }
   }
-  redirect(url)
+  return { url }
 }
 
 // Spec 8.7: com mais vitrines do que o plano permite, o dono escolhe qual fica ativa.
