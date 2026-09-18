@@ -1,10 +1,12 @@
+import { LogOut } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import type { ReactNode } from 'react'
-import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { signOutAction } from '@/features/auth/actions'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { BottomNav, SideNav } from './painel-nav'
 
 export default async function PainelLayout({ children }: { children: ReactNode }) {
   // O proxy já confirmou a sessão (session_state); aqui basta o JWT validado localmente.
@@ -20,53 +22,65 @@ export default async function PainelLayout({ children }: { children: ReactNode }
     supabase.rpc('my_entitlements'),
   ])
   const displayName = profile?.name || email
+  const planName = plan?.name ?? 'Gratuito'
+  const isPro = planName !== 'Gratuito'
 
   return (
-    <div className="min-h-dvh">
-      <header className="border-b border-line bg-surface">
-        <div className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-4 sm:gap-4">
-          <Link href="/painel" className="flex shrink-0 items-center gap-2 font-semibold">
-            <Image src="/brand/logo-icone-512.png" alt="" width={32} height={32} className="size-8 shrink-0 rounded-lg" />
-            <span className="hidden sm:inline">Agenn Vitrine</span>
-          </Link>
-          <nav className="hidden items-center gap-1 text-sm sm:flex">
-            <Link href="/painel" className="rounded-control px-3 py-2 hover:bg-canvas">
-              Vitrines
+    <div className="min-h-dvh lg:grid lg:grid-cols-[15.5rem_minmax(0,1fr)]">
+      <aside className="sticky top-0 hidden h-dvh flex-col gap-8 border-r-2 border-line bg-surface px-4 py-6 lg:flex">
+        <Link href="/painel" className="flex items-center gap-2.5 px-2">
+          <Image src="/brand/logo-icone-512.png" alt="" width={40} height={40} className="size-10 rounded-xl" />
+          <span className="text-lg font-black leading-none tracking-[-0.02em] text-deep">
+            Agenn <span className="text-go-strong">Vitrine</span>
+          </span>
+        </Link>
+        <SideNav />
+      </aside>
+
+      <div className="flex min-w-0 flex-col">
+        <header className="sticky top-0 z-30 border-b-2 border-line bg-canvas">
+          <div className="mx-auto flex h-16 max-w-5xl items-center gap-3 px-4 lg:px-8">
+            <Link href="/painel" aria-label="Agenn Vitrine, início" className="shrink-0 lg:hidden">
+              <Image src="/brand/logo-icone-512.png" alt="" width={36} height={36} className="size-9 rounded-[0.625rem]" />
             </Link>
-            <Link href="/painel/simulador" className="rounded-control px-3 py-2 hover:bg-canvas">
-              Simulador
-            </Link>
-            <Link href="/painel/plano" className="rounded-control px-3 py-2 hover:bg-canvas">
-              Plano
-            </Link>
-            <Link href="/painel/conta" className="rounded-control px-3 py-2 hover:bg-canvas">
-              Conta
-            </Link>
-          </nav>
-          <div className="ml-auto flex min-w-0 items-center gap-2 sm:gap-3">
-            {/* Único acesso a Conta no celular, onde a navegação fica escondida. */}
-            <div className="flex min-w-0 flex-col items-end leading-tight">
-              <Link
-                href="/painel/conta"
-                aria-label={`Conta de ${displayName}`}
-                className="max-w-[8rem] truncate rounded-control px-2 py-0.5 text-sm font-medium hover:bg-canvas sm:max-w-[10rem]"
+            <div className="ml-auto flex min-w-0 items-center gap-2">
+              <span
+                aria-hidden="true"
+                className="flex size-9 shrink-0 items-center justify-center rounded-full bg-deep text-sm font-black text-deep-ink"
               >
-                {displayName}
-              </Link>
-              {/* Link separado: um <a> dentro de outro seria HTML inválido. */}
-              <Link href="/painel/plano" className="rounded-control px-2 py-0.5 text-xs text-ink-muted hover:bg-canvas">
-                Plano {plan?.name ?? 'Gratuito'}
-              </Link>
+                {displayName.trim().charAt(0).toUpperCase() || '?'}
+              </span>
+              <div className="flex min-w-0 flex-col items-start leading-tight">
+                <Link
+                  href="/painel/conta"
+                  aria-label={`Conta de ${displayName}`}
+                  className="max-w-[9rem] truncate rounded-md text-sm font-extrabold text-ink hover:text-go-strong sm:max-w-[14rem]"
+                >
+                  {displayName}
+                </Link>
+                {/* Link separado: um <a> dentro de outro seria HTML inválido. */}
+                <Link href="/painel/plano" className="rounded-md">
+                  <Badge tone={isPro ? 'sun' : 'neutral'} className="mt-0.5 h-5 px-2 text-[0.6875rem]">
+                    Plano {planName}
+                  </Badge>
+                </Link>
+              </div>
+              <form action={signOutAction} className="ml-1 shrink-0">
+                <button
+                  type="submit"
+                  className="flex h-10 items-center gap-1.5 rounded-control px-3 text-sm font-extrabold text-ink-muted transition-colors hover:bg-subtle hover:text-ink"
+                >
+                  <LogOut aria-hidden="true" className="size-[1.125rem]" strokeWidth={2.5} />
+                  Sair
+                </button>
+              </form>
             </div>
-            <form action={signOutAction} className="shrink-0">
-              <Button type="submit" variant="ghost">
-                Sair
-              </Button>
-            </form>
           </div>
-        </div>
-      </header>
-      <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
+        </header>
+        <main className="mx-auto w-full max-w-5xl px-4 pb-32 pt-6 sm:pt-8 lg:px-8 lg:pb-16">{children}</main>
+      </div>
+
+      <BottomNav />
     </div>
   )
 }

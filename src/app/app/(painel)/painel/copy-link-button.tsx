@@ -1,5 +1,6 @@
 'use client'
 
+import { Check, Link2 } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 
@@ -8,6 +9,7 @@ export function CopyLinkButton({ url }: { url: string }) {
   return (
     <Button
       variant="secondary"
+      className={copied ? 'border-go bg-go-soft text-go-strong' : ''}
       onClick={async () => {
         try {
           await navigator.clipboard.writeText(url)
@@ -18,7 +20,12 @@ export function CopyLinkButton({ url }: { url: string }) {
         }
       }}
     >
-      {copied ? 'Link copiado' : 'Copiar link'}
+      {copied ? (
+        <Check aria-hidden="true" className="size-[1.125rem] animate-pop" strokeWidth={3} />
+      ) : (
+        <Link2 aria-hidden="true" className="size-[1.125rem]" strokeWidth={2.5} />
+      )}
+      <span aria-live="polite">{copied ? 'Link copiado' : 'Copiar link'}</span>
     </Button>
   )
 }

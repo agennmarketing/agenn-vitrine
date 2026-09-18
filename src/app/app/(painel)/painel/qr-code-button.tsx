@@ -1,7 +1,8 @@
 'use client'
 
+import { Download, QrCode, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { Button, buttonClasses } from '@/components/ui/button'
+import { Button } from '@/components/ui/button'
 
 export function QrCodeButton({ url, name, subdomain }: { url: string; name: string; subdomain: string }) {
   const [open, setOpen] = useState(false)
@@ -18,7 +19,7 @@ export function QrCodeButton({ url, name, subdomain }: { url: string; name: stri
       try {
         const { toCanvas } = await import('qrcode')
         if (cancelled || !canvas.current) return
-        await toCanvas(canvas.current, url, { width: 320, margin: 2 })
+        await toCanvas(canvas.current, url, { width: 320, margin: 2, color: { dark: '#0b2a1c' } })
       } catch {
         if (!cancelled) setFailed(true)
       }
@@ -50,6 +51,7 @@ export function QrCodeButton({ url, name, subdomain }: { url: string; name: stri
   if (!open) {
     return (
       <Button variant="secondary" onClick={() => setOpen(true)}>
+        <QrCode aria-hidden="true" className="size-[1.125rem]" strokeWidth={2.5} />
         QR Code
       </Button>
     )
@@ -60,27 +62,37 @@ export function QrCodeButton({ url, name, subdomain }: { url: string; name: stri
       role="dialog"
       aria-label={`QR Code de ${name}`}
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      className="fixed inset-0 z-50 flex animate-fade items-end justify-center bg-deep/60 sm:items-center sm:p-4"
       onClick={(event) => {
         if (event.target === event.currentTarget) setOpen(false)
       }}
     >
-      <div className="flex w-full max-w-sm flex-col items-center gap-4 rounded-control bg-surface p-6 text-center">
-        <h2 className="text-lg font-medium">{name}</h2>
-        {failed ? (
-          <p className="text-sm text-danger">Não foi possível gerar o QR Code. Tente de novo.</p>
-        ) : (
-          <canvas ref={canvas} aria-label="QR Code" role="img" className="size-[320px] max-w-full" />
-        )}
-        <p className="break-all text-sm text-ink-muted">{url.replace(/^https?:\/\//, '')}</p>
-        <div className="flex flex-wrap justify-center gap-2">
-          <Button onClick={download} disabled={failed}>
-            Baixar PNG
-          </Button>
-          <button ref={closeRef} type="button" onClick={() => setOpen(false)} className={buttonClasses('secondary')}>
-            Fechar
-          </button>
+      <div className="relative flex w-full max-w-sm animate-sheet-up flex-col items-center gap-4 rounded-t-sheet bg-surface px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-6 text-center sm:rounded-sheet">
+        <button
+          ref={closeRef}
+          type="button"
+          aria-label="Fechar"
+          onClick={() => setOpen(false)}
+          className="absolute right-3 top-3 flex size-10 items-center justify-center rounded-full text-ink-muted hover:bg-subtle hover:text-ink"
+        >
+          <X aria-hidden="true" className="size-5" strokeWidth={3} />
+        </button>
+        <h2 className="px-10 text-xl font-black tracking-[-0.02em]">{name}</h2>
+        <p className="-mt-2 text-sm font-semibold text-ink-muted">Imprima e cole no balcão, na embalagem ou no cardápio.</p>
+        <div className="rounded-card border-2 border-line p-2">
+          {failed ? (
+            <p className="flex size-64 items-center justify-center p-4 text-sm font-bold text-danger">
+              Não foi possível gerar o QR Code. Tente de novo.
+            </p>
+          ) : (
+            <canvas ref={canvas} aria-label="QR Code" role="img" className="size-64 max-w-full" />
+          )}
         </div>
+        <p className="break-all text-sm font-bold text-ink-muted">{url.replace(/^https?:\/\//, '')}</p>
+        <Button onClick={download} disabled={failed} size="lg" className="w-full">
+          <Download aria-hidden="true" className="size-5" strokeWidth={2.75} />
+          Baixar PNG
+        </Button>
       </div>
     </div>
   )

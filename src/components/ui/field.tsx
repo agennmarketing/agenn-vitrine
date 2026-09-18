@@ -1,3 +1,4 @@
+import { CircleAlert } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 export function Field({
@@ -15,15 +16,13 @@ export function Field({
 }) {
   return (
     <div className="flex flex-col gap-2">
-      <label htmlFor={htmlFor} className="text-sm font-semibold leading-5 text-ink">
+      <label htmlFor={htmlFor} className="text-[0.9375rem] font-extrabold leading-5 text-ink">
         {label}
       </label>
       {children}
       {error ? (
-        <p id={`${htmlFor}-error`} className="flex items-start gap-1.5 text-sm leading-5 text-danger">
-          <svg aria-hidden="true" viewBox="0 0 16 16" className="mt-0.5 size-4 shrink-0" fill="currentColor">
-            <path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13Zm0 3a.75.75 0 0 1 .75.75v3a.75.75 0 0 1-1.5 0v-3A.75.75 0 0 1 8 4.5Zm0 6.25a.875.875 0 1 1 0-1.75.875.875 0 0 1 0 1.75Z" />
-          </svg>
+        <p id={`${htmlFor}-error`} className="flex animate-rise items-start gap-1.5 text-sm font-bold leading-5 text-danger">
+          <CircleAlert aria-hidden="true" className="mt-px size-4 shrink-0" strokeWidth={2.5} />
           <span>{error}</span>
         </p>
       ) : hint ? (

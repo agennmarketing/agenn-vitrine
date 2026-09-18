@@ -1,0 +1,79 @@
+'use client'
+
+import { Crown, ReceiptText, Store, UserRound } from 'lucide-react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+
+const ITEMS = [
+  { href: '/painel', label: 'Vitrines', Icon: Store },
+  { href: '/painel/simulador', label: 'Simulador', Icon: ReceiptText },
+  { href: '/painel/plano', label: 'Plano', Icon: Crown },
+  { href: '/painel/conta', label: 'Conta', Icon: UserRound },
+] as const
+
+function isActive(pathname: string, href: string) {
+  if (href === '/painel') return pathname === '/painel' || pathname.startsWith('/painel/vitrines')
+  return pathname === href || pathname.startsWith(`${href}/`)
+}
+
+// Barra lateral (computador): itens grandes, o ativo ganha placa verde-clara com borda, como no Duolingo.
+export function SideNav() {
+  const pathname = usePathname()
+  return (
+    <nav aria-label="Principal" className="flex flex-col gap-1.5">
+      {ITEMS.map(({ href, label, Icon }) => {
+        const active = isActive(pathname, href)
+        return (
+          <Link
+            key={href}
+            href={href}
+            aria-current={active ? 'page' : undefined}
+            className={`flex h-12 items-center gap-3.5 rounded-control border-2 px-3.5 text-[0.9375rem] font-extrabold transition-colors duration-150 ${
+              active ? 'border-go/70 bg-go-soft text-go-strong' : 'border-transparent text-ink-muted hover:bg-subtle hover:text-ink'
+            }`}
+          >
+            <Icon aria-hidden="true" className="size-6 shrink-0" strokeWidth={active ? 2.75 : 2.25} />
+            {label}
+          </Link>
+        )
+      })}
+    </nav>
+  )
+}
+
+// Barra inferior (celular): quatro destinos rotulados ao alcance do polegar.
+export function BottomNav() {
+  const pathname = usePathname()
+  return (
+    <nav
+      aria-label="Principal"
+      className="fixed inset-x-0 bottom-0 z-40 border-t-2 border-line bg-surface pb-[env(safe-area-inset-bottom)] lg:hidden"
+    >
+      <ul className="mx-auto grid max-w-md grid-cols-4">
+        {ITEMS.map(({ href, label, Icon }) => {
+          const active = isActive(pathname, href)
+          return (
+            <li key={href}>
+              <Link
+                href={href}
+                aria-current={active ? 'page' : undefined}
+                className={`flex h-16 flex-col items-center justify-center gap-1 text-[0.75rem] font-extrabold ${
+                  active ? 'text-go-strong' : 'text-ink-muted'
+                }`}
+              >
+                <span
+                  className={`flex h-7 w-12 items-center justify-center rounded-full transition-colors duration-200 ${
+                    active ? 'bg-go-soft' : ''
+                  }`}
+                >
+                  <Icon aria-hidden="true" className="size-[1.375rem]" strokeWidth={active ? 2.75 : 2.25} />
+                </span>
+                {label}
+              </Link>
+            </li>
+          )
+        })}
+      </ul>
+    </nav>
+  )
+}

@@ -1,25 +1,63 @@
-import type { InputHTMLAttributes } from 'react'
+import type { InputHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes } from 'react'
+
+export function fieldControlClasses(invalid?: boolean) {
+  return `w-full min-w-0 rounded-control border-2 bg-surface px-4 text-base font-semibold text-ink transition-[border-color,background-color] duration-150 ease-out-quint placeholder:font-medium placeholder:text-ink-muted/80 focus-visible:outline-none disabled:cursor-not-allowed disabled:bg-subtle disabled:text-ink-muted read-only:bg-canvas read-only:text-ink-muted ${
+    invalid
+      ? 'border-danger bg-danger-soft/40 focus-visible:border-danger'
+      : 'border-line-strong hover:border-ink-muted/60 focus-visible:border-go-strong'
+  }`
+}
+
+// Liga o campo à mensagem de erro que o Field renderiza em `${htmlFor}-error`.
+// `invalid` só deve ser true quando o Field que envolve o controle recebe `error` (é o Field que cria esse id).
+function describedBy(invalid: boolean | undefined, id: string | undefined, extra: string | undefined) {
+  const errorId = invalid && id ? `${id}-error` : undefined
+  return [extra, errorId].filter(Boolean).join(' ') || undefined
+}
 
 export function Input({
   invalid,
   className = '',
-  'aria-describedby': describedBy,
+  'aria-describedby': extra,
   ...props
 }: InputHTMLAttributes<HTMLInputElement> & { invalid?: boolean }) {
-  // Liga o campo à mensagem de erro que o Field renderiza em `${htmlFor}-error`.
-  // `invalid` só deve ser true quando o Field que envolve o Input recebe `error` (é o Field que cria esse id).
-  const errorId = invalid && props.id ? `${props.id}-error` : undefined
-  const ariaDescribedBy = [describedBy, errorId].filter(Boolean).join(' ') || undefined
-
   return (
     <input
       aria-invalid={invalid || undefined}
-      aria-describedby={ariaDescribedBy}
-      className={`h-11 w-full min-w-0 rounded-control border bg-surface px-3.5 text-base text-ink shadow-control transition-[border-color] duration-150 ease-out-quint placeholder:text-ink-muted focus-visible:outline-2 focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:bg-subtle disabled:text-ink-muted read-only:bg-canvas read-only:text-ink-muted read-only:shadow-none ${
-        invalid
-          ? 'border-danger focus-visible:outline-danger'
-          : 'border-line-strong hover:border-ink-muted focus-visible:border-brand focus-visible:outline-brand'
-      } ${className}`}
+      aria-describedby={describedBy(invalid, props.id, extra)}
+      className={`h-12 ${fieldControlClasses(invalid)} ${className}`}
+      {...props}
+    />
+  )
+}
+
+export function Textarea({
+  invalid,
+  className = '',
+  'aria-describedby': extra,
+  ...props
+}: TextareaHTMLAttributes<HTMLTextAreaElement> & { invalid?: boolean }) {
+  return (
+    <textarea
+      aria-invalid={invalid || undefined}
+      aria-describedby={describedBy(invalid, props.id, extra)}
+      className={`min-h-28 py-3 leading-relaxed ${fieldControlClasses(invalid)} ${className}`}
+      {...props}
+    />
+  )
+}
+
+export function Select({
+  invalid,
+  className = '',
+  'aria-describedby': extra,
+  ...props
+}: SelectHTMLAttributes<HTMLSelectElement> & { invalid?: boolean }) {
+  return (
+    <select
+      aria-invalid={invalid || undefined}
+      aria-describedby={describedBy(invalid, props.id, extra)}
+      className={`select-chevron h-12 appearance-none pr-11 ${fieldControlClasses(invalid)} ${className}`}
       {...props}
     />
   )
