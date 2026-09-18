@@ -22,7 +22,15 @@ describe('decideAppRoute', () => {
   })
 
   it('visitante acessa as rotas públicas', () => {
-    for (const pathname of ['/entrar', '/cadastro', '/confirmar-email', '/esqueci-senha', '/auth/callback', '/auth/confirm']) {
+    for (const pathname of [
+      '/entrar',
+      '/cadastro',
+      '/confirmar-email',
+      '/esqueci-senha',
+      '/auth/callback',
+      '/auth/confirm',
+      '/robots.txt',
+    ]) {
       expect(decideAppRoute({ pathname, ...guest })).toEqual({ action: 'continue' })
     }
   })

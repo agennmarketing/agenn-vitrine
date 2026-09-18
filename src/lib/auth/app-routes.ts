@@ -5,6 +5,8 @@ export const PUBLIC_APP_PATHS = [
   '/esqueci-senha',
   '/auth/callback',
   '/auth/confirm',
+  // Buscadores acessam sem cookie: precisa responder sem cair no login.
+  '/robots.txt',
 ] as const
 
 // Estas rotas trocam a sessão do cookie pela nova (link de e-mail, Google): não
