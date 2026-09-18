@@ -1,5 +1,7 @@
 import * as Sentry from '@sentry/nextjs'
 import { NextResponse } from 'next/server'
+import { reconcileSubscriptions } from '@/features/billing/reconcile'
+import { deleteVideosAfterPro, warnVideoCleanup } from '@/features/billing/video-cleanup'
 import { deleteMediaRows } from '@/lib/media/remove-media'
 import { getCronSecret } from '@/lib/server-env'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
@@ -7,8 +9,9 @@ import { revalidateVitrine } from '@/lib/vitrines/cache'
 
 const BATCH = 100
 
-// Spec 6.4 (parte sem Stripe): mídias órfãs e falhas, pedidos expirados, limites antigos
-// e revalidação das vitrines de quem estourou a franquia no mês anterior.
+// Spec 6.4: mídias órfãs e falhas, pedidos expirados, limites antigos, revalidação de
+// quem estourou a franquia, conferência das assinaturas com o Stripe, aviso do dia 83
+// e limpeza dos vídeos 90 dias depois do fim do Pro.
 export async function GET(request: Request) {
   let secret: string
   try {
@@ -38,11 +41,18 @@ export async function GET(request: Request) {
     if (subdomainsError) throw subdomainsError
     revalidateVitrine(...(subdomains ?? []))
 
+    const subscriptions = await reconcileSubscriptions(admin)
+    const videoWarnings = await warnVideoCleanup(admin)
+    const videosDeleted = await deleteVideosAfterPro(admin)
+
     return NextResponse.json({
       media: rows.length,
       orders: expired?.[0]?.orders_deleted ?? 0,
       rateLimits: expired?.[0]?.rate_limits_deleted ?? 0,
       revalidated: subdomains?.length ?? 0,
+      subscriptions,
+      videoWarnings,
+      videosDeleted,
     })
   } catch (error) {
     Sentry.captureException(error)
