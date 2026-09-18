@@ -8,6 +8,7 @@ import { formatGigabytes } from '@/lib/video/rules'
 import { mapDbError } from '@/lib/vitrines/db-errors'
 import { VITRINE_TYPE_LABEL } from '@/lib/vitrines/vitrine-types'
 import { CopyLinkButton } from './copy-link-button'
+import { QrCodeButton } from './qr-code-button'
 
 export const metadata = { title: 'Minhas vitrines' }
 
@@ -74,6 +75,7 @@ export default async function PainelHome() {
                   </a>
                   <div className="flex flex-wrap gap-2">
                     <CopyLinkButton url={url} />
+                    <QrCodeButton url={url} name={vitrine.name} subdomain={vitrine.subdomain} />
                     <Link href={`/painel/vitrines/${vitrine.id}/itens`} className={buttonClasses('primary')}>
                       Editar
                     </Link>
