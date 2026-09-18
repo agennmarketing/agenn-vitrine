@@ -16,7 +16,7 @@ function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`)
 }
 
-// Barra lateral (computador): itens grandes, o ativo ganha placa verde-clara com borda, como no Duolingo.
+// Barra lateral (computador): itens grandes, o ativo ganha placa lilás-clara com borda, como no Duolingo.
 export function SideNav() {
   const pathname = usePathname()
   return (
@@ -47,7 +47,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Principal"
-      className="fixed inset-x-0 bottom-0 z-40 border-t-2 border-line bg-surface pb-[env(safe-area-inset-bottom)] lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t-2 border-line bg-surface pb-[env(safe-area-inset-bottom)] group-has-[[data-focus-mode]]/shell:hidden lg:hidden"
     >
       <ul className="mx-auto grid max-w-md grid-cols-4">
         {ITEMS.map(({ href, label, Icon }) => {

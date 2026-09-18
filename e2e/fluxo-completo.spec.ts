@@ -27,7 +27,7 @@ test('criar vitrine → cadastrar item com vídeo → vitrine pública → Whats
   await page.getByLabel('WhatsApp', { exact: true }).fill('(11) 98765-4321')
   await page.getByRole('button', { name: 'Continuar' }).click()
   await page.getByRole('button', { name: 'Criar vitrine' }).click()
-  await expect(page).toHaveURL(/\/itens$/)
+  await expect(page).toHaveURL(/\/itens(\?criada=1)?$/)
 
   await page.getByRole('link', { name: 'Novo item' }).click()
   await uploadImage(page, 'Capa', await makeTestImage(page))
@@ -79,8 +79,8 @@ test('Comida: vitrine → complementos pelo modelo → item → sacola → Whats
   await page.getByLabel('WhatsApp', { exact: true }).fill('(11) 98765-4321')
   await page.getByRole('button', { name: 'Continuar' }).click()
   await page.getByRole('button', { name: 'Criar vitrine' }).click()
-  await expect(page).toHaveURL(/\/itens$/)
-  const vitrinePath = page.url().replace(/\/itens$/, '')
+  await expect(page).toHaveURL(/\/itens(\?criada=1)?$/)
+  const vitrinePath = page.url().replace(/\/itens(\?.*)?$/, '')
 
   await page.goto(`${vitrinePath}/complementos`)
   await page.getByLabel('Começar de um modelo').selectOption({ label: 'Adicionais' })

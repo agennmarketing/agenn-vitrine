@@ -24,7 +24,7 @@ test('endereço passa de 404 para a vitrine assim que ela é criada no painel', 
   await page.getByLabel('WhatsApp', { exact: true }).fill('(11) 98765-4321')
   await page.getByRole('button', { name: 'Continuar' }).click()
   await page.getByRole('button', { name: 'Criar vitrine' }).click()
-  await expect(page).toHaveURL(/\/itens$/)
+  await expect(page).toHaveURL(/\/itens(\?criada=1)?$/)
 
   const after = await page.goto(vitrineUrl(subdomain))
   expect(after?.status()).toBe(200)

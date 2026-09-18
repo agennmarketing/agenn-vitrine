@@ -1,3 +1,5 @@
+import { Celebration } from '@/components/ui/celebration'
+import { ClearSearchParams } from '@/components/ui/clear-search-params'
 import { FormMessage } from '@/components/ui/form-message'
 import { getMyVitrine, getPanelSession } from '@/features/vitrines/queries'
 import { env } from '@/lib/env'
@@ -12,9 +14,9 @@ export default async function ItensPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ salvo?: string }>
+  searchParams: Promise<{ salvo?: string; criada?: string }>
 }) {
-  const [{ id }, { salvo }] = await Promise.all([params, searchParams])
+  const [{ id }, { salvo, criada }] = await Promise.all([params, searchParams])
   await getMyVitrine(id)
   const { supabase } = await getPanelSession()
   const [{ data: categories }, { data: items }] = await Promise.all([
@@ -32,7 +34,14 @@ export default async function ItensPage({
 
   return (
     <div className="flex flex-col gap-5">
+      {criada === '1' || salvo === '1' ? <ClearSearchParams keys={['criada', 'salvo']} /> : null}
+      {criada === '1' ? (
+        <Celebration title="Vitrine criada!">O próximo passo é cadastrar o primeiro item: foto, nome e preço.</Celebration>
+      ) : null}
       {salvo === '1' ? <FormMessage success="Item salvo." /> : null}
+      {salvo === '1' && (items ?? []).length === 1 ? (
+        <Celebration title="Primeiro item no ar!" announce={false}>Ele já aparece na sua vitrine. Que tal mais alguns?</Celebration>
+      ) : null}
       <ItemList
         vitrineId={id}
         categories={categories ?? []}

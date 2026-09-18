@@ -3,7 +3,7 @@ import type { InputHTMLAttributes, ReactNode } from 'react'
 
 /*
  * Opção grande e prensável (radio ou checkbox), no molde das respostas do Duolingo:
- * borda de 2px com lábio; marcada, fica verde com um check que "pula".
+ * borda de 2px com lábio; marcada, fica roxa com um check que "pula".
  * O input real continua no DOM (acessível por rótulo e teclado), transparente por cima do cartão.
  * layout "row": ícone, texto e check em linha. "stack": prévia em cima, título embaixo, check no canto.
  */

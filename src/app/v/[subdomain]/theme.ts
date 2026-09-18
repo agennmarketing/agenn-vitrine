@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react'
 import { readableTextColor } from '@/lib/color/contrast'
 
 /*
- * Tema da vitrine pública: neutros próprios (não os verdes do painel), levemente
+ * Tema da vitrine pública: neutros próprios (não os do painel), levemente
  * tingidos pela cor do lojista, nos dois temas. A cor da marca só entra como
  * preenchimento (com --color-brand-ink por cima); onde ela vira traço ou texto,
  * usamos --color-accent, que cai para a cor do texto quando a marca some no fundo.
@@ -92,7 +92,7 @@ export function vitrineTheme(brandColor: string | null, theme: 'light' | 'dark')
     '--color-brand-edge': brandEdge,
     '--color-accent': accent,
     '--color-danger': dark ? '#ff7a6b' : '#c4291c',
-    // Foco e seleção do navegador na linguagem da vitrine, não no verde do painel.
+    // Foco e seleção do navegador na linguagem da vitrine, não na cor do painel.
     '--color-go-strong': accent,
     '--color-go-soft': mix(surface, brand, dark ? 0.35 : 0.2),
     '--color-go-ink': base.ink,
