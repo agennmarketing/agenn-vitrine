@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
 import {
   createConfirmedUser,
+  itemStep,
   makeTestImage,
   mediaOfItem,
   seedItem,
@@ -31,8 +32,10 @@ test('criar vitrine → cadastrar item com vídeo → vitrine pública → Whats
 
   await page.getByRole('link', { name: 'Novo item' }).click()
   await uploadImage(page, 'Capa', await makeTestImage(page))
+  await itemStep(page, 'Detalhes')
   await page.getByLabel('Nome', { exact: true }).fill('X-Bacon')
-  await page.getByLabel('Categoria').selectOption({ label: 'Destaques' })
+  await page.getByLabel('Categoria', { exact: true }).selectOption({ label: 'Destaques' })
+  await itemStep(page, 'Preço')
   await page.getByLabel('Preço', { exact: true }).fill('25,90')
   await page.getByRole('button', { name: 'Salvar item' }).click()
   await expect(page.getByText('Item salvo.')).toBeVisible()
@@ -89,9 +92,12 @@ test('Comida: vitrine → complementos pelo modelo → item → sacola → Whats
 
   await page.goto(`${vitrinePath}/itens/novo`)
   await uploadImage(page, 'Capa', await makeTestImage(page))
+  await itemStep(page, 'Detalhes')
   await page.getByLabel('Nome', { exact: true }).fill('X-Salada')
-  await page.getByLabel('Categoria').selectOption({ label: 'Lanches' })
+  await page.getByLabel('Categoria', { exact: true }).selectOption({ label: 'Lanches' })
+  await itemStep(page, 'Preço')
   await page.getByLabel('Preço', { exact: true }).fill('22,00')
+  await itemStep(page, 'Extras')
   await page.getByLabel('Adicionais').check()
   await page.getByRole('button', { name: 'Salvar item' }).click()
   await expect(page.getByText('Item salvo.')).toBeVisible()

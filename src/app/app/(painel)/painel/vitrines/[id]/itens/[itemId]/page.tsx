@@ -1,34 +1,9 @@
-import { getItemForEdit, getItemFormOptions } from '@/features/items/queries'
-import { getMyVitrine, getVideoLimits } from '@/features/vitrines/queries'
-import { ItemForm } from '../item-form'
-import { ItemPageHeader } from '../item-page-header'
+import { ItemDialogs } from '../item-dialog-route'
 
 export const metadata = { title: 'Editar item' }
 
+// Link direto (ou recarregar a página): a lista por trás e o popup por cima.
 export default async function EditarItemPage({ params }: { params: Promise<{ id: string; itemId: string }> }) {
   const { id, itemId } = await params
-  const [options, vitrine, item, videoLimits] = await Promise.all([
-    getItemFormOptions(id),
-    getMyVitrine(id),
-    getItemForEdit(id, itemId),
-    getVideoLimits(),
-  ])
-
-  return (
-    <div className="flex flex-col gap-5">
-      <ItemPageHeader vitrineId={id} title="Editar item" />
-      <ItemForm
-        addonGroups={options.addonGroups}
-        key={item.updated_at}
-        vitrineId={id}
-        vitrineType={options.vitrine.type}
-        defaultButtonText={vitrine.default_button_text}
-        categories={options.categories}
-        contacts={options.contacts}
-        nextCode={options.nextCode}
-        videoLimits={videoLimits}
-        item={item}
-      />
-    </div>
-  )
+  return <ItemDialogs id={id} itemId={itemId} />
 }

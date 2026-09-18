@@ -14,9 +14,10 @@ import { DragHandle, SortableItem, SortableList } from '@/components/ui/sortable
 import { Spinner } from '@/components/ui/submit-button'
 import { deleteAddonGroupAction, reorderAddonGroupsAction, saveAddonGroupAction } from '@/features/addons/actions'
 import { groupBadge, type AddonGroup } from '@/lib/addons/addons'
-import { ADDON_TEMPLATES } from '@/lib/addons/templates'
+import { templatesFor } from '@/lib/addons/templates'
 import type { FormState } from '@/lib/forms/form-state'
 import { centsToInput, formatBRL } from '@/lib/money/money'
+import type { VitrineType } from '@/lib/vitrines/vitrine-types'
 
 type OptionRow = { key: string; id: string | null; name: string; price: string; soldOut: boolean }
 type Draft = {
@@ -38,7 +39,7 @@ const BLANK: Draft = {
 }
 
 const KINDS = [
-  ['standard', 'Padrão', 'Adicionais, ponto da carne, bebidas.', Layers],
+  ['standard', 'Padrão', 'Escolhas e adicionais, com ou sem custo.', Layers],
   ['flavors', 'Sabores de pizza', 'Meia a meia: o preço segue a regra que você escolher.', Pizza],
 ] as const
 
@@ -51,7 +52,16 @@ function draftFromGroup(group: AddonGroup): Draft {
   }
 }
 
-export function AddonGroups({ vitrineId, groups: serverGroups }: { vitrineId: string; groups: AddonGroup[] }) {
+export function AddonGroups({
+  vitrineId,
+  vitrineType,
+  groups: serverGroups,
+}: {
+  vitrineId: string
+  vitrineType: VitrineType
+  groups: AddonGroup[]
+}) {
+  const templates = templatesFor(vitrineType)
   const router = useRouter()
   const [template, setTemplate] = useState('')
   const [draftVersion, setDraftVersion] = useState(0)
@@ -85,7 +95,7 @@ export function AddonGroups({ vitrineId, groups: serverGroups }: { vitrineId: st
   }
 
   const templateDraft: Draft = (() => {
-    const found = ADDON_TEMPLATES.find((item) => item.key === template)
+    const found = templates.find((item) => item.key === template)
     if (!found) return BLANK
     return {
       ...found.group,
@@ -118,6 +128,7 @@ export function AddonGroups({ vitrineId, groups: serverGroups }: { vitrineId: st
                   // "Salvar grupo" atualiza em vez de recriar (sacolas guardam esses ids).
                   key={`${group.id}-${group.options.map((option) => option.id).join(',')}`}
                   vitrineId={vitrineId}
+                  showFlavors={vitrineType === 'comida' || group.kind === 'flavors'}
                   groupId={group.id}
                   group={group}
                   handle={<DragHandle label={`Reordenar grupo ${group.name}`} className="-my-1.5 -ml-3 size-11 rounded-full" />}
@@ -155,7 +166,7 @@ export function AddonGroups({ vitrineId, groups: serverGroups }: { vitrineId: st
             }}
           >
             <option value="">Em branco</option>
-            {ADDON_TEMPLATES.map((item) => (
+            {templates.map((item) => (
               <option key={item.key} value={item.key}>
                 {item.label}
               </option>
@@ -166,6 +177,7 @@ export function AddonGroups({ vitrineId, groups: serverGroups }: { vitrineId: st
           <AddonGroupForm
             key={`novo-${draftVersion}`}
             vitrineId={vitrineId}
+            showFlavors={vitrineType === 'comida'}
             groupId={null}
             initial={templateDraft}
             onSaved={() => {
@@ -254,6 +266,8 @@ function AddonGroupForm(props: {
   footer?: ReactNode
   /** Alça de arrastar o grupo inteiro (só nos grupos já salvos). */
   handle?: ReactNode
+  /** Sabores de pizza (meia a meia) só em vitrines de comida. */
+  showFlavors: boolean
 }) {
   const prefix = props.groupId ?? 'novo'
   const [kind, setKind] = useState(props.initial.kind)
@@ -275,7 +289,8 @@ function AddonGroupForm(props: {
         <Input id={`${prefix}-name`} name="name" maxLength={40} defaultValue={props.initial.name} invalid={!!errors.name} />
       </Field>
 
-      <fieldset className="flex flex-col gap-3">
+      {/* Fora de Comida só existe o grupo padrão: o seletor some (a opção Padrão marcada continua indo no envio). */}
+      <fieldset hidden={!props.showFlavors} className="flex flex-col gap-3">
         <legend className="mb-2 text-[0.9375rem] font-extrabold text-ink">Tipo</legend>
         <div className="grid gap-3 sm:grid-cols-2">
           {KINDS.map(([value, label, description, Icon]) => (

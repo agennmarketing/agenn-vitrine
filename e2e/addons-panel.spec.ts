@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { createConfirmedUser, seedItem, seedVitrine, signIn, uniqueSubdomain } from './helpers'
+import { createConfirmedUser, itemStep, seedItem, seedVitrine, signIn, uniqueSubdomain } from './helpers'
 
 test('grupos a partir de modelos, ligados ao item, e formulário da sacola', async ({ page }) => {
   const user = await createConfirmedUser('complementos')
@@ -27,11 +27,13 @@ test('grupos a partir de modelos, ligados ao item, e formulário da sacola', asy
   await expect(page.getByRole('form', { name: 'Grupo Sabores' }).getByLabel('Preço dos sabores')).toHaveValue('average')
 
   await page.goto(`/painel/vitrines/${vitrine.id}/itens/${item.id}`)
+  await itemStep(page, 'Extras')
   await page.getByLabel('Ponto da carne').check()
   await page.getByLabel('Sabores').check()
   await page.getByRole('button', { name: 'Salvar item' }).click()
   await expect(page.getByText('Item salvo.')).toBeVisible()
   await page.goto(`/painel/vitrines/${vitrine.id}/itens/${item.id}`)
+  await itemStep(page, 'Extras')
   await expect(page.getByLabel('Ponto da carne')).toBeChecked()
   await expect(page.getByLabel('Sabores')).toBeChecked()
 

@@ -201,10 +201,10 @@ components:
     backgroundColor: "{colors.surface}"
     rounded: "{rounded.card}"
     padding: "20px"
-  vitrine-card-header:
+  panel-top-bar:
     backgroundColor: "{colors.deep}"
     textColor: "{colors.deep-ink}"
-    padding: "16px 20px"
+    padding: "12px 16px"
   badge-neutral:
     backgroundColor: "{colors.subtle}"
     textColor: "{colors.ink-muted}"
@@ -285,7 +285,7 @@ Uma paleta de papéis rígidos: cada cor quente tem um só trabalho, e o resto �
 - **Roxo Vitrimove** (`go` / `brand`, #673DE6): ação principal do painel (botão primário, "Editar", "Salvar", preenchimento da barra de progresso, interruptor ligado, check da comemoração). Texto branco por cima (contraste 6,2:1). Hover clareia (`go-hover`); o lábio é `go-lip`. `go-strong` é a versão de traço e texto: anel de foco, item ativo da navegação, `caret` e `accent-color`. `go-soft` é a placa clara de seleção (opção marcada, item ativo da barra lateral, comemoração, `::selection`). `go-bright` é o "move" do logotipo em fundo escuro.
 
 ### Secondary
-- **Índigo Profundo** (`deep`, #1D1147): a placa invertida. Cabeçalho do cartão de vitrine, aba ativa do editor, avatar do usuário, variante `deep` do botão. Em cima dele: `deep-ink` (branco) e `deep-muted` para texto secundário. O lábio do índigo é preto puro.
+- **Índigo Profundo** (`deep`, #1D1147): a placa invertida. Cabeçalho do painel (`PanelTopBar`), aba ativa do editor, passo atual do popup do item, avatar do usuário, variante `deep` do botão. Em cima dele: `deep-ink` (branco) e `deep-muted` para texto secundário. O lábio do índigo é preto puro.
 
 ### Tertiary
 - **Dourado Pro** (`sun`, #FFC83D): só plano Pro e conquistas. Botão "Ver o plano Pro", selo "Plano Pro", aviso de limite de plano (`sun-soft` com borda `sun`), barra de progresso em tom `sun`. Texto sobre o dourado é sempre `sun-ink` (#4A3500), nunca branco.
@@ -298,7 +298,7 @@ Uma paleta de papéis rígidos: cada cor quente tem um só trabalho, e o resto �
 - **Comida** (#FF6B2C), **Serviços** (#E83E8C), **Produtos** (#2F7DEB): só no quadrado do `TypeIcon` (com lábio de 3px mais escuro) e em marcadores. As versões `-soft` existem para marcadores pequenos. Nunca em áreas grandes, fundos de seção ou botões.
 
 ### Neutral
-- **Tela Lilás** (`canvas`, #F7F6FB): fundo do documento e do cabeçalho do painel.
+- **Tela Lilás** (`canvas`, #F7F6FB): fundo do documento e do popup do item.
 - **Superfície** (`surface`, #FFFFFF): cartões, campos, barra lateral, navegação inferior.
 - **Lilás Suave** (`subtle`, #EFEDF7): hover de botões fantasma, campos desativados, selo neutro.
 - **Tinta** (`ink`, #17122B) e **Tinta Apagada** (`ink-muted`, #5E5873): texto principal e secundário. O apagado também desenha a seta do `<select>`.
@@ -322,7 +322,7 @@ Neutros próprios, em dois temas (`vitrine-light-*` e `vitrine-dark-*` no frontm
 **Character:** Nunito arredondada e pesada dá a pegada de trilha amigável; Figtree neutra deixa a marca do lojista aparecer mais que a nossa.
 
 ### Hierarchy (painel)
-- **Display** (900, 1.75rem no celular / 2rem a partir de sm, 1.1, −0.025em): título da página (`PageHeader`), ex. "Minhas vitrines". Estado vazio usa 1.5rem/900.
+- **Display** (900, 1.75rem no celular / 2rem a partir de sm, 1.1, −0.025em): título das telas soltas (`PageHeader`) e pergunta de cada passo das trilhas. No cabeçalho índigo o título é 1.25rem/1.5rem 900. Estado vazio usa 1.5rem/900.
 - **Headline** (900, 1.375rem / 1.5rem, −0.025em): título de seção do editor (`SectionIntro`).
 - **Title** (900, 1.125rem–1.25rem, −0.02em): título de bloco (`ConfigBlock`), nome da vitrine no cartão, título da comemoração.
 - **Body** (600, 1rem, 1.5): texto de apoio; parágrafos com `max-width: 65ch` (`max-w-prose`) e `text-wrap: pretty`.
@@ -344,8 +344,10 @@ Neutros próprios, em dois temas (`vitrine-light-*` e `vitrine-dark-*` no frontm
 ## Layout
 
 - **Painel:** coluna única centralizada, `max-width: 64rem` (max-w-5xl), respiro lateral de 16px no celular e 32px a partir de lg. Pilhas verticais com 24px entre blocos e 20–24px dentro dos cartões.
-- **Navegação:** no celular, barra inferior fixa de 64px com quatro destinos rotulados (Vitrines, Simulador, Plano, Conta) respeitando `safe-area-inset-bottom`; cabeçalho fixo de 64px com logo, avatar, nome, selo do plano e "Sair". A partir de lg, barra lateral fixa de 15.5rem com logo + wordmark, e a navegação inferior some.
-- **Modo foco:** uma tela que marca `data-focus-mode` (o assistente "Nova vitrine") esconde cabeçalho, barra lateral e navegação inferior; sobra só a trilha, numa coluna de 36rem com barra de progresso e "Passo N de 4".
+- **Navegação:** no celular, barra inferior fixa de 64px com quatro destinos rotulados (Vitrines, Simulador, Plano, Conta) respeitando `safe-area-inset-bottom`. A partir de lg, barra lateral fixa de 15.5rem com logo + wordmark, navegação, o convite Pro (só no Gratuito) e, no rodapé, avatar, nome, selo do plano e "Sair"; a navegação inferior some. No celular, "Sair" fica no cabeçalho da página Conta.
+- **Cabeçalho índigo (`PanelTopBar`):** faixa `deep` (#1D1147) grudada no topo de toda página do painel, 72px (80px em lg), na mesma coluna de 64rem do conteúdo. Sempre diz onde o lojista está: título da seção em branco 900 e uma linha de apoio em `deep-muted`; à esquerda, voltar opcional (círculo de 44px) e ícone opcional; à direita, a ação da seção (ex.: "Nova vitrine"; no editor, "Ver vitrine"). No editor da vitrine, o título é o nome da vitrine e o apoio é o subdomínio. Foco em `go-bright` sobre o índigo.
+- **Modo foco:** uma tela que marca `data-focus-mode` (o assistente "Nova vitrine") esconde barra lateral e navegação inferior e não desenha cabeçalho; sobra só a trilha, numa coluna de 36rem com barra de progresso e "Passo N de 4".
+- **Popup do item:** novo item e edição abrem por cima da lista (rotas interceptadas em `@modal`; link direto mostra a lista por trás e o popup por cima). Tela cheia no celular; no computador, janela de 42rem com raio `sheet`, borda 2px e `--shadow-float` sobre `deep/60`. Mesma trilha do assistente: fechar, barra de progresso, "Passo N de 4" e quatro passos em pílula (Fotos, Detalhes, Preço, Extras; o atual em índigo, os feitos em `go-soft` com check), uma pergunta por passo e rodapé fixo com Voltar, "Salvar item" (secundário até o último passo, depois primário) e "Continuar". Erro ao salvar leva ao passo do campo. Fechar com alterações pede confirmação.
 - **Barra de salvar:** no celular gruda no rodapé logo acima da navegação inferior enquanto o formulário está na tela; no computador (lg) fica parada no fim do formulário.
 - **Abas do editor:** fileira de pílulas que rola de lado no celular (com esmaecimento na borda direita e a aba ativa trazida à vista) e quebra linha no computador.
 - **Vitrine pública:** container de 1200px com respiro 16/24/32px; banner em sangria no celular, arredondado (1.75rem) no computador; faixa de categorias fixa no topo que acompanha a rolagem; barra flutuante da sacola (64px, pílula, máx. 28rem) no rodapé.
@@ -386,7 +388,7 @@ Táteis e confiantes: gordos, em 800, com lábio que afunda.
 
 ### Chips / Badges
 - **Selo** (`Badge`): pílula de 24px, 0.75rem/800, tons `neutral`, `go`, `success`, `sun`, `danger`, `deep`. O selo do plano no cabeçalho é neutro no Gratuito e `sun` no Pro.
-- **Pílulas de uso** ("Vitrines: 1 de 1"): pílula branca com borda 2px `line`, 0.875rem/700, `ink-muted`.
+- **Pílulas de informação** (cartão de vitrine: "2 vídeos", "Criada em 18 de set. de 2026"): 32px, fundo `canvas`, anel 2px `line`, ícone de 14px e texto 0.8125rem/700 `ink-muted`. O uso do plano saiu da tela inicial; fica na página Plano (e "N de M vitrines" no apoio do cabeçalho).
 
 ### Cards / Containers
 - **Card:** raio 1rem, `surface`, borda 2px `line`, sem sombra, padding 20px (24px a partir de sm).
@@ -409,7 +411,10 @@ Táteis e confiantes: gordos, em 800, com lábio que afunda.
 - **PageHeader:** "voltar" opcional (chevron + rótulo 800), título Display, apoio e ações à direita.
 
 ### Cartão de vitrine (assinatura)
-Placa índigo no topo (ícone de tipo, nome 1.25rem/900, endereço sublinhado em `deep-muted`, selo de status) e, embaixo, "Editar" como botão primário grande de largura total seguido de três ladrilhos secundários lado a lado: Copiar link, QR Code, Ver vitrine. Os cartões entram com `rise` escalonado em 60ms.
+Cartão branco com borda 2px. Em cima: `TypeIcon` de 64px (`xl`), nome 1.25–1.375rem/900 (link para o editor) com o selo de status ao lado ("Ativa" em `success` com ponto), o endereço em `go-strong` sublinhado com ícone de link externo (abre a vitrine) e as pílulas de informação; no canto, o menu ⋮ com atalhos para cada seção do editor e "Ver vitrine". Embaixo, três botões lado a lado: Copiar link e QR Code (secundários) e **Editar** (primário, com seta). Os cartões entram com `rise` escalonado em 60ms. Não mostrar métricas que o produto não mede (visualizações).
+
+### Convite Pro
+`ProUpsell`, só no plano Gratuito: placa `go-soft` com borda `go/25`, coroa `go-strong`, "Vá mais longe com o Plano Pro" (900) e apoio, e "Fazer upgrade →" como botão primário pequeno. No rodapé da barra lateral (lg) e no fim de Minhas vitrines no celular. Segue o anexo aprovado pelo usuário (roxo, não dourado).
 
 ### ChoiceCard
 Opção grande prensável (radio ou checkbox) no molde das respostas do Duolingo: borda 2px `line-strong` com lábio, 1.0625rem/800. Marcada: borda e lábio `go`, fundo `go-soft`, círculo de check que faz `pop`. O input real cobre o cartão, transparente, e recebe toque, rótulo e teclado. Layout `row` (mínimo 64px) ou `stack` (prévia em cima, check no canto).

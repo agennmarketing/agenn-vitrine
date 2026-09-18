@@ -1,7 +1,7 @@
 import { Check, Crown, Minus, PartyPopper, Sparkles } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
-import { PageHeader } from '@/components/ui/page-header'
+import { PanelBody, PanelTopBar } from '@/components/ui/panel-page'
 import { ProgressBar } from '@/components/ui/progress'
 import { getMySubscription, getPlanPrices } from '@/features/billing/queries'
 import { getEntitlements, getPanelSession, getVideoUsage, listMyVitrines } from '@/features/vitrines/queries'
@@ -122,8 +122,9 @@ export default async function PlanoPage({ searchParams }: { searchParams: Promis
   })
 
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeader title="Plano e assinatura" />
+    <>
+      <PanelTopBar title="Plano e assinatura" subtitle="Seu plano, o uso e a assinatura" />
+      <PanelBody className="flex flex-col gap-6">
 
       {assinatura === 'ok' ? (
         <p
@@ -254,6 +255,7 @@ export default async function PlanoPage({ searchParams }: { searchParams: Promis
           />
         </Card>
       ) : null}
-    </div>
+      </PanelBody>
+    </>
   )
 }

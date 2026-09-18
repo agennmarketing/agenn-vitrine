@@ -39,7 +39,7 @@ test('envia vídeo do item, processa pelo webhook e respeita o limite do gratuit
   await expect(page.getByText('Seu plano permite até 1 vídeo por vitrine. Assine o Pro para enviar mais.')).toBeVisible()
 
   await page.goto('/painel')
-  await expect(page.getByText(/Vídeos: 1 de 1/)).toBeVisible()
+  await expect(page.getByText('1 vídeo', { exact: true })).toBeVisible()
 
   await setPlan(user.id, 'pro')
   await page.goto(`/painel/vitrines/${vitrine.id}/itens/${second.id}`)

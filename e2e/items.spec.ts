@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { createConfirmedUser, makeTestImage, seedVitrine, signIn, uploadImage } from './helpers'
+import { createConfirmedUser, itemStep, makeTestImage, seedVitrine, signIn, uploadImage } from './helpers'
 
 test('cadastra item com capa e variações, edita código, esgota, duplica e exclui', async ({ page }) => {
   const user = await createConfirmedUser('itens')
@@ -9,9 +9,11 @@ test('cadastra item com capa e variações, edita código, esgota, duplica e exc
   await page.goto(`/painel/vitrines/${vitrine.id}/itens`)
   await page.getByRole('link', { name: 'Novo item' }).click()
   await uploadImage(page, 'Capa', await makeTestImage(page))
+  await page.getByRole('button', { name: 'Continuar' }).click()
   await page.getByLabel('Nome', { exact: true }).fill('Camiseta')
   await expect(page.getByLabel('Código')).toHaveValue('101')
-  await page.getByLabel('Categoria').selectOption({ label: 'Destaques' })
+  await page.getByLabel('Categoria', { exact: true }).selectOption({ label: 'Destaques' })
+  await itemStep(page, 'Preço')
   await page.getByRole('button', { name: 'Adicionar variação' }).click()
   await page.getByLabel('Nome da variação 1').fill('P')
   await page.getByLabel('Preço da variação 1').fill('39,90')
@@ -25,6 +27,7 @@ test('cadastra item com capa e variações, edita código, esgota, duplica e exc
   await expect(page.getByText('A partir de R$ 39,90')).toBeVisible()
 
   await page.getByRole('link', { name: 'Editar' }).click()
+  await itemStep(page, 'Detalhes')
   await page.getByLabel('Código').fill('cam1')
   await expect(page.getByText('Código disponível.')).toBeVisible()
   await page.getByRole('button', { name: 'Salvar item' }).click()
@@ -52,7 +55,9 @@ test('item sem capa mostra erro', async ({ page }) => {
   await signIn(page, user.email, user.password)
 
   await page.goto(`/painel/vitrines/${vitrine.id}/itens/novo`)
+  await itemStep(page, 'Detalhes')
   await page.getByLabel('Nome', { exact: true }).fill('Sem capa')
+  await itemStep(page, 'Preço')
   await page.getByLabel('Preço', { exact: true }).fill('10')
   await page.getByRole('button', { name: 'Salvar item' }).click()
   await expect(page.getByText('Envie a imagem de capa.')).toBeVisible()
