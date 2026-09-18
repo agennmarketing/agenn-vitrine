@@ -7,6 +7,7 @@ export function QrCodeButton({ url, name, subdomain }: { url: string; name: stri
   const [open, setOpen] = useState(false)
   const [failed, setFailed] = useState(false)
   const canvas = useRef<HTMLCanvasElement>(null)
+  const closeRef = useRef<HTMLButtonElement>(null)
 
   // A biblioteca só é baixada quando alguém abre o QR Code.
   useEffect(() => {
@@ -26,6 +27,17 @@ export function QrCodeButton({ url, name, subdomain }: { url: string; name: stri
       cancelled = true
     }
   }, [open, url])
+
+  // Foco inicial e Escape para fechar, seguindo o padrão de cart-sheet.
+  useEffect(() => {
+    if (!open) return
+    closeRef.current?.focus()
+    const onKey = (event: KeyboardEvent) => event.key === 'Escape' && setOpen(false)
+    window.addEventListener('keydown', onKey)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [open])
 
   function download() {
     if (!canvas.current) return
@@ -58,16 +70,16 @@ export function QrCodeButton({ url, name, subdomain }: { url: string; name: stri
         {failed ? (
           <p className="text-sm text-danger">Não foi possível gerar o QR Code. Tente de novo.</p>
         ) : (
-          <canvas ref={canvas} aria-label={`QR Code de ${name}`} role="img" className="size-[320px] max-w-full" />
+          <canvas ref={canvas} aria-label="QR Code" role="img" className="size-[320px] max-w-full" />
         )}
         <p className="break-all text-sm text-ink-muted">{url.replace(/^https?:\/\//, '')}</p>
         <div className="flex flex-wrap justify-center gap-2">
           <Button onClick={download} disabled={failed}>
             Baixar PNG
           </Button>
-          <Button variant="secondary" onClick={() => setOpen(false)}>
+          <button ref={closeRef} type="button" onClick={() => setOpen(false)} className="inline-flex h-11 select-none items-center justify-center gap-2 rounded-control px-4 text-[0.9375rem] font-semibold leading-none transition-[background-color,border-color,color,translate] duration-150 ease-out-quint focus-visible:outline-2 focus-visible:outline-offset-2 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-55 disabled:active:translate-y-0 border border-line-strong bg-surface text-ink shadow-control hover:border-ink-muted hover:bg-canvas active:bg-subtle focus-visible:outline-brand">
             Fechar
-          </Button>
+          </button>
         </div>
       </div>
     </div>

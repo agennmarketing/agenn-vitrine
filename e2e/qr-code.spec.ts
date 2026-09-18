@@ -11,7 +11,7 @@ test('QR Code da vitrine abre, mostra o endereço e pode ser baixado', async ({ 
   await expect(dialog).toBeVisible()
   await expect(dialog.getByText(`${vitrine.subdomain}.localhost:3000`)).toBeVisible()
 
-  const canvasElement = dialog.getByRole('img', { name: 'QR Code de Loja do QR' })
+  const canvasElement = dialog.getByRole('img', { name: 'QR Code' })
   await expect(canvasElement).toBeVisible()
 
   // O canvas precisa ter conteúdo, não só existir. Esperamos até que tenha sido renderizado.
@@ -32,5 +32,18 @@ test('QR Code da vitrine abre, mostra o endereço e pode ser baixado', async ({ 
   expect((await download).suggestedFilename()).toBe(`qrcode-${vitrine.subdomain}.png`)
 
   await dialog.getByRole('button', { name: 'Fechar' }).click()
+  await expect(dialog).toBeHidden()
+})
+
+test('QR Code do diálogo fecha com Escape', async ({ page }) => {
+  const user = await createConfirmedUser('qr-escape')
+  await seedVitrine(user.id, { name: 'Loja do Escape', subdomain: uniqueSubdomain('qr-escape') })
+  await signIn(page, user.email, user.password)
+
+  await page.getByRole('button', { name: 'QR Code' }).click()
+  const dialog = page.getByRole('dialog', { name: 'QR Code de Loja do Escape' })
+  await expect(dialog).toBeVisible()
+
+  await page.keyboard.press('Escape')
   await expect(dialog).toBeHidden()
 })
