@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { createConfirmedUser, seedVitrine, signIn, uniqueSubdomain } from './helpers'
+import { APP_URL } from '../playwright.config'
 
 test('cria vitrine pelo assistente e respeita o limite do gratuito', async ({ page }) => {
   const user = await createConfirmedUser('assistente')
@@ -49,4 +50,10 @@ test('telefone inválido volta ao passo do WhatsApp; endereço em uso é avisado
   await page.getByRole('button', { name: 'Criar vitrine' }).click()
   await expect(page.getByText('Passo 3 de 4')).toBeVisible()
   await expect(page.getByText('Informe um WhatsApp válido com DDD.')).toBeVisible()
+})
+
+test('checagem de disponibilidade exige sessão', async ({ request }) => {
+  const response = await request.get(`${APP_URL}/api/disponibilidade/subdominio?valor=qualquer`)
+  expect(response.status()).toBe(401)
+  expect((await response.json()).ok).toBe(false)
 })

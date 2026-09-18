@@ -11,6 +11,8 @@ const SUBDOMAIN_MESSAGES = {
   reserved: 'Este endereço é reservado. Escolha outro.',
 } as const
 
+export const SUBDOMAIN_TAKEN_MESSAGE = 'Este endereço já está em uso. Escolha outro.'
+
 export const subdomainField = z.string().transform((value, ctx) => {
   const result = validateSubdomain(value)
   if (!result.ok) {

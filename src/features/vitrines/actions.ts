@@ -9,10 +9,14 @@ import { storagePathList } from '@/lib/media/urls'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { revalidateVitrine } from '@/lib/vitrines/cache'
 import { mapDbError } from '@/lib/vitrines/db-errors'
-import { appearanceSchema, checkoutSettingsSchema, createVitrineSchema, subdomainField, vitrineSettingsSchema } from '@/lib/vitrines/schemas'
+import {
+  appearanceSchema,
+  checkoutSettingsSchema,
+  createVitrineSchema,
+  SUBDOMAIN_TAKEN_MESSAGE,
+  vitrineSettingsSchema,
+} from '@/lib/vitrines/schemas'
 import { DEFAULT_BUTTON_TEXT, SAMPLE_CATEGORIES } from '@/lib/vitrines/vitrine-types'
-
-const SUBDOMAIN_TAKEN = 'Este endereço já está em uso. Escolha outro.'
 
 export async function createVitrineAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const fields = readFormFields(formData, ['type', 'name', 'subdomain', 'whatsappLabel', 'whatsappPhone', 'theme'])
@@ -32,25 +36,13 @@ export async function createVitrineAction(_prev: FormState, formData: FormData):
     p_categories: [...SAMPLE_CATEGORIES[input.type]],
   })
   if (error) {
-    if (error.code === '23505') return { fieldErrors: { subdomain: SUBDOMAIN_TAKEN }, values: fields }
+    if (error.code === '23505') return { fieldErrors: { subdomain: SUBDOMAIN_TAKEN_MESSAGE }, values: fields }
     return { error: mapDbError(error), values: fields }
   }
 
   // Limpa um eventual "Vitrine não encontrada" em cache para este endereço.
   revalidateVitrine(input.subdomain)
   redirect(`/painel/vitrines/${vitrineId}/itens`)
-}
-
-export async function checkSubdomainAction(value: string, vitrineId?: string): Promise<{ ok: boolean; message: string }> {
-  const parsed = subdomainField.safeParse(value)
-  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? 'Endereço inválido.' }
-  const { supabase } = await requireActionUser()
-  const { data, error } = await supabase.rpc('is_subdomain_available', {
-    p_subdomain: parsed.data,
-    p_except_vitrine_id: vitrineId,
-  })
-  if (error) return { ok: false, message: 'Não foi possível verificar agora.' }
-  return data ? { ok: true, message: 'Endereço disponível.' } : { ok: false, message: SUBDOMAIN_TAKEN }
 }
 
 async function loadOwnedVitrine(vitrineId: string) {
@@ -83,7 +75,7 @@ export async function updateSettingsAction(vitrineId: string, _prev: FormState, 
     .update({ name: parsed.data.name, description: parsed.data.description, subdomain: parsed.data.subdomain })
     .eq('id', vitrineId)
   if (error) {
-    if (error.code === '23505') return { fieldErrors: { subdomain: SUBDOMAIN_TAKEN }, values: fields }
+    if (error.code === '23505') return { fieldErrors: { subdomain: SUBDOMAIN_TAKEN_MESSAGE }, values: fields }
     return { error: mapDbError(error), values: fields }
   }
   revalidateVitrine(vitrine.subdomain, parsed.data.subdomain)

@@ -6,7 +6,8 @@ import { Card } from '@/components/ui/card'
 import { Field } from '@/components/ui/field'
 import { FormMessage } from '@/components/ui/form-message'
 import { Input } from '@/components/ui/input'
-import { checkSubdomainAction, createVitrineAction } from '@/features/vitrines/actions'
+import { createVitrineAction } from '@/features/vitrines/actions'
+import { fetchAvailability } from '@/lib/forms/availability'
 import { initialFormState, type FormState } from '@/lib/forms/form-state'
 
 const STEPS = ['Tipo', 'Nome e endereço', 'WhatsApp', 'Aparência'] as const
@@ -30,14 +31,28 @@ export function VitrineWizard({ rootDomain }: { rootDomain: string }) {
 
   const [availability, setAvailability] = useState<{ ok: boolean; message: string } | null>(null)
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
-  // Server actions vão para a URL atual: um timer que dispara depois de sair da página
-  // chamaria a ação numa rota que não a conhece ("Failed to find Server Action").
-  useEffect(() => () => clearTimeout(timer.current), [])
+  const inFlight = useRef<AbortController>(undefined)
+  useEffect(
+    () => () => {
+      clearTimeout(timer.current)
+      inFlight.current?.abort()
+    },
+    [],
+  )
   function onSubdomainChange(value: string) {
     setAvailability(null)
     clearTimeout(timer.current)
+    inFlight.current?.abort()
     if (!value.trim()) return
-    timer.current = setTimeout(async () => setAvailability(await checkSubdomainAction(value)), 400)
+    timer.current = setTimeout(async () => {
+      const controller = new AbortController()
+      inFlight.current = controller
+      const result = await fetchAvailability(
+        `/api/disponibilidade/subdominio?valor=${encodeURIComponent(value)}`,
+        controller.signal,
+      )
+      if (result) setAvailability(result)
+    }, 400)
   }
 
   const errors = state.fieldErrors ?? {}
