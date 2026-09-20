@@ -1,59 +1,66 @@
 import { describe, expect, it } from 'vitest'
-import { buildCartMessage, withNoteLine } from './cart-message'
+import { buildCartMessage } from './cart-message'
 
 const retiradaAna = {
   name: 'Ana', fulfillment: 'retirada' as const, address: null, payment: 'Pix', changeForCents: null, schedule: null, notes: null,
 }
 
-describe('buildCartMessage (spec 7.5)', () => {
-  it('exemplo da spec', () => {
+describe('buildCartMessage', () => {
+  it('produtos, variações, quantidade, valores, total e observações', () => {
     expect(
       buildCartMessage({
-        vitrineName: 'Burger do Zé',
+        vitrineName: 'Loja da Ana',
         orderCode: 'K7F2',
         lines: [
-          {
-            qty: 2, itemName: 'X-Bacon', variationName: null, code: '104',
-            addonLines: ['   • Ponto: Ao ponto', '   • Adicionais: 2x Bacon, 1x Cheddar'], note: 'sem cebola',
-          },
-          { qty: 1, itemName: 'Coca-Cola lata', variationName: null, code: '210', addonLines: [], note: null },
+          { qty: 2, itemName: 'Camiseta básica', variationName: 'Tamanho M', code: '104', unitCents: 4990, note: 'sem estampa' },
+          { qty: 1, itemName: 'Caneca', variationName: null, code: '210', unitCents: 2500, note: null },
         ],
         checkout: retiradaAna,
       }),
     ).toBe(
       [
-        '*Pedido #K7F2 – Burger do Zé*',
+        '*Pedido #K7F2 – Loja da Ana*',
         '',
-        '2x *X-Bacon* (cód. 104)',
-        '   • Ponto: Ao ponto',
-        '   • Adicionais: 2x Bacon, 1x Cheddar',
-        '   • Obs: sem cebola',
+        '*1.* 2x Camiseta básica – Tamanho M',
+        'cód. 104 · R$ 49,90 cada · total R$ 99,80',
+        'Obs: sem estampa',
         '',
-        '1x *Coca-Cola lata* (cód. 210)',
+        '*2.* 1x Caneca',
+        'cód. 210 · R$ 25,00 cada · total R$ 25,00',
         '',
-        'Retirada · Nome: Ana · Pagamento: Pix',
+        '*Total: R$ 124,80*',
+        '',
+        'Nome: Ana\nEntrega: retirada\nPagamento: Pix',
       ].join('\n'),
     )
   })
 
-  it('sem código, variação, entrega, troco, agendamento e observação geral', () => {
+  it('sem código, com entrega, troco, agendamento e observação geral', () => {
     expect(
       buildCartMessage({
-        vitrineName: 'Pizzaria',
+        vitrineName: 'Loja',
         orderCode: null,
-        lines: [{ qty: 1, itemName: 'Pizza', variationName: 'Grande', code: '301', addonLines: [], note: null }],
+        lines: [{ qty: 1, itemName: 'Tênis', variationName: 'Azul', code: '301', unitCents: 19900, note: null }],
         checkout: {
-          name: 'Bia', fulfillment: 'entrega', address: 'Rua A, 10', payment: 'Dinheiro', changeForCents: 10000,
+          name: 'Bia', fulfillment: 'entrega', address: 'Rua A, 10', payment: 'Dinheiro', changeForCents: 30000,
           schedule: { date: '2026-09-20', time: '19:30' }, notes: 'Portão azul',
         },
       }),
     ).toBe(
       [
-        '*Pedido – Pizzaria*',
+        '*Pedido – Loja*',
         '',
-        '1x *Pizza – Grande* (cód. 301)',
+        '*1.* 1x Tênis – Azul',
+        'cód. 301 · R$ 199,00 cada · total R$ 199,00',
         '',
-        'Entrega · Endereço: Rua A, 10 · Nome: Bia · Pagamento: Dinheiro (troco para R$ 100,00) · Agendado para 20/09 às 19:30 · Obs: Portão azul',
+        '*Total: R$ 199,00*',
+        '',
+        'Nome: Bia',
+        'Entrega: entrega',
+        'Endereço: Rua A, 10',
+        'Pagamento: Dinheiro (troco para R$ 300,00)',
+        'Agendado para 20/09 às 19:30',
+        'Observações: Portão azul',
       ].join('\n'),
     )
   })
@@ -64,14 +71,21 @@ describe('buildCartMessage (spec 7.5)', () => {
       buildCartMessage({
         vitrineName: 'Loja',
         orderCode: 'AB23',
-        lines: [{ qty: 1, itemName: 'Camiseta', variationName: null, code: '101', addonLines: [], note: null }],
+        lines: [{ qty: 1, itemName: 'Camiseta', variationName: null, code: '101', unitCents: 5000, note: null }],
         checkout: empty,
       }),
-    ).toBe('*Pedido #AB23 – Loja*\n\n1x *Camiseta* (cód. 101)')
+    ).toBe('*Pedido #AB23 – Loja*\n\n*1.* 1x Camiseta\ncód. 101 · R$ 50,00 cada · total R$ 50,00\n\n*Total: R$ 50,00*')
   })
-})
 
-it('withNoteLine acrescenta a observação do item', () => {
-  expect(withNoteLine(['   • Ponto: Ao ponto'], 'sem sal')).toEqual(['   • Ponto: Ao ponto', '   • Obs: sem sal'])
-  expect(withNoteLine([], null)).toEqual([])
+  it('sem preço no item (vitrine sem preços ou sob consulta) não soma total', () => {
+    const empty = { name: null, fulfillment: null, address: null, payment: null, changeForCents: null, schedule: null, notes: null }
+    expect(
+      buildCartMessage({
+        vitrineName: 'Loja',
+        orderCode: null,
+        lines: [{ qty: 3, itemName: 'Camiseta', variationName: null, code: '101', unitCents: null, note: null }],
+        checkout: empty,
+      }),
+    ).toBe('*Pedido – Loja*\n\n*1.* 3x Camiseta\ncód. 101')
+  })
 })

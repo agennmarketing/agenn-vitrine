@@ -1,7 +1,7 @@
 import type { PublicItem, PublicVitrine } from '@/features/public/build-catalog'
-import { addonMessageLines } from '@/lib/addons/addons'
 import type { CartLine } from '@/lib/cart/cart'
 import type { CheckoutValue } from '@/lib/cart/checkout'
+import { lineUnitCents } from '@/lib/cart/reconcile'
 import { buildCartMessage } from '@/lib/whatsapp/cart-message'
 import { buildWhatsAppUrl } from '@/lib/whatsapp/messages'
 import { requestOrderCode } from './send-direct'
@@ -16,7 +16,7 @@ export async function buildCartWhatsAppUrl(
 ): Promise<string | null> {
   if (!vitrine.primaryPhone || lines.length === 0) return null
   const orderCode = await requestOrderCode(
-    lines.map((line) => ({ itemId: line.itemId, variationId: line.variationId, qty: line.qty, note: line.note, addons: line.addons })),
+    lines.map((line) => ({ itemId: line.itemId, variationId: line.variationId, qty: line.qty, note: line.note })),
   )
   const message = buildCartMessage({
     vitrineName: vitrine.name,
@@ -32,7 +32,7 @@ export async function buildCartWhatsAppUrl(
           itemName: item.name,
           variationName: variation?.name ?? null,
           code: item.code,
-          addonLines: addonMessageLines(item.addonGroups, line.addons),
+          unitCents: vitrine.showPrices ? lineUnitCents(line, item) : null,
           note: line.note || null,
         },
       ]

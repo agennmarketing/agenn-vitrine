@@ -1,12 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import {
-  createAdminClient,
-  createConfirmedUser,
-  linkAddonGroup,
-  seedAddonGroup,
-  seedItem,
-  seedVitrine,
-} from './helpers'
+import { createAdminClient, createConfirmedUser, seedItem, seedVitrine, setCart, setCheckout } from './helpers'
 
 const vitrineUrl = (subdomain: string) => `http://${subdomain}.localhost:3000/`
 const ORDER = '[23456789A-HJ-NP-Z]{4}'
@@ -16,45 +9,38 @@ async function captureWhatsApp(page: Page) {
   return page.waitForRequest(/^https:\/\/wa\.me\//)
 }
 
-test('sacola: complementos, quantidade, guarda no aparelho, formulário e mensagem completa', async ({ page }) => {
+test('sacola: variações, quantidade, guarda no aparelho, formulário e mensagem completa', async ({ page }) => {
   const user = await createConfirmedUser('sacola')
-  const vitrine = await seedVitrine(user.id, { type: 'comida', name: 'Burger do Zé', phone: '+5511912345678' })
-  const burger = await seedItem(vitrine, user.id, { name: 'X-Bacon', priceCents: 2590 })
-  const coca = await seedItem(vitrine, user.id, { name: 'Coca-Cola lata', priceCents: 600 })
-  const ponto = await seedAddonGroup(vitrine, user.id, {
-    name: 'Ponto', required: true, options: [{ name: 'Mal passado' }, { name: 'Ao ponto' }],
+  const vitrine = await seedVitrine(user.id, { name: 'Loja da Ana', phone: '+5511912345678' })
+  const camiseta = await seedItem(vitrine, user.id, {
+    name: 'Camiseta básica',
+    priceCents: 2590,
+    variations: [{ name: 'Tamanho M', priceCents: 4990 }, { name: 'Tamanho G', priceCents: 5490 }],
   })
-  const adicionais = await seedAddonGroup(vitrine, user.id, {
-    name: 'Adicionais', maxSelect: 5, allowRepeat: true, options: [{ name: 'Bacon', priceCents: 400 }, { name: 'Cheddar', priceCents: 300 }],
-  })
-  await linkAddonGroup(user.id, burger.id, ponto.id, 0)
-  await linkAddonGroup(user.id, burger.id, adicionais.id, 1)
+  const caneca = await seedItem(vitrine, user.id, { name: 'Caneca', priceCents: 600 })
+  // Formulário do pedido no modo mais exigente, para conferir os avisos e o rodapé da mensagem.
+  await setCheckout(vitrine.id, { name_mode: 'required', fulfillment_mode: 'required', payment_mode: 'required' })
 
   await page.goto(vitrineUrl(vitrine.subdomain))
   await expect(page.getByRole('button', { name: 'Abrir sacola' })).toBeVisible()
 
-  await page.getByRole('button', { name: 'X-Bacon' }).click()
-  const sheet = page.getByRole('dialog', { name: 'X-Bacon' })
-  await expect(sheet.getByText('Obrigatório · escolha 1')).toBeVisible()
-  await expect(sheet.getByText('Opcional · até 5')).toBeVisible()
-  await sheet.getByRole('button', { name: 'Adicionar · R$ 25,90' }).click()
-  await expect(sheet.getByText('Escolha uma opção em Ponto.')).toBeVisible()
+  await page.getByRole('button', { name: 'Camiseta básica' }).click()
+  const sheet = page.getByRole('dialog', { name: 'Camiseta básica' })
+  await sheet.getByRole('button', { name: /^Adicionar à sacola/ }).click()
+  await expect(sheet.getByText('Escolha uma opção.')).toBeVisible()
 
-  await sheet.getByLabel('Ao ponto').check()
-  await sheet.getByRole('button', { name: 'Aumentar Bacon' }).click()
-  await sheet.getByRole('button', { name: 'Aumentar Bacon' }).click()
-  await sheet.getByRole('button', { name: 'Aumentar Cheddar' }).click()
+  await sheet.getByRole('radio', { name: /^Tamanho M/ }).check()
   await sheet.getByRole('button', { name: 'Aumentar quantidade' }).click()
-  await sheet.getByLabel('Observação').fill('sem cebola')
-  await sheet.getByRole('button', { name: 'Adicionar · R$ 73,80' }).click()
-  await expect(page.getByRole('button', { name: 'Ver sacola · 2 itens · R$ 73,80' })).toBeVisible()
+  await sheet.getByLabel('Observação').fill('sem estampa')
+  await sheet.getByRole('button', { name: 'Adicionar à sacola · R$ 99,80' }).click()
+  await expect(page.getByRole('button', { name: 'Ver sacola · 2 itens · R$ 99,80' })).toBeVisible()
 
-  await page.getByRole('button', { name: 'Coca-Cola lata' }).click()
-  await page.getByRole('dialog', { name: 'Coca-Cola lata' }).getByRole('button', { name: 'Adicionar · R$ 6,00' }).click()
-  await expect(page.getByRole('button', { name: 'Ver sacola · 3 itens · R$ 79,80' })).toBeVisible()
+  await page.getByRole('button', { name: 'Caneca' }).click()
+  await page.getByRole('dialog', { name: 'Caneca' }).getByRole('button', { name: 'Adicionar à sacola · R$ 6,00' }).click()
+  await expect(page.getByRole('button', { name: 'Ver sacola · 3 itens · R$ 105,80' })).toBeVisible()
 
   await page.reload()
-  await page.getByRole('button', { name: 'Ver sacola · 3 itens · R$ 79,80' }).click()
+  await page.getByRole('button', { name: 'Ver sacola · 3 itens · R$ 105,80' }).click()
   const cart = page.getByRole('dialog', { name: 'Sacola' })
   await cart.getByRole('button', { name: 'Enviar pedido' }).click()
   await expect(cart.getByText('Informe seu nome.')).toBeVisible()
@@ -71,16 +57,18 @@ test('sacola: complementos, quantidade, guarda no aparelho, formulário e mensag
   expect(url.searchParams.get('text')).toMatch(
     new RegExp(
       [
-        `^\\*Pedido #(${ORDER}) – Burger do Zé\\*`,
+        `^\\*Pedido #(${ORDER}) – Loja da Ana\\*`,
         '',
-        `2x \\*X-Bacon\\* \\(cód\\. ${burger.code}\\)`,
-        '   • Ponto: Ao ponto',
-        '   • Adicionais: 2x Bacon, 1x Cheddar',
-        '   • Obs: sem cebola',
+        '\\*1\\.\\* 2x Camiseta básica – Tamanho M',
+        `cód\\. ${camiseta.code} · R\\$ 49,90 cada · total R\\$ 99,80`,
+        'Obs: sem estampa',
         '',
-        `1x \\*Coca-Cola lata\\* \\(cód\\. ${coca.code}\\)`,
+        '\\*2\\.\\* 1x Caneca',
+        `cód\\. ${caneca.code} · R\\$ 6,00 cada · total R\\$ 6,00`,
         '',
-        'Retirada · Nome: Ana · Pagamento: Pix$',
+        '\\*Total: R\\$ 105,80\\*',
+        '',
+        'Nome: Ana\\nEntrega: retirada\\nPagamento: Pix$',
       ].join('\\n'),
     ),
   )
@@ -93,7 +81,7 @@ test('sacola: complementos, quantidade, guarda no aparelho, formulário e mensag
     .eq('code', orderCode)
     .single()
     .throwOnError()
-  expect(snapshot.payload.items[0]).toMatchObject({ qty: 2, unit_price_cents: 2590, addons_unit_cents: 1100 })
+  expect(snapshot.payload.items[0]).toMatchObject({ qty: 2, unit_price_cents: 4990 })
   expect(JSON.stringify(snapshot.payload)).not.toContain('Ana')
 
   // Espera a ida ao WhatsApp terminar antes de voltar para a vitrine.
@@ -104,8 +92,8 @@ test('sacola: complementos, quantidade, guarda no aparelho, formulário e mensag
 
 test('sacola com item que não existe mais avisa e remove', async ({ page }) => {
   const user = await createConfirmedUser('sacola-reconcilia')
-  const vitrine = await seedVitrine(user.id, { type: 'comida' })
-  const item = await seedItem(vitrine, user.id, { name: 'Suco', priceCents: 800 })
+  const vitrine = await seedVitrine(user.id)
+  const item = await seedItem(vitrine, user.id, { name: 'Caderno', priceCents: 800 })
 
   await page.addInitScript(
     ([key, value]) => window.localStorage.setItem(key, value),
@@ -114,8 +102,8 @@ test('sacola com item que não existe mais avisa e remove', async ({ page }) => 
       JSON.stringify({
         version: 1,
         lines: [
-          { itemId: item.id, variationId: null, qty: 1, note: '', addons: [] },
-          { itemId: '00000000-0000-4000-8000-000000000999', variationId: null, qty: 1, note: '', addons: [] },
+          { itemId: item.id, variationId: null, qty: 1, note: '' },
+          { itemId: '00000000-0000-4000-8000-000000000999', variationId: null, qty: 1, note: '' },
         ],
       }),
     ],
@@ -124,44 +112,28 @@ test('sacola com item que não existe mais avisa e remove', async ({ page }) => 
   await page.getByRole('button', { name: 'Abrir sacola' }).click()
   const cart = page.getByRole('dialog', { name: 'Sacola' })
   await expect(cart.getByText('Alguns itens saíram da sacola porque não estão mais disponíveis: Um item.')).toBeVisible()
-  await expect(cart.getByText('Suco')).toBeVisible()
+  await expect(cart.getByText('Caderno')).toBeVisible()
   await expect(cart.getByText('Total: R$ 8,00')).toBeVisible()
 })
 
-test('sabores de pizza pela média e botão direto com complementos', async ({ page }) => {
-  const user = await createConfirmedUser('sabores')
-  const pizzaria = await seedVitrine(user.id, { type: 'comida', name: 'Pizzaria' })
-  const pizza = await seedItem(pizzaria, user.id, { name: 'Pizza grande', priceCents: 0 })
-  const sabores = await seedAddonGroup(pizzaria, user.id, {
-    name: 'Sabores', kind: 'flavors', required: true, maxSelect: 2, flavorPriceRule: 'average',
-    options: [{ name: 'Calabresa', priceCents: 4990 }, { name: 'Quatro queijos', priceCents: 5491 }],
-  })
-  await linkAddonGroup(user.id, pizza.id, sabores.id)
-
-  await page.goto(vitrineUrl(pizzaria.subdomain))
-  await page.getByRole('button', { name: 'Pizza grande' }).click()
-  const sheet = page.getByRole('dialog', { name: 'Pizza grande' })
-  await sheet.getByLabel('Calabresa').check()
-  await sheet.getByLabel('Quatro queijos').check()
-  await expect(sheet.getByRole('button', { name: 'Adicionar · R$ 52,41' })).toBeVisible()
-
-  // Botão direto (sacola desligada) numa vitrine de produtos, de outro dono (plano grátis: 1 vitrine)
-  const lojista = await createConfirmedUser('direto-complementos')
+test('com a sacola desligada o produto vai direto para o WhatsApp', async ({ page }) => {
+  const lojista = await createConfirmedUser('direto-produto')
   const loja = await seedVitrine(lojista.id, { name: 'Loja' })
-  const camiseta = await seedItem(loja, lojista.id, { name: 'Camiseta', priceCents: 5000 })
-  const tamanho = await seedAddonGroup(loja, lojista.id, {
-    name: 'Tamanho', required: true, options: [{ name: 'P' }, { name: 'G', priceCents: 1000 }],
+  await setCart(loja.id, false)
+  const camiseta = await seedItem(loja, lojista.id, {
+    name: 'Camiseta',
+    priceCents: 5000,
+    variations: [{ name: 'Tamanho G', priceCents: 6000 }],
   })
-  await linkAddonGroup(lojista.id, camiseta.id, tamanho.id)
 
   await page.goto(vitrineUrl(loja.subdomain))
   await page.getByRole('button', { name: 'Camiseta' }).click()
   const direto = page.getByRole('dialog', { name: 'Camiseta' })
-  await direto.getByRole('radio', { name: /^G/ }).check()
+  await direto.getByRole('radio', { name: /^Tamanho G/ }).check()
   await direto.getByLabel('Observação').fill('presente')
   const whatsapp = captureWhatsApp(page)
-  await direto.getByRole('button', { name: 'Solicitar orçamento' }).click()
+  await direto.getByRole('button', { name: 'Adicionar à sacola' }).click()
   expect(new URL((await whatsapp).url()).searchParams.get('text')).toMatch(
-    new RegExp(`\\(cód\\. ${camiseta.code}\\)\\. Pedido #${ORDER}\\n\\n   • Tamanho: G\\n   • Obs: presente$`),
+    new RegExp(`\\(cód\\. ${camiseta.code}\\)\\. Pedido #${ORDER}\\n\\nObs: presente$`),
   )
 })

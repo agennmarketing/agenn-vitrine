@@ -3,7 +3,6 @@
 import { Bike, CircleAlert, Pencil, ShoppingBag, Store, Trash2 } from 'lucide-react'
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import type { PublicItem, PublicVitrine } from '@/features/public/build-catalog'
-import { addonMessageLines } from '@/lib/addons/addons'
 import { removeLine, setLineQty, type CartLine } from '@/lib/cart/cart'
 import {
   CASH_OPTION,
@@ -195,11 +194,6 @@ export default function CartSheet({
                         <span className="numeric shrink-0 font-bold">{subtotal === null ? 'Sob consulta' : formatBRL(subtotal)}</span>
                       ) : null}
                     </div>
-                    {addonMessageLines(item.addonGroups, line.addons).map((text) => (
-                      <span key={text} className="text-sm leading-snug text-ink-muted">
-                        {text.trim().replace(/^• /, '')}
-                      </span>
-                    ))}
                     {line.note ? <span className="text-sm leading-snug text-ink-muted">Obs: {line.note}</span> : null}
                     <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-1 rounded-full bg-subtle p-1">

@@ -49,16 +49,6 @@ async function fetchCatalog(subdomain: string): Promise<PublicVitrine | null> {
     : { data: [], error: null }
   if (variations.error) throw variations.error
 
-  const addonLinks = itemIds.length
-    ? await admin
-        .from('item_addon_groups')
-        .select(
-          'item_id, position, addon_groups(id, name, kind, required, min_select, max_select, allow_repeat, flavor_price_rule, position, addon_options(id, name, price_cents, sold_out, position))',
-        )
-        .in('item_id', itemIds)
-    : { data: [], error: null }
-  if (addonLinks.error) throw addonLinks.error
-
   return buildPublicCatalog(
     {
       vitrine,
@@ -70,7 +60,6 @@ async function fetchCatalog(subdomain: string): Promise<PublicVitrine | null> {
       variations: variations.data ?? [],
       media: media.data ?? [],
       checkout: checkout.data ?? null,
-      addonLinks: (addonLinks.data ?? []) as unknown as CatalogRows['addonLinks'],
     },
     env.NEXT_PUBLIC_MEDIA_BASE_URL,
     env.NEXT_PUBLIC_VIDEO_CDN_BASE_URL,

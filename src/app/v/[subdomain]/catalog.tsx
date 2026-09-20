@@ -160,10 +160,11 @@ export function Catalog({ vitrine, siteUrl }: { vitrine: PublicVitrine; siteUrl:
       <StoreHeader
         vitrine={vitrine}
         hasBanner={hasBanner}
+        // O botão do cabeçalho leva à lista; o pedido do serviço acontece na tela do serviço.
         action={
           type === 'servicos' && firstCategory ? (
             <a href={`#cat-${firstCategory.id}`} className={`${brandButtonClass} h-12 w-full px-6 text-[0.9375rem] sm:w-auto`}>
-              {vitrine.defaultButtonText}
+              Ver serviços
             </a>
           ) : null
         }
@@ -565,8 +566,6 @@ function ProductCard({ item, showMedia, showPrices, onOpen }: CardProps) {
             {item.name}
           </span>
           {showPrices ? <Price item={item} className="text-[0.9375rem] font-bold" /> : null}
-          {item.durationMinutes ? <Duration minutes={item.durationMinutes} /> : null}
-          <TagList tags={item.tags} />
           {item.soldOut && !showMedia ? <SoldOut /> : null}
         </span>
         {!item.soldOut ? <PlusBubble className="mt-0.5 size-8 shrink-0" /> : null}

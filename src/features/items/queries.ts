@@ -7,18 +7,16 @@ import { imageSources } from '@/lib/media/urls'
 export async function getItemFormOptions(vitrineId: string) {
   const vitrine = await getMyVitrine(vitrineId)
   const { supabase } = await getPanelSession()
-  const [categories, contacts, nextCode, groups] = await Promise.all([
+  const [categories, contacts, nextCode] = await Promise.all([
     supabase.from('categories').select('id, name').eq('vitrine_id', vitrineId).order('position'),
     supabase.from('whatsapp_contacts').select('id, label').eq('vitrine_id', vitrineId).order('position'),
     supabase.rpc('peek_next_item_code'),
-    supabase.from('addon_groups').select('id, name').eq('vitrine_id', vitrineId).order('position').order('created_at'),
   ])
   return {
     vitrine: { id: vitrine.id, type: vitrine.type, subdomain: vitrine.subdomain },
     categories: categories.data ?? [],
     contacts: contacts.data ?? [],
     nextCode: nextCode.data ?? '',
-    addonGroups: groups.data ?? [],
   }
 }
 
@@ -26,7 +24,7 @@ export async function getItemForEdit(vitrineId: string, itemId: string) {
   const { supabase } = await getPanelSession()
   const { data: item } = await supabase
     .from('items')
-    .select('*, item_variations(id, name, price_cents, promo_price_cents, sold_out, position), media(id, role, position, storage_paths, status), item_addon_groups(group_id, position)')
+    .select('*, item_variations(id, name, price_cents, promo_price_cents, sold_out, position), media(id, role, position, storage_paths, status)')
     .eq('id', itemId)
     .eq('vitrine_id', vitrineId)
     .is('deleted_at', null)
@@ -41,7 +39,6 @@ export async function getItemForEdit(vitrineId: string, itemId: string) {
   return {
     ...item,
     variations: [...(item.item_variations ?? [])].sort((a, b) => a.position - b.position),
-    addonGroupIds: [...(item.item_addon_groups ?? [])].sort((a, b) => a.position - b.position).map((link) => link.group_id),
     cover: toSlot(media.find((m) => m.role === 'cover')),
     gallery: [1, 2].map((position) => toSlot(media.find((m) => m.role === 'gallery' && m.position === position))) as [
       { id: string; url: string } | null,

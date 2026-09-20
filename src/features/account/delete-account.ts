@@ -43,7 +43,7 @@ export async function deleteAccount(userId: string): Promise<void> {
   console.error(trace)
 
   // Apagar o usuário derruba, em cascata, perfil, vitrines, itens, mídias, códigos,
-  // complementos, pedidos e assinatura (conferido em 11_account_deletion.test.sql).
+  // pedidos e assinatura (conferido em 11_account_deletion.test.sql).
   const { error } = await admin.auth.admin.deleteUser(userId)
   if (error) throw error
 

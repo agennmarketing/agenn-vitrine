@@ -1,40 +1,38 @@
 import { describe, expect, it } from 'vitest'
 import { addToCart, cartLineKey, parseStoredCart, removeLine, replaceLine, serializeCart, setLineQty } from './cart'
 
-const xBacon = { itemId: 'i1', variationId: null, qty: 1, note: '', addons: [{ optionId: 'o-bacon', qty: 2 }] }
+const camiseta = { itemId: 'i1', variationId: null, qty: 1, note: '' }
 
 describe('linhas da sacola', () => {
   it('mesma escolha junta quantidade; escolha diferente vira outra linha', () => {
-    let lines = addToCart([], xBacon)
-    lines = addToCart(lines, { ...xBacon, qty: 2 })
+    let lines = addToCart([], camiseta)
+    lines = addToCart(lines, { ...camiseta, qty: 2 })
     expect(lines).toHaveLength(1)
     expect(lines[0].qty).toBe(3)
-    lines = addToCart(lines, { ...xBacon, note: 'sem cebola' })
+    lines = addToCart(lines, { ...camiseta, note: 'sem cebola' })
     expect(lines).toHaveLength(2)
   })
 
-  it('ordem dos complementos não muda a chave e o limite é 99', () => {
-    const a = cartLineKey({ ...xBacon, addons: [{ optionId: 'x', qty: 1 }, { optionId: 'y', qty: 1 }] })
-    const b = cartLineKey({ ...xBacon, addons: [{ optionId: 'y', qty: 1 }, { optionId: 'x', qty: 1 }] })
-    expect(a).toBe(b)
-    expect(addToCart([], { ...xBacon, qty: 150 })[0].qty).toBe(99)
+  it('a variação entra na chave e a quantidade para em 99', () => {
+    expect(cartLineKey(camiseta)).not.toBe(cartLineKey({ ...camiseta, variationId: 'v1' }))
+    expect(addToCart([], { ...camiseta, qty: 150 })[0].qty).toBe(99)
   })
 
   it('quantidade, remover e trocar', () => {
-    const lines = addToCart([], xBacon)
+    const lines = addToCart([], camiseta)
     const key = lines[0].key
     expect(setLineQty(lines, key, 5)[0].qty).toBe(5)
     expect(setLineQty(lines, key, 0)).toEqual([])
     expect(removeLine(lines, key)).toEqual([])
-    const replaced = replaceLine(lines, key, { ...xBacon, note: 'bem passado' })
+    const replaced = replaceLine(lines, key, { ...camiseta, note: 'bem passado' })
     expect(replaced).toHaveLength(1)
     expect(replaced[0].note).toBe('bem passado')
   })
 
   it('trocar para uma escolha que já existe junta as linhas', () => {
-    let lines = addToCart([], xBacon)
-    lines = addToCart(lines, { ...xBacon, note: 'x' })
-    const merged = replaceLine(lines, lines[1].key, { ...xBacon, qty: 4 })
+    let lines = addToCart([], camiseta)
+    lines = addToCart(lines, { ...camiseta, note: 'x' })
+    const merged = replaceLine(lines, lines[1].key, { ...camiseta, qty: 4 })
     expect(merged).toHaveLength(1)
     expect(merged[0].qty).toBe(5)
   })
@@ -42,7 +40,7 @@ describe('linhas da sacola', () => {
 
 describe('guardar no aparelho', () => {
   it('ida e volta', () => {
-    const lines = addToCart([], xBacon)
+    const lines = addToCart([], camiseta)
     expect(parseStoredCart(serializeCart(lines))).toEqual(lines)
   })
 

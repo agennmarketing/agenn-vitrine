@@ -1,6 +1,29 @@
 import { expect, test } from '@playwright/test'
 import { createConfirmedUser, seedVitrine, setPlan, signIn, uniqueSubdomain } from './helpers'
 
+test('abas do editor por tipo de vitrine', async ({ page }) => {
+  const user = await createConfirmedUser('abas')
+  const vitrine = await seedVitrine(user.id, { type: 'servicos' })
+  await signIn(page, user.email, user.password)
+
+  const abas = page.getByRole('navigation', { name: 'Seções da vitrine' })
+  await page.goto(`/painel/vitrines/${vitrine.id}/itens`)
+  await expect(abas.getByRole('link')).toHaveText(['Serviços', 'Aparência', 'WhatsApp', 'Configurações'])
+  await expect(abas.getByRole('link', { name: 'Complementos' })).toHaveCount(0)
+
+  // Sem sacola em serviços: a seção não abre nem pelo endereço.
+  await page.goto(`/painel/vitrines/${vitrine.id}/mensagens`)
+  await expect(page).toHaveURL(new RegExp(`/painel/vitrines/${vitrine.id}/itens$`))
+
+  // Uma vitrine por conta: a de produtos é de outro dono.
+  const lojista = await createConfirmedUser('abas-produtos')
+  const loja = await seedVitrine(lojista.id, { type: 'produtos' })
+  await page.context().clearCookies()
+  await signIn(page, lojista.email, lojista.password)
+  await page.goto(`/painel/vitrines/${loja.id}/itens`)
+  await expect(abas.getByRole('link')).toHaveText(['Itens', 'Aparência', 'WhatsApp', 'Sacola e mensagens', 'Configurações'])
+})
+
 test('configurações, mensagens e WhatsApp', async ({ page }) => {
   const user = await createConfirmedUser('editor')
   const vitrine = await seedVitrine(user.id)

@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(16);
+select plan(17);
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000f1', 'ana@vitrine.com'),
@@ -28,8 +28,13 @@ select is(
   array['Destaques', 'Novidades'],
   'categorias de exemplo na ordem'
 );
+select is(
+  (select cart_enabled from public.vitrines where subdomain = 'loja-ana'),
+  true,
+  'vitrine de produtos nasce com a sacola ligada'
+);
 select throws_ok(
-  $$ select public.create_vitrine('servicos', 'ana-dois', 'Ana 2', 'light', 'Agendar', 'Principal', '+5511987654321', array[]::text[]) $$,
+  $ select public.create_vitrine('servicos', 'ana-dois', 'Ana 2', 'light', 'Agendar', 'Principal', '+5511987654321', array[]::text[]) $,
   'P0001', 'plan_limit:vitrines', 'gratuito não cria a segunda vitrine'
 );
 select throws_ok(

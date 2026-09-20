@@ -1,6 +1,5 @@
 import * as Sentry from '@sentry/nextjs'
 import { NextResponse, type NextRequest } from 'next/server'
-import { groupsFromLinks, type AddonGroupRow } from '@/lib/addons/rows'
 import { generateOrderCode } from '@/lib/codes/order-code'
 import { env } from '@/lib/env'
 import { parseHost } from '@/lib/hosts/parse-host'
@@ -44,21 +43,14 @@ export async function POST(request: NextRequest) {
     const { data: items, error: itemsError } = await admin
       .from('items')
       .select(
-        'id, code, name, price_type, price_cents, promo_price_cents, sold_out, item_variations(id, name, price_cents, promo_price_cents, sold_out), item_addon_groups(position, addon_groups(id, name, kind, required, min_select, max_select, allow_repeat, flavor_price_rule, position, addon_options(id, name, price_cents, sold_out, position)))',
+        'id, code, name, price_type, price_cents, promo_price_cents, sold_out, item_variations(id, name, price_cents, promo_price_cents, sold_out)',
       )
       .eq('vitrine_id', vitrine.id)
       .in('id', parsed.data.lines.map((line) => line.itemId))
       .is('deleted_at', null)
     if (itemsError) throw itemsError
 
-    type ItemWithLinks = Omit<SnapshotSourceItem, 'addon_groups'> & {
-      item_addon_groups: { position: number; addon_groups: AddonGroupRow | null }[]
-    }
-    const sourceItems: SnapshotSourceItem[] = ((items ?? []) as unknown as ItemWithLinks[]).map(({ item_addon_groups, ...item }) => ({
-      ...item,
-      addon_groups: groupsFromLinks(item_addon_groups),
-    }))
-    const snapshot = buildSnapshotPayload(parsed.data.lines, sourceItems)
+    const snapshot = buildSnapshotPayload(parsed.data.lines, (items ?? []) as SnapshotSourceItem[])
     if (!snapshot.ok) return fail(422, 'Algum item não está mais disponível.')
 
     for (let attempt = 0; attempt < 5; attempt++) {

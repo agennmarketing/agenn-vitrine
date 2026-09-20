@@ -12,10 +12,10 @@ export function unitPriceCents(item: PricedItem, variation?: PricedVariation | n
   return source.promoPriceCents ?? source.priceCents
 }
 
-// Regra 4.6.4. `addonsCents` fica 0 até a Fase 4 (complementos).
-export function lineTotalCents(unitCents: number | null, qty: number, addonsCents = 0): number | null {
+// Regra 4.6.4.
+export function lineTotalCents(unitCents: number | null, qty: number): number | null {
   if (unitCents == null) return null
-  return (unitCents + addonsCents) * qty
+  return unitCents * qty
 }
 
 // Regra 4.6.5: itens sob consulta ficam fora da soma.

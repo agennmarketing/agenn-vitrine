@@ -63,7 +63,7 @@ export default async function PainelHome() {
             <div className="flex flex-col gap-2">
               <h2 className="text-2xl font-black tracking-[-0.02em]">Você ainda não tem vitrine</h2>
               <p className="max-w-sm font-semibold text-ink-muted">
-                Em quatro passos sua vitrine fica no ar e os pedidos chegam no seu WhatsApp.
+                Em quatro passos sua vitrine fica no ar e as mensagens chegam no seu WhatsApp.
               </p>
             </div>
             <Link href="/painel/vitrines/nova" className={buttonClasses('primary', 'w-full max-w-xs', 'lg')}>
@@ -108,7 +108,7 @@ export default async function PainelHome() {
                           <ExternalLink aria-hidden="true" className="size-4 shrink-0" strokeWidth={2.5} />
                         </a>
                       </div>
-                      <VitrineCardMenu vitrineId={vitrine.id} name={vitrine.name} url={url} />
+                      <VitrineCardMenu vitrineId={vitrine.id} type={vitrine.type as VitrineType} name={vitrine.name} url={url} />
                     </div>
                     {/* No celular as pílulas ocupam a largura toda; a partir de sm alinham com o nome. */}
                     <ul className="-mt-1 flex flex-wrap gap-2 text-[0.8125rem] font-bold text-ink-muted sm:ml-20">

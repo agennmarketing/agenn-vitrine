@@ -17,6 +17,8 @@ test('cria vitrine pelo assistente e respeita a vitrine única da conta', async 
   await expect(page.getByText('Endereço disponível.')).toBeVisible()
   await page.getByRole('button', { name: 'Continuar' }).click()
 
+  // Vitrine de produtos: o passo do contato fala em pedidos.
+  await expect(page.getByRole('heading', { name: 'Para onde vão os pedidos?' })).toBeVisible()
   await page.getByLabel('WhatsApp', { exact: true }).fill('(11) 98765-4321')
   await page.getByRole('button', { name: 'Continuar' }).click()
   await page.getByLabel('Escuro').check()
@@ -50,6 +52,8 @@ test('telefone inválido volta ao passo do WhatsApp; endereço em uso é avisado
   await expect(page.getByText('Este endereço já está em uso. Escolha outro.')).toBeVisible()
   await page.getByLabel('Endereço da vitrine').fill(uniqueSubdomain('clinica'))
   await page.getByRole('button', { name: 'Continuar' }).click()
+  // Vitrine de serviços: o mesmo passo fala em solicitações.
+  await expect(page.getByRole('heading', { name: 'Para onde vão as solicitações?' })).toBeVisible()
   await page.getByLabel('WhatsApp', { exact: true }).fill('123')
   await page.getByRole('button', { name: 'Continuar' }).click()
   await page.getByRole('button', { name: 'Criar vitrine' }).click()

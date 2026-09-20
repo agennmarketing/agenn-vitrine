@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation'
 import { SectionIntro } from '@/components/ui/config-section'
 import { getMyVitrine, getPanelSession } from '@/features/vitrines/queries'
 import { MessagesForm } from './messages-form'
@@ -7,6 +8,8 @@ export const metadata = { title: 'Sacola e mensagens' }
 export default async function MensagensPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const vitrine = await getMyVitrine(id)
+  // Vitrine de serviços não tem sacola: a seção não existe nem pelo endereço.
+  if (vitrine.type === 'servicos') redirect(`/painel/vitrines/${id}/itens`)
   const { supabase } = await getPanelSession()
   const { data: checkout, error } = await supabase
     .from('checkout_settings')
