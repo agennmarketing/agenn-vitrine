@@ -34,7 +34,7 @@ select is(
   'vitrine de produtos nasce com a sacola ligada'
 );
 select throws_ok(
-  $ select public.create_vitrine('servicos', 'ana-dois', 'Ana 2', 'light', 'Agendar', 'Principal', '+5511987654321', array[]::text[]) $,
+  $$ select public.create_vitrine('servicos', 'ana-dois', 'Ana 2', 'light', 'Quero esse serviço', 'Principal', '+5511987654321', array[]::text[]) $$,
   'P0001', 'plan_limit:vitrines', 'gratuito não cria a segunda vitrine'
 );
 select throws_ok(
