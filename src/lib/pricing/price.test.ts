@@ -25,7 +25,6 @@ describe('unitPriceCents (4.6.1)', () => {
 describe('totais (4.6.4 e 4.6.5)', () => {
   it('linha multiplica pela quantidade', () => {
     expect(lineTotalCents(1500, 3)).toBe(4500)
-    expect(lineTotalCents(1500, 2, 250)).toBe(3500)
     expect(lineTotalCents(null, 2)).toBeNull()
   })
 

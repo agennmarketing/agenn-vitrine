@@ -1,4 +1,3 @@
-import { addonsUnitCents, validateAddonSelections, type AddonGroup } from '@/lib/addons/addons'
 import { lineTotalCents, orderTotal, unitPriceCents, type PricedItem, type PricedVariation } from '@/lib/pricing/price'
 import type { CartLine, NewCartLine } from './cart'
 
@@ -8,7 +7,6 @@ export type CartCatalogItem = PricedItem & {
   name: string
   soldOut: boolean
   variations: (PricedVariation & { id: string; name: string; soldOut: boolean })[]
-  addonGroups: AddonGroup[]
 }
 
 function isAvailable(line: NewCartLine, item: CartCatalogItem): boolean {
@@ -19,7 +17,7 @@ function isAvailable(line: NewCartLine, item: CartCatalogItem): boolean {
   } else if (line.variationId) {
     return false
   }
-  return validateAddonSelections(item.addonGroups, line.addons).ok
+  return true
 }
 
 // Spec 7.4: ao abrir, confere com os dados atuais e remove o que não dá mais para pedir.
@@ -40,9 +38,7 @@ export function reconcileCart(lines: CartLine[], items: ReadonlyMap<string, Cart
 
 export function lineUnitCents(line: NewCartLine, item: CartCatalogItem): number | null {
   const variation = line.variationId ? (item.variations.find((v) => v.id === line.variationId) ?? null) : null
-  const base = unitPriceCents(item, variation)
-  if (base === null) return null
-  return base + addonsUnitCents(item.addonGroups, line.addons)
+  return unitPriceCents(item, variation)
 }
 
 export function cartSummary(lines: CartLine[], items: ReadonlyMap<string, CartCatalogItem>) {

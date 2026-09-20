@@ -181,11 +181,11 @@ function NewContactForm({ vitrineId, onAdded }: { vitrineId: string; onAdded: ()
   }, initialFormState)
   const errors = state.fieldErrors ?? {}
   return (
-    <ConfigBlock title="Adicionar contato" description="Balcão, delivery, outra unidade. Você escolhe qual é o principal.">
+    <ConfigBlock title="Adicionar contato" description="Balcão, atendimento, outra unidade. Você escolhe qual é o principal.">
       <form action={formAction} noValidate className="flex flex-col gap-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Nome do novo contato" htmlFor="new-label" error={errors.label}>
-            <Input id="new-label" name="label" placeholder="Delivery" defaultValue={state.values?.label} invalid={!!errors.label} />
+            <Input id="new-label" name="label" placeholder="Atendimento" defaultValue={state.values?.label} invalid={!!errors.label} />
           </Field>
           <Field label="Número do novo contato" htmlFor="new-phone" error={errors.phone}>
             <Input

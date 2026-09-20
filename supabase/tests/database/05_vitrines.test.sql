@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(16);
+select plan(17);
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000f1', 'ana@vitrine.com'),
@@ -28,8 +28,13 @@ select is(
   array['Destaques', 'Novidades'],
   'categorias de exemplo na ordem'
 );
+select is(
+  (select cart_enabled from public.vitrines where subdomain = 'loja-ana'),
+  true,
+  'vitrine de produtos nasce com a sacola ligada'
+);
 select throws_ok(
-  $$ select public.create_vitrine('servicos', 'ana-dois', 'Ana 2', 'light', 'Agendar', 'Principal', '+5511987654321', array[]::text[]) $$,
+  $$ select public.create_vitrine('servicos', 'ana-dois', 'Ana 2', 'light', 'Quero esse serviço', 'Principal', '+5511987654321', array[]::text[]) $$,
   'P0001', 'plan_limit:vitrines', 'gratuito não cria a segunda vitrine'
 );
 select throws_ok(
@@ -47,16 +52,9 @@ select is(
   'o próprio subdomínio fica disponível para a vitrine dona'
 );
 
--- Pro
+-- Pro. As recusas de subdomínio vêm antes da primeira vitrine: a trava de uma vitrine
+-- por conta roda antes das checagens da tabela e esconderia esses erros.
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000f3","role":"authenticated"}', true);
-select lives_ok(
-  $$ select public.create_vitrine('produtos', 'pro-um', 'Pro 1', 'dark', 'Solicitar orçamento', 'Principal', '+5511912345678', null) $$,
-  'pro cria a primeira'
-);
-select lives_ok(
-  $$ select public.create_vitrine('servicos', 'pro-dois', 'Pro 2', 'light', 'Agendar', 'Principal', '+5511912345678', null) $$,
-  'pro cria a segunda'
-);
 select throws_ok(
   $$ select public.create_vitrine('produtos', 'Loja-Ana', 'Cópia', 'light', 'Solicitar orçamento', 'Principal', '+5511912345678', null) $$,
   '23514', null, 'subdomínio com maiúscula viola o formato'
@@ -68,6 +66,14 @@ select throws_ok(
 select throws_ok(
   $$ select public.create_vitrine('produtos', 'loja-ana', 'Cópia', 'light', 'Solicitar orçamento', 'Principal', '+5511912345678', null) $$,
   '23505', null, 'subdomínio duplicado é recusado'
+);
+select lives_ok(
+  $$ select public.create_vitrine('produtos', 'pro-um', 'Pro 1', 'dark', 'Solicitar orçamento', 'Principal', '+5511912345678', null) $$,
+  'pro cria a primeira'
+);
+select throws_ok(
+  $$ select public.create_vitrine('servicos', 'pro-dois', 'Pro 2', 'light', 'Agendar', 'Principal', '+5511912345678', null) $$,
+  'P0001', 'plan_limit:vitrines', 'pro também só tem uma vitrine'
 );
 
 -- Bia não enxerga nem escreve na vitrine da Ana. O id é lido como postgres,

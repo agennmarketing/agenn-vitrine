@@ -31,22 +31,6 @@ const base: CatalogRows = {
     name_mode: 'required', fulfillment_mode: 'optional', payment_mode: 'off', schedule_mode: 'off', notes_mode: 'optional',
     payment_options: ['Pix'],
   },
-  addonLinks: [
-    {
-      item_id: 'i2', position: 1,
-      addon_groups: {
-        id: 'g-b', name: 'Adicionais', kind: 'standard', required: false, min_select: 0, max_select: 5, allow_repeat: true,
-        flavor_price_rule: null, position: 0, addon_options: [{ id: 'o1', name: 'Bacon', price_cents: 400, sold_out: false, position: 0 }],
-      },
-    },
-    {
-      item_id: 'i2', position: 0,
-      addon_groups: {
-        id: 'g-a', name: 'Ponto', kind: 'standard', required: true, min_select: 1, max_select: 1, allow_repeat: false,
-        flavor_price_rule: null, position: 1, addon_options: [{ id: 'o2', name: 'Ao ponto', price_cents: 0, sold_out: false, position: 0 }],
-      },
-    },
-  ],
   media: [
     { id: 'm1', item_id: 'i2', role: 'cover', kind: 'image', position: 0, storage_paths: { '480': 'a-480.webp', '1080': 'a-1080.webp' }, bunny_video_id: null, aspect: null },
     { id: 'logo', item_id: null, role: 'logo', kind: 'image', position: 0, storage_paths: { '128': 'l-128.webp', '512': 'l-512.webp' }, bunny_video_id: null, aspect: null },
@@ -134,13 +118,7 @@ describe('vídeos', () => {
   })
 })
 
-describe('sacola e complementos', () => {
-  it('grupos do item na ordem do vínculo; itens sem grupo ficam vazios', () => {
-    const [first, second] = buildPublicCatalog(base, 'https://cdn', 'https://vz').categories[0].items
-    expect(first.addonGroups.map((group) => group.name)).toEqual(['Ponto', 'Adicionais'])
-    expect(second.addonGroups).toEqual([])
-  })
-
+describe('sacola', () => {
   it('sacola e formulário da vitrine', () => {
     const catalog = buildPublicCatalog(base, 'https://cdn', 'https://vz')
     expect([catalog.cartEnabled, catalog.cartButtonText]).toEqual([true, 'Enviar pedido'])

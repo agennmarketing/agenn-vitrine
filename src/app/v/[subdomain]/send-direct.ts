@@ -1,15 +1,12 @@
 import type { PublicItem, PublicVitrine } from '@/features/public/build-catalog'
-import { addonMessageLines, type AddonSelection } from '@/lib/addons/addons'
 import { isValidOrderCode } from '@/lib/codes/order-code'
-import { withNoteLine } from '@/lib/whatsapp/cart-message'
-import { buildDirectMessage, buildWhatsAppUrl } from '@/lib/whatsapp/messages'
+import { buildDirectMessage, buildWhatsAppUrl, type ServiceRequestDetails } from '@/lib/whatsapp/messages'
 
 export type OrderLineRequest = {
   itemId: string
   variationId: string | null
   qty: number
   note: string
-  addons: AddonSelection[]
 }
 
 export async function requestOrderCode(lines: OrderLineRequest[]): Promise<string | null> {
@@ -31,13 +28,13 @@ export async function requestOrderCode(lines: OrderLineRequest[]): Promise<strin
 export async function sendDirect(
   vitrine: PublicVitrine,
   item: PublicItem,
-  choice: { variation: { id: string; name: string } | null; addons: AddonSelection[]; note: string },
+  choice: { variation: { id: string; name: string } | null; note: string; request?: ServiceRequestDetails | null },
 ): Promise<void> {
   const phone = item.whatsappPhone ?? vitrine.primaryPhone
   if (!phone) return
   const note = choice.note.trim()
   const orderCode = await requestOrderCode([
-    { itemId: item.id, variationId: choice.variation?.id ?? null, qty: 1, note, addons: choice.addons },
+    { itemId: item.id, variationId: choice.variation?.id ?? null, qty: 1, note },
   ])
   const text = buildDirectMessage({
     vitrineType: vitrine.type,
@@ -47,7 +44,8 @@ export async function sendDirect(
     variationName: choice.variation?.name ?? null,
     orderCode,
     customTemplate: item.customMessage,
-    addonLines: withNoteLine(addonMessageLines(item.addonGroups, choice.addons), note || null),
+    note: note || null,
+    request: choice.request ?? null,
   })
   window.location.assign(buildWhatsAppUrl(phone, text))
 }

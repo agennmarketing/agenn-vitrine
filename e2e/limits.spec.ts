@@ -22,14 +22,14 @@ test('gratuito: 11º item vira convite para o Pro; Pro cadastra', async ({ page 
   await expect(page.getByText('Item salvo.')).toBeVisible()
 })
 
-test('gratuito: nova vitrine bloqueada; marca com cadeado; vitrine pública com marca d’água', async ({ page }) => {
+test('nova vitrine bloqueada com uma já criada; marca com cadeado; vitrine pública com marca d’água', async ({ page }) => {
   const user = await createConfirmedUser('limite-vitrine')
   const vitrine = await seedVitrine(user.id)
   await seedItem(vitrine, user.id, { name: 'Único', priceCents: 1000 })
   await signIn(page, user.email, user.password)
 
   await page.goto('/painel/vitrines/nova')
-  await expect(page.getByText('Seu plano permite até 1 vitrine. Assine o Pro para criar mais.')).toBeVisible()
+  await expect(page.getByText('Cada conta tem uma vitrine. Edite a sua quando quiser.')).toBeVisible()
 
   await page.goto(`/painel/vitrines/${vitrine.id}/aparencia`)
   await expect(page.getByText('Recurso do plano Pro')).toBeVisible()

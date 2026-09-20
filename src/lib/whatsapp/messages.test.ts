@@ -29,10 +29,38 @@ describe('mensagem automática do botão direto (7.5)', () => {
     )
   })
 
-  it('linhas de complementos vão ao final', () => {
+  it('serviço: preço e o que o cliente preencheu na etapa', () => {
     expect(
-      buildDirectMessage({ ...base, vitrineType: 'comida', addonLines: ['   • Ponto: Ao ponto'] }),
-    ).toBe('Olá! Vim da vitrine *Loja da Ana* e tenho interesse em: *Camiseta* (cód. 104). Pedido #K7F2\n\n   • Ponto: Ao ponto')
+      buildDirectMessage({
+        ...base,
+        vitrineType: 'servicos',
+        itemName: 'Corte de cabelo',
+        request: { priceText: 'A partir de R$ 50,00', name: 'Maria', date: '2026-10-05', time: '14:30' },
+        note: 'bem curto',
+      }),
+    ).toBe(
+      'Olá! Vim da vitrine *Loja da Ana* e gostaria de agendar: *Corte de cabelo* (cód. 104). Pedido #K7F2\n\n' +
+        'Valor: A partir de R$ 50,00\nNome: Maria\nData desejada: 05/10\nHorário desejado: 14:30\n\nObs: bem curto',
+    )
+  })
+
+  it('serviço: data, horário e preço ficam de fora quando não há', () => {
+    expect(
+      buildDirectMessage({
+        ...base,
+        vitrineType: 'servicos',
+        itemName: 'Corte de cabelo',
+        request: { priceText: null, name: 'Maria', date: null, time: null },
+      }),
+    ).toBe(
+      'Olá! Vim da vitrine *Loja da Ana* e gostaria de agendar: *Corte de cabelo* (cód. 104). Pedido #K7F2\n\nNome: Maria',
+    )
+  })
+
+  it('a observação do cliente vai ao final', () => {
+    expect(buildDirectMessage({ ...base, vitrineType: 'produtos', note: 'tamanho G' })).toBe(
+      'Olá! Vim da vitrine *Loja da Ana* e tenho interesse em: *Camiseta* (cód. 104). Pedido #K7F2\n\nObs: tamanho G',
+    )
   })
 })
 

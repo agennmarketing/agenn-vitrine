@@ -25,18 +25,6 @@ export const subdomainField = z.string().transform((value, ctx) => {
 const vitrineName = z.string().trim().min(1, 'Informe o nome da vitrine.').max(60, 'Use até 60 caracteres.')
 const theme = z.enum(['light', 'dark'], 'Escolha o tema.')
 const checkbox = z.string().optional().transform((value) => value === 'on' || value === 'true')
-const intField = (min: number, max: number) =>
-  z
-    .string()
-    .trim()
-    .transform((value, ctx) => {
-      const number = Number(value)
-      if (!value || !Number.isInteger(number) || number < min || number > max) {
-        ctx.addIssue({ code: 'custom', message: `Informe um número de ${min} a ${max}.` })
-        return z.NEVER
-      }
-      return number
-    })
 
 const fieldMode = z.enum(['off', 'optional', 'required'], 'Escolha uma opção.')
 const optionalText = (max: number) =>
@@ -182,12 +170,6 @@ export const itemSchema = z
       .union([z.uuid(), z.literal('')])
       .default('')
       .transform((value) => value || null),
-    // Opcional: formulários antigos não enviam o campo.
-    addonGroupIds: z
-      .string()
-      .optional()
-      .transform((value) => value ?? '[]')
-      .pipe(jsonArray(z.uuid(), 20)),
   })
   .superRefine((data, ctx) => {
     if (data.priceType === 'on_request') return
@@ -236,64 +218,10 @@ export const itemSchema = z
       coverMediaId: data.coverMediaId,
       galleryMediaIds: data.galleryMediaIds,
       videoMediaId: data.videoMediaId,
-      addonGroupIds: data.addonGroupIds,
     }
   })
 
 export type ItemInput = z.output<typeof itemSchema>
-
-const addonOptionInput = z.object({
-  id: z.uuid().nullish().transform((value) => value ?? null),
-  name: z.string().trim().min(1, 'Informe o nome da opção.').max(40, 'Use até 40 caracteres.'),
-  price: z.string().default(''),
-  soldOut: z.boolean().default(false),
-})
-
-export const addonGroupSchema = z
-  .object({
-    name: z.string().trim().min(1, 'Informe o nome do grupo.').max(40, 'Use até 40 caracteres.'),
-    kind: z.enum(['standard', 'flavors'], 'Escolha o tipo do grupo.'),
-    required: checkbox,
-    minSelect: intField(0, 20),
-    maxSelect: intField(1, 20),
-    allowRepeat: checkbox,
-    flavorPriceRule: z.union([z.enum(['max', 'average']), z.literal('')]).transform((value) => value || null),
-    options: jsonArray(addonOptionInput, 50),
-  })
-  .superRefine((data, ctx) => {
-    if (data.options.length === 0) {
-      ctx.addIssue({ code: 'custom', path: ['options'], message: 'Adicione pelo menos uma opção.' })
-    }
-    data.options.forEach((option, index) => {
-      if (option.price.trim() && parseBRLToCents(option.price) === null) {
-        ctx.addIssue({ code: 'custom', path: ['options'], message: `Preço inválido na opção ${index + 1}. Ex.: 4,00` })
-      }
-    })
-    const min = data.required ? Math.max(1, data.minSelect) : 0
-    if (min > data.maxSelect) {
-      ctx.addIssue({ code: 'custom', path: ['minSelect'], message: 'O mínimo não pode passar do máximo.' })
-    }
-    if (data.kind === 'flavors' && !data.flavorPriceRule) {
-      ctx.addIssue({ code: 'custom', path: ['flavorPriceRule'], message: 'Escolha a regra de preço dos sabores.' })
-    }
-  })
-  .transform((data) => ({
-    name: data.name,
-    kind: data.kind,
-    required: data.required,
-    minSelect: data.required ? Math.max(1, data.minSelect) : 0,
-    maxSelect: data.maxSelect,
-    allowRepeat: data.kind === 'flavors' ? false : data.allowRepeat,
-    flavorPriceRule: data.kind === 'flavors' ? data.flavorPriceRule : null,
-    options: data.options.map((option) => ({
-      id: option.id,
-      name: option.name,
-      priceCents: option.price.trim() ? (parseBRLToCents(option.price) ?? 0) : 0,
-      soldOut: option.soldOut,
-    })),
-  }))
-
-export type AddonGroupInput = z.output<typeof addonGroupSchema>
 
 export const checkoutSettingsSchema = z
   .object({

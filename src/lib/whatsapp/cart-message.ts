@@ -6,22 +6,19 @@ export type CartMessageLine = {
   itemName: string
   variationName: string | null
   code: string
-  addonLines: string[]
+  /** Preço de uma unidade já com a variação escolhida; null quando a vitrine esconde preços. */
+  unitCents: number | null
   note: string | null
 }
 
-export function withNoteLine(addonLines: string[], note: string | null): string[] {
-  return note ? [...addonLines, `   • Obs: ${note}`] : addonLines
-}
-
-function footer(checkout: CheckoutValue): string | null {
+function footer(checkout: CheckoutValue): string[] {
   const parts: string[] = []
-  if (checkout.fulfillment === 'retirada') parts.push('Retirada')
+  if (checkout.name) parts.push(`Nome: ${checkout.name}`)
+  if (checkout.fulfillment === 'retirada') parts.push('Entrega: retirada')
   if (checkout.fulfillment === 'entrega') {
-    parts.push('Entrega')
+    parts.push('Entrega: entrega')
     if (checkout.address) parts.push(`Endereço: ${checkout.address}`)
   }
-  if (checkout.name) parts.push(`Nome: ${checkout.name}`)
   if (checkout.payment) {
     const change = checkout.changeForCents !== null ? ` (troco para ${formatBRL(checkout.changeForCents)})` : ''
     parts.push(`Pagamento: ${checkout.payment}${change}`)
@@ -30,11 +27,12 @@ function footer(checkout: CheckoutValue): string | null {
     const [, month, day] = checkout.schedule.date.split('-')
     parts.push(`Agendado para ${day}/${month} às ${checkout.schedule.time}`)
   }
-  if (checkout.notes) parts.push(`Obs: ${checkout.notes}`)
-  return parts.length > 0 ? parts.join(' · ') : null
+  if (checkout.notes) parts.push(`Observações: ${checkout.notes}`)
+  return parts
 }
 
-// Spec 7.5: a mensagem não leva valores (só o troco).
+// A mensagem chega pronta no WhatsApp: um bloco numerado por produto, com
+// variação, quantidade, valores e observações, e o total no fim.
 export function buildCartMessage(input: {
   vitrineName: string
   orderCode: string | null
@@ -44,10 +42,25 @@ export function buildCartMessage(input: {
   const header = input.orderCode
     ? `*Pedido #${input.orderCode} – ${input.vitrineName}*`
     : `*Pedido – ${input.vitrineName}*`
-  const blocks = input.lines.map((line) => {
+
+  const blocks = input.lines.map((line, index) => {
     const label = line.variationName ? `${line.itemName} – ${line.variationName}` : line.itemName
-    return [`${line.qty}x *${label}* (cód. ${line.code})`, ...withNoteLine(line.addonLines, line.note)].join('\n')
+    const rows = [`*${index + 1}.* ${line.qty}x ${label}`]
+    const details = [`cód. ${line.code}`]
+    if (line.unitCents !== null) {
+      details.push(`${formatBRL(line.unitCents)} cada`, `total ${formatBRL(line.unitCents * line.qty)}`)
+    }
+    rows.push(details.join(' · '))
+    if (line.note) rows.push(`Obs: ${line.note}`)
+    return rows.join('\n')
   })
+
+  // Sem preço em algum item (sob consulta ou vitrine sem preços) não há total a somar.
+  const priced = input.lines.every((line) => line.unitCents !== null)
+  const total = priced
+    ? [`*Total: ${formatBRL(input.lines.reduce((sum, line) => sum + line.unitCents! * line.qty, 0))}*`]
+    : []
+
   const end = footer(input.checkout)
-  return [header, ...blocks, ...(end ? [end] : [])].join('\n\n')
+  return [header, ...blocks, ...total, ...(end.length > 0 ? [end.join('\n')] : [])].join('\n\n')
 }

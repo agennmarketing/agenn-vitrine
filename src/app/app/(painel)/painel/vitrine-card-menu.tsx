@@ -1,37 +1,34 @@
 'use client'
 
-import {
-  EllipsisVertical,
-  ExternalLink,
-  LayoutGrid,
-  ListPlus,
-  MessageCircle,
-  Palette,
-  Settings,
-  ShoppingBag,
-} from 'lucide-react'
+import { EllipsisVertical, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
+import { editorSections } from '@/lib/vitrines/editor-sections'
+import type { VitrineType } from '@/lib/vitrines/vitrine-types'
 
 /*
  * Menu "mais opções" do cartão de vitrine: atalhos para cada seção do editor e para abrir a vitrine.
  * Mesmo comportamento do menu dos itens: setas, Home/End, Escape e clique fora fecham.
  */
-export function VitrineCardMenu({ vitrineId, name, url }: { vitrineId: string; name: string; url: string }) {
+export function VitrineCardMenu({
+  vitrineId,
+  type,
+  name,
+  url,
+}: {
+  vitrineId: string
+  type: VitrineType
+  name: string
+  url: string
+}) {
   const [open, setOpen] = useState(false)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
   const menuId = useId()
   const base = `/painel/vitrines/${vitrineId}`
 
-  const links = [
-    { href: `${base}/itens`, label: 'Itens', Icon: LayoutGrid },
-    { href: `${base}/complementos`, label: 'Complementos', Icon: ListPlus },
-    { href: `${base}/aparencia`, label: 'Aparência', Icon: Palette },
-    { href: `${base}/whatsapp`, label: 'WhatsApp', Icon: MessageCircle },
-    { href: `${base}/mensagens`, label: 'Sacola e mensagens', Icon: ShoppingBag },
-    { href: `${base}/configuracoes`, label: 'Configurações', Icon: Settings },
-  ]
+  // As mesmas seções das abas do editor: cada tipo de vitrine mostra as suas.
+  const links = editorSections(type).map(({ slug, label, Icon }) => ({ href: `${base}/${slug}`, label, Icon }))
 
   function items() {
     return Array.from(menuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? [])

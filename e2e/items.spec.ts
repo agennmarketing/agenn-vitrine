@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { createConfirmedUser, itemStep, makeTestImage, seedVitrine, signIn, uploadImage } from './helpers'
+import { createConfirmedUser, itemStep, makeTestImage, seedItem, seedVitrine, signIn, uploadImage } from './helpers'
 
 test('cadastra item com capa e variações, edita código, esgota, duplica e exclui', async ({ page }) => {
   const user = await createConfirmedUser('itens')
@@ -61,4 +61,63 @@ test('item sem capa mostra erro', async ({ page }) => {
   await page.getByLabel('Preço', { exact: true }).fill('10')
   await page.getByRole('button', { name: 'Salvar item' }).click()
   await expect(page.getByText('Envie a imagem de capa.')).toBeVisible()
+})
+
+test('formulário do produto: sem duração, etiquetas ou tipo de preço, com disponibilidade ativo/inativo', async ({ page }) => {
+  const user = await createConfirmedUser('itens-produto')
+  const vitrine = await seedVitrine(user.id)
+  await signIn(page, user.email, user.password)
+
+  await page.goto(`/painel/vitrines/${vitrine.id}/itens/novo`)
+  await itemStep(page, 'Detalhes')
+  await expect(page.getByLabel('Etiquetas')).toHaveCount(0)
+  await expect(page.getByLabel('Duração (minutos)')).toHaveCount(0)
+  await itemStep(page, 'Preço')
+  await expect(page.getByRole('radio', { name: 'Sob consulta' })).toBeHidden()
+  await expect(page.getByRole('radio', { name: 'Ativo', exact: true })).toBeChecked()
+
+  await itemStep(page, 'Fotos')
+  await uploadImage(page, 'Capa', await makeTestImage(page))
+  await itemStep(page, 'Detalhes')
+  await page.getByLabel('Nome', { exact: true }).fill('Caneca')
+  await itemStep(page, 'Preço')
+  await page.getByLabel('Preço', { exact: true }).fill('25,00')
+  await page.getByRole('radio', { name: 'Inativo', exact: true }).check()
+  await page.getByRole('button', { name: 'Salvar item' }).click()
+  await expect(page.getByText('Item salvo.')).toBeVisible()
+  await expect(page.getByRole('switch', { name: 'Caneca disponível' })).toHaveAttribute('aria-checked', 'false')
+})
+
+
+test('formulário do serviço: duração, tipo de preço e disponibilidade ativo/inativo', async ({ page }) => {
+  const user = await createConfirmedUser('itens-servico')
+  const vitrine = await seedVitrine(user.id, { type: 'servicos' })
+  const item = await seedItem(vitrine, user.id, { name: 'Corte de cabelo', priceCents: 5000 })
+  await signIn(page, user.email, user.password)
+
+  await page.goto(`/painel/vitrines/${vitrine.id}/itens/${item.id}`)
+  await itemStep(page, 'Detalhes')
+  await page.getByLabel('Duração (minutos)').fill('45')
+  await itemStep(page, 'Preço')
+  await expect(page.getByRole('radio', { name: 'Ativo', exact: true })).toBeChecked()
+  await page.getByRole('radio', { name: 'A partir de' }).check()
+  await page.getByLabel('Preço', { exact: true }).fill('50,00')
+  await page.getByRole('button', { name: 'Salvar item' }).click()
+
+  await expect(page.getByText('Item salvo.')).toBeVisible()
+  await expect(page.getByText('A partir de R$ 50,00')).toBeVisible()
+
+  // A duração volta preenchida e "Sob consulta" esconde os campos de preço.
+  await page.getByRole('link', { name: 'Editar' }).click()
+  await itemStep(page, 'Detalhes')
+  await expect(page.getByLabel('Duração (minutos)')).toHaveValue('45')
+  await itemStep(page, 'Preço')
+  await page.getByRole('radio', { name: 'Sob consulta' }).check()
+  await expect(page.getByLabel('Preço', { exact: true })).toBeHidden()
+  await page.getByRole('radio', { name: 'Inativo', exact: true }).check()
+  await page.getByRole('button', { name: 'Salvar item' }).click()
+
+  await expect(page.getByText('Item salvo.')).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Editar Corte de cabelo' })).toContainText('Sob consulta')
+  await expect(page.getByRole('switch', { name: 'Corte de cabelo disponível' })).toHaveAttribute('aria-checked', 'false')
 })

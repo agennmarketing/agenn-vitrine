@@ -1,6 +1,5 @@
 'use client'
 
-import type { AddonSelection } from '@/lib/addons/addons'
 import { Calculator, Check, Copy, Minus, Plus, ReceiptText, Search, Trash2, TriangleAlert } from 'lucide-react'
 import { useState, useTransition, type FormEvent, type ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
@@ -106,7 +105,7 @@ function OrderLookup() {
   )
 }
 
-type ManualLine = { key: string; itemId: string; variationId: string | null; qty: number; addons: AddonSelection[] }
+type ManualLine = { key: string; itemId: string; variationId: string | null; qty: number }
 
 function ManualMode() {
   const [code, setCode] = useState('')
@@ -129,18 +128,13 @@ function ManualMode() {
       setItems((current) => new Map(current).set(item.id, item))
       setLines((current) => [
         ...current,
-        { key: Math.random().toString(36).slice(2), itemId: item.id, variationId: item.variations[0]?.id ?? null, qty: 1, addons: [] },
+        { key: Math.random().toString(36).slice(2), itemId: item.id, variationId: item.variations[0]?.id ?? null, qty: 1 },
       ])
     })
   }
 
   function update(key: string, patch: Partial<ManualLine>) {
     setLines((current) => current.map((line) => (line.key === key ? { ...line, ...patch } : line)))
-  }
-
-  function setAddonQty(line: ManualLine, optionId: string, qty: number) {
-    const rest = line.addons.filter((addon) => addon.optionId !== optionId)
-    update(line.key, { addons: qty > 0 ? [...rest, { optionId, qty }] : rest })
   }
 
   const simulation = simulateOrder(lines, items)
@@ -240,28 +234,6 @@ function ManualMode() {
                       {result?.subtotalCents != null ? formatBRL(result.subtotalCents) : 'Sob consulta'}
                     </span>
                   </div>
-
-                  {(item.addonGroups ?? []).map((group) => (
-                    <fieldset key={group.id} className="flex flex-col gap-2 border-t-2 border-line pt-3">
-                      <legend className="mb-1 text-sm font-extrabold text-ink-muted">{group.name}</legend>
-                      {group.options.map((option) => (
-                        <div key={option.id} className="flex items-center justify-between gap-3">
-                          <span aria-hidden="true" className="min-w-0 text-[0.9375rem] font-bold leading-snug text-ink">
-                            {option.name}
-                          </span>
-                          <Stepper
-                            label={`${option.name} em ${item.name}`}
-                            stepName={`${option.name} (${item.name})`}
-                            value={line.addons.find((addon) => addon.optionId === option.id)?.qty ?? 0}
-                            min={0}
-                            max={20}
-                            size="sm"
-                            onChange={(qty) => setAddonQty(line, option.id, qty)}
-                          />
-                        </div>
-                      ))}
-                    </fieldset>
-                  ))}
                 </li>
               )
             })}
@@ -332,7 +304,7 @@ function TotalRow({ value }: { value: string }) {
   )
 }
 
-// O pedido lido como uma comanda: linhas, complementos, avisos em destaque e o total embaixo.
+// O pedido lido como uma comanda: linhas, avisos em destaque e o total embaixo.
 function Receipt({
   simulation,
   title,
@@ -407,15 +379,6 @@ function ReceiptLine({ line }: { line: SimulatedLine }) {
           {line.unitCents == null && line.status === 'ok' ? 'Sob consulta' : null}
         </span>
       </div>
-      {line.addonLines.length > 0 ? (
-        <div className="flex flex-col gap-0.5 pl-12">
-          {line.addonLines.map((text) => (
-            <span key={text} className="text-sm font-semibold text-ink-muted">
-              {text.trim()}
-            </span>
-          ))}
-        </div>
-      ) : null}
       {line.status === 'price_changed' ? (
         <div className="pl-12">
           <Warning>
@@ -431,11 +394,6 @@ function ReceiptLine({ line }: { line: SimulatedLine }) {
       {line.status === 'variation_removed' ? (
         <div className="pl-12">
           <Warning>Variação não existe mais</Warning>
-        </div>
-      ) : null}
-      {line.status === 'addon_removed' ? (
-        <div className="pl-12">
-          <Warning>Complemento não existe mais</Warning>
         </div>
       ) : null}
     </li>

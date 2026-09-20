@@ -1,5 +1,3 @@
-import type { AddonGroup } from '@/lib/addons/addons'
-import { groupsFromLinks, type AddonGroupRow } from '@/lib/addons/rows'
 import type { CheckoutSettings, FieldMode } from '@/lib/cart/checkout'
 import { imageSources } from '@/lib/media/urls'
 import { videoPlaylistUrl, videoThumbnailUrl } from '@/lib/video/urls'
@@ -24,7 +22,6 @@ export type CatalogRows = {
   checkout: {
     name_mode: string; fulfillment_mode: string; payment_mode: string; schedule_mode: string; notes_mode: string; payment_options: string[]
   } | null
-  addonLinks: { item_id: string; position: number; addon_groups: AddonGroupRow | null }[]
   variations: { id: string; item_id: string; name: string; price_cents: number; promo_price_cents: number | null; sold_out: boolean; position: number }[]
   media: {
     id: string
@@ -48,7 +45,6 @@ export type PublicItem = {
   whatsappPhone: string | null; buttonText: string | null; customMessage: string | null
   cover: PublicImage | null; gallery: PublicImage[]; video: PublicVideo | null
   variations: { id: string; name: string; priceCents: number; promoPriceCents: number | null; soldOut: boolean }[]
-  addonGroups: AddonGroup[]
 }
 
 export type PublicVitrine = {
@@ -108,7 +104,6 @@ export function buildPublicCatalog(rows: CatalogRows, mediaBaseUrl: string, vide
         .sort((a, b) => a.position - b.position)
         .map((m) => image(m.storage_paths))
         .filter((img): img is PublicImage => img !== null),
-      addonGroups: groupsFromLinks(rows.addonLinks.filter((link) => link.item_id === row.id)),
       variations: rows.variations
         .filter((v) => v.item_id === row.id)
         .sort((a, b) => a.position - b.position)

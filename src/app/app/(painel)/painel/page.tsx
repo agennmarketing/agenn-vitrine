@@ -7,7 +7,6 @@ import { TypeIcon } from '@/components/ui/type-icon'
 import { getEntitlements, getPanelSession, getVideoUsage, listMyVitrines } from '@/features/vitrines/queries'
 import { env } from '@/lib/env'
 import { buildVitrineUrl } from '@/lib/hosts/urls'
-import { mapDbError } from '@/lib/vitrines/db-errors'
 import type { VitrineType } from '@/lib/vitrines/vitrine-types'
 import { ProUpsell } from '../pro-upsell'
 import { CopyLinkButton } from './copy-link-button'
@@ -39,36 +38,16 @@ export default async function PainelHome() {
     getVideoUsage(),
     videoCountByVitrine(),
   ])
-  const atLimit = vitrines.length >= plan.max_vitrines
   const isPro = plan.name !== 'Gratuito'
+  // Uma vitrine por conta: sem vitrine, o convite para criar; com vitrine, nenhum botão de nova.
 
   return (
     <>
       <PanelTopBar
         title="Minhas vitrines"
-        subtitle={
-          vitrines.length === 0
-            ? 'Crie sua primeira vitrine'
-            : `${vitrines.length} de ${plan.max_vitrines} ${plan.max_vitrines === 1 ? 'vitrine' : 'vitrines'} do seu plano`
-        }
-        actions={
-          atLimit || vitrines.length === 0 ? null : (
-            <Link href="/painel/vitrines/nova" className={buttonClasses('primary', '', 'sm')}>
-              <Plus aria-hidden="true" className="size-5" strokeWidth={3} />
-              Nova vitrine
-            </Link>
-          )
-        }
+        subtitle={vitrines.length === 0 ? 'Crie sua vitrine' : 'Sua vitrine'}
       />
       <PanelBody className="flex flex-col gap-6">
-        {atLimit ? (
-          <div className="flex flex-col items-start gap-3 rounded-card border-2 border-sun/60 bg-sun-soft p-5 sm:flex-row sm:items-center sm:justify-between">
-            <p className="font-bold text-sun-ink">{mapDbError({ message: 'plan_limit:vitrines', hint: String(plan.max_vitrines) })}</p>
-            <Link href="/painel/plano" className={buttonClasses('sun', 'shrink-0')}>
-              Ver o plano Pro
-            </Link>
-          </div>
-        ) : null}
         {usage.overQuota ? (
           <p role="status" className="rounded-card border-2 border-danger/25 bg-danger-soft p-5 font-bold text-danger">
             A franquia de vídeo deste mês acabou. Os vídeos voltam no próximo mês.
@@ -78,22 +57,19 @@ export default async function PainelHome() {
         {vitrines.length === 0 ? (
           <section className="flex flex-col items-center gap-5 rounded-card border-2 border-dashed border-line-strong bg-surface px-6 py-12 text-center">
             <div aria-hidden="true" className="flex items-end gap-2">
-              <span className="-rotate-6"><TypeIcon type="comida" size="lg" /></span>
-              <span className="-translate-y-2"><TypeIcon type="servicos" size="lg" /></span>
-              <span className="rotate-6"><TypeIcon type="produtos" size="lg" /></span>
+              <span className="-rotate-6"><TypeIcon type="produtos" size="lg" /></span>
+              <span className="rotate-6"><TypeIcon type="servicos" size="lg" /></span>
             </div>
             <div className="flex flex-col gap-2">
-              <h2 className="text-2xl font-black tracking-[-0.02em]">Você ainda não tem vitrines</h2>
+              <h2 className="text-2xl font-black tracking-[-0.02em]">Você ainda não tem vitrine</h2>
               <p className="max-w-sm font-semibold text-ink-muted">
-                Em quatro passos sua vitrine fica no ar e os pedidos chegam no seu WhatsApp.
+                Em quatro passos sua vitrine fica no ar e as mensagens chegam no seu WhatsApp.
               </p>
             </div>
-            {atLimit ? null : (
-              <Link href="/painel/vitrines/nova" className={buttonClasses('primary', 'w-full max-w-xs', 'lg')}>
-                <Plus aria-hidden="true" className="size-5" strokeWidth={3} />
-                Nova vitrine
-              </Link>
-            )}
+            <Link href="/painel/vitrines/nova" className={buttonClasses('primary', 'w-full max-w-xs', 'lg')}>
+              <Plus aria-hidden="true" className="size-5" strokeWidth={3} />
+              Criar minha vitrine
+            </Link>
           </section>
         ) : (
           <ul className={`grid grid-cols-1 gap-5 ${vitrines.length > 1 ? 'xl:grid-cols-2' : ''}`}>
@@ -132,7 +108,7 @@ export default async function PainelHome() {
                           <ExternalLink aria-hidden="true" className="size-4 shrink-0" strokeWidth={2.5} />
                         </a>
                       </div>
-                      <VitrineCardMenu vitrineId={vitrine.id} name={vitrine.name} url={url} />
+                      <VitrineCardMenu vitrineId={vitrine.id} type={vitrine.type as VitrineType} name={vitrine.name} url={url} />
                     </div>
                     {/* No celular as pílulas ocupam a largura toda; a partir de sm alinham com o nome. */}
                     <ul className="-mt-1 flex flex-wrap gap-2 text-[0.8125rem] font-bold text-ink-muted sm:ml-20">

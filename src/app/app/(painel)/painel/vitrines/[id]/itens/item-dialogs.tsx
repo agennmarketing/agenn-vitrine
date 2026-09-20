@@ -12,7 +12,6 @@ export async function NewItemDialog({ id, intercepted = false }: { id: string; i
         <NoCategoryStep />
       ) : (
         <ItemForm
-          addonGroups={options.addonGroups}
           vitrineId={id}
           vitrineType={options.vitrine.type}
           defaultButtonText={vitrine.default_button_text}
@@ -37,7 +36,6 @@ export async function EditItemDialog({ id, itemId, intercepted = false }: { id: 
   return (
     <ItemDialog vitrineId={id} label="Editar item" intercepted={intercepted}>
       <ItemForm
-        addonGroups={options.addonGroups}
         key={item.updated_at}
         vitrineId={id}
         vitrineType={options.vitrine.type}

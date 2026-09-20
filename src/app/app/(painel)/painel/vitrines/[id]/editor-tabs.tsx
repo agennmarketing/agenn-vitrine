@@ -1,21 +1,13 @@
 'use client'
 
-import { LayoutGrid, ListPlus, MessageCircle, Palette, Settings, ShoppingBag } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef } from 'react'
-
-const TABS = [
-  { slug: 'itens', label: 'Itens', Icon: LayoutGrid },
-  { slug: 'complementos', label: 'Complementos', Icon: ListPlus },
-  { slug: 'aparencia', label: 'Aparência', Icon: Palette },
-  { slug: 'whatsapp', label: 'WhatsApp', Icon: MessageCircle },
-  { slug: 'mensagens', label: 'Sacola e mensagens', Icon: ShoppingBag },
-  { slug: 'configuracoes', label: 'Configurações', Icon: Settings },
-] as const
+import { editorSections } from '@/lib/vitrines/editor-sections'
+import type { VitrineType } from '@/lib/vitrines/vitrine-types'
 
 // Seções do editor como pílulas: a ativa vira a placa índigo-escura. No celular a fileira rola de lado.
-export function EditorTabs({ vitrineId }: { vitrineId: string }) {
+export function EditorTabs({ vitrineId, type }: { vitrineId: string; type: VitrineType }) {
   const pathname = usePathname()
   const listRef = useRef<HTMLUListElement>(null)
 
@@ -37,7 +29,7 @@ export function EditorTabs({ vitrineId }: { vitrineId: string }) {
         ref={listRef}
         className="relative flex gap-2 overflow-x-auto px-4 pb-1.5 pt-0.5 [scrollbar-width:none] [mask-image:linear-gradient(to_right,#000_calc(100%-2.5rem),transparent)] lg:flex-wrap lg:[mask-image:none] lg:overflow-visible lg:px-0 [&::-webkit-scrollbar]:hidden"
       >
-        {TABS.map(({ slug, label, Icon }) => {
+        {editorSections(type).map(({ slug, label, Icon }) => {
           const href = `/painel/vitrines/${vitrineId}/${slug}`
           const active = pathname === href || pathname.startsWith(`${href}/`)
           return (

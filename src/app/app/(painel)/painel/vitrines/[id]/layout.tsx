@@ -49,7 +49,7 @@ export default async function VitrineEditorLayout({
         }
       />
       <PanelBody className="flex flex-col gap-6">
-        <EditorTabs vitrineId={id} />
+        <EditorTabs vitrineId={id} type={vitrine.type as VitrineType} />
         {children}
       </PanelBody>
       {modal}

@@ -16,7 +16,6 @@ import { useActionState, useEffect, useRef, useState, type ComponentProps, type 
 import { ImageSlot } from '@/components/media/image-slot'
 import { VideoSlot } from '@/components/media/video-slot'
 import { Button } from '@/components/ui/button'
-import { ChoiceCard } from '@/components/ui/choice-card'
 import { Field } from '@/components/ui/field'
 import { FormMessage } from '@/components/ui/form-message'
 import { Input, Select, Textarea } from '@/components/ui/input'
@@ -36,6 +35,9 @@ type ItemForEdit = Awaited<ReturnType<typeof getItemForEdit>>
 type Slot = { id: string; url: string } | null
 type VariationRow = { key: string; id: string | null; name: string; price: string; promoPrice: string; soldOut: boolean }
 
+const CHOICE_CARD =
+  'pressable relative flex h-12 cursor-pointer items-center justify-center rounded-control border-2 border-line-strong bg-surface px-2 text-center text-sm font-extrabold leading-tight text-ink [--lip:var(--color-line-strong)] hover:bg-canvas has-[:checked]:border-go has-[:checked]:bg-go-soft has-[:checked]:text-go-strong has-[:checked]:[--lip:var(--color-go)] has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-go-strong'
+
 const ADVANCED_FIELDS = ['whatsappId', 'buttonText', 'customMessage']
 const PRICE_TYPES = [
   ['fixed', 'Preço fixo'],
@@ -44,23 +46,42 @@ const PRICE_TYPES = [
 ] as const
 
 // Os passos do popup, no molde da criação de vitrine: uma pergunta por tela.
-const STEPS = [
-  {
-    label: 'Fotos',
-    question: 'Mostre o seu item',
-    help: 'A capa é a foto que aparece na vitrine. As outras duas fotos e o vídeo são opcionais.',
-  },
-  { label: 'Detalhes', question: 'Como ele se chama?', help: 'Nome, descrição e a categoria em que ele aparece na vitrine.' },
-  { label: 'Preço', question: 'Quanto custa?', help: 'Escolha o tipo de preço. Variações, como tamanhos ou modelos, são opcionais.' },
-  { label: 'Extras', question: 'Algo a mais?', help: 'Tudo aqui é opcional: complementos, WhatsApp do item, texto do botão e mensagem.' },
-] as const
+// Vitrine de produtos: o produto tem um preço só, e as variações são tamanho ou cor.
+// Vitrine de serviços: o mesmo cadastro, falando de serviço e com duração.
+function steps(produto: boolean, servico: boolean) {
+  return [
+    {
+      label: 'Fotos',
+      question: produto ? 'Mostre o seu produto' : servico ? 'Mostre o seu serviço' : 'Mostre o seu item',
+      help: 'A capa é a foto que aparece na vitrine. As outras duas fotos e o vídeo são opcionais.',
+    },
+    {
+      label: 'Detalhes',
+      question: 'Como ele se chama?',
+      help: servico
+        ? 'Nome, descrição, categoria e quanto tempo o serviço leva.'
+        : 'Nome, descrição e a categoria em que ele aparece na vitrine.',
+    },
+    {
+      label: 'Preço',
+      question: 'Quanto custa?',
+      help: produto
+        ? 'O preço do produto. Variações, como tamanho ou cor, são opcionais.'
+        : servico
+          ? 'Preço fixo, a partir de ou sob consulta. Variações, como pacotes, são opcionais.'
+          : 'Escolha o tipo de preço. Variações, como tamanhos ou modelos, são opcionais.',
+    },
+    { label: 'Extras', question: 'Algo a mais?', help: 'Tudo aqui é opcional: WhatsApp do item, texto do botão e mensagem.' },
+  ]
+}
+const STEP_COUNT = 4
 
 // Campo com erro → passo onde ele mora (o popup volta para lá depois de salvar com erro).
 const STEP_FIELDS: string[][] = [
   ['coverMediaId', 'galleryMediaIds', 'videoMediaId'],
   ['name', 'description', 'categoryId', 'code', 'durationMinutes', 'tags'],
   ['priceType', 'price', 'promoPrice', 'soldOut', 'variations'],
-  ['addonGroupIds', ...ADVANCED_FIELDS],
+  [...ADVANCED_FIELDS],
 ]
 
 function stepForErrors(errors: FormState['fieldErrors']): number | null {
@@ -116,19 +137,19 @@ function CloseButton() {
 }
 
 // Cabeçalho do popup: fechar, a barra de progresso e os passos (tocar num passo leva direto a ele).
-function DialogHeader({ step, onStep }: { step: number; onStep: (step: number) => void }) {
+function DialogHeader({ step, labels, onStep }: { step: number; labels: string[]; onStep: (step: number) => void }) {
   return (
     <header className="flex flex-col gap-4 border-b-2 border-line bg-surface px-4 pb-4 pt-3 sm:px-6 sm:pt-5">
       <div className="flex items-center gap-3">
         <CloseButton />
-        <ProgressBar value={step + 1} max={STEPS.length} label="Progresso do item" />
+        <ProgressBar value={step + 1} max={STEP_COUNT} label="Progresso do item" />
         <p className="numeric shrink-0 text-sm font-extrabold text-go-strong">
-          Passo {step + 1} de {STEPS.length}
+          Passo {step + 1} de {STEP_COUNT}
         </p>
       </div>
       <nav aria-label="Passos do item">
         <ol className="grid grid-cols-4 gap-1.5 sm:gap-2">
-          {STEPS.map(({ label }, index) => {
+          {labels.map((label, index) => {
             const current = index === step
             const done = index < step
             const tone = current
@@ -174,7 +195,7 @@ export function NoCategoryStep() {
         <div className="flex flex-col gap-2">
           <h2 className="text-2xl font-black tracking-[-0.025em] text-ink">Crie uma categoria antes de cadastrar itens.</h2>
           <p className="mx-auto max-w-sm font-semibold text-ink-muted">
-            As categorias organizam a vitrine. Por exemplo: Lanches, Bebidas, Promoções.
+            As categorias organizam a vitrine. Por exemplo: Destaques, Novidades, Promoções.
           </p>
         </div>
         <Button size="lg" className="w-full max-w-xs" onClick={close}>
@@ -193,15 +214,18 @@ export function ItemForm(props: {
   contacts: { id: string; label: string }[]
   nextCode: string
   videoLimits: { maxSeconds: number; maxUploadMb: number }
-  addonGroups: { id: string; name: string }[]
   item?: ItemForEdit
 }) {
   const { vitrineId, item } = props
+  // Produtos: preço fixo, sem duração e sem etiquetas — só o que a spec do produto pede.
+  const produto = props.vitrineType === 'produtos'
+  const servico = props.vitrineType === 'servicos'
+  const stepList = steps(produto, servico)
   const [step, setStep] = useState(0)
   const [coverId, setCoverId] = useState<string>(item?.cover?.id ?? '')
   const [videoId, setVideoId] = useState<string>(item?.video?.id ?? '')
   const [galleryIds, setGalleryIds] = useState<(string | null)[]>([item?.gallery[0]?.id ?? null, item?.gallery[1]?.id ?? null])
-  const [priceType, setPriceType] = useState<string>(item?.price_type ?? 'fixed')
+  const [priceType, setPriceType] = useState<string>(produto ? 'fixed' : (item?.price_type ?? 'fixed'))
   const [variations, setVariations] = useState<VariationRow[]>(
     (item?.variations ?? []).map((v) => ({
       key: v.id,
@@ -212,7 +236,6 @@ export function ItemForm(props: {
       soldOut: v.sold_out,
     })),
   )
-  const [groupIds, setGroupIds] = useState<string[]>(item?.addonGroupIds ?? [])
   const [codeEdited, setCodeEdited] = useState(false)
   const [codeCheck, setCodeCheck] = useState<{ ok: boolean; message: string } | null>(null)
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
@@ -274,16 +297,15 @@ export function ItemForm(props: {
     setVariations((rows) => rows.map((row) => (row.key === key ? { ...row, ...patch } : row)))
   }
 
-  const groupName = (id: string) => props.addonGroups.find((group) => group.id === id)?.name ?? 'Grupo'
-
   const showPrices = priceType !== 'on_request'
   const initialCode = item?.code ?? props.nextCode
-  const current = STEPS[step]
-  const last = step === STEPS.length - 1
+  const inactive = values ? values.soldOut === 'on' : (item?.sold_out ?? false)
+  const current = stepList[step]
+  const last = step === STEP_COUNT - 1
 
   return (
     <>
-      <DialogHeader step={step} onStep={goTo} />
+      <DialogHeader step={step} labels={stepList.map((entry) => entry.label)} onStep={goTo} />
 
       <div ref={bodyRef} className="flex-1 overflow-y-auto overscroll-contain">
         <div className="mx-auto flex max-w-xl flex-col gap-7 px-4 py-6 sm:px-6 sm:py-8">
@@ -349,7 +371,6 @@ export function ItemForm(props: {
             <input type="hidden" name="coverMediaId" value={coverId} />
             <input type="hidden" name="galleryMediaIds" value={JSON.stringify(galleryIds.filter(Boolean))} />
             <input type="hidden" name="videoMediaId" value={videoId} />
-            <input type="hidden" name="addonGroupIds" value={JSON.stringify(groupIds)} />
             <input
               type="hidden"
               name="variations"
@@ -373,7 +394,7 @@ export function ItemForm(props: {
                     id="name"
                     name="name"
                     maxLength={80}
-                    placeholder="Ex.: X-Bacon da casa"
+                    placeholder={produto ? 'Ex.: Camiseta básica' : 'Ex.: Corte de cabelo'}
                     defaultValue={values?.name ?? item?.name ?? ''}
                     invalid={!!errors.name}
                   />
@@ -384,7 +405,7 @@ export function ItemForm(props: {
                     name="description"
                     rows={4}
                     maxLength={1000}
-                    placeholder="O que vem, tamanho, sabor, detalhes que ajudam a escolher."
+                    placeholder={produto ? 'Material, medidas, detalhes que ajudam a escolher.' : 'O que está incluído e detalhes que ajudam a escolher.'}
                     defaultValue={values?.description ?? item?.description ?? ''}
                     invalid={!!errors.description}
                   />
@@ -432,8 +453,8 @@ export function ItemForm(props: {
                     ) : null}
                   </div>
                 </div>
-                {props.vitrineType === 'servicos' ? (
-                  <Field label="Duração (minutos)" htmlFor="durationMinutes" error={errors.durationMinutes}>
+                {servico ? (
+                  <Field label="Duração (minutos)" htmlFor="durationMinutes" error={errors.durationMinutes} hint="Opcional.">
                     <Input
                       id="durationMinutes"
                       name="durationMinutes"
@@ -447,28 +468,33 @@ export function ItemForm(props: {
                 ) : (
                   <input type="hidden" name="durationMinutes" value="" />
                 )}
-                <Field label="Etiquetas" htmlFor="tags" error={errors.tags} hint="Até 5, separadas por vírgula.">
-                  <Input
-                    id="tags"
-                    name="tags"
-                    placeholder="Ex.: novo, vegano"
-                    defaultValue={values?.tags ?? (item?.tags ?? []).join(', ')}
-                    invalid={!!errors.tags}
-                  />
-                </Field>
+                {produto ? (
+                  <input type="hidden" name="tags" value="" />
+                ) : (
+                  <Field label="Etiquetas" htmlFor="tags" error={errors.tags} hint="Até 5, separadas por vírgula.">
+                    <Input
+                      id="tags"
+                      name="tags"
+                      placeholder="Ex.: novo, promoção"
+                      defaultValue={values?.tags ?? (item?.tags ?? []).join(', ')}
+                      invalid={!!errors.tags}
+                    />
+                  </Field>
+                )}
               </FormSection>
             </div>
 
             {/* Passo 3: preço, esgotado e variações. */}
             <div hidden={step !== 2} className="flex flex-col gap-7">
               <FormSection>
-                <fieldset className="flex min-w-0 flex-col gap-2">
+                {produto ? <input type="hidden" name="priceType" value="fixed" /> : null}
+                <fieldset hidden={produto} className="flex min-w-0 flex-col gap-2">
                   <legend className="mb-2 text-[0.9375rem] font-extrabold leading-5 text-ink">Tipo de preço</legend>
                   <div className="grid grid-cols-3 gap-2">
                     {PRICE_TYPES.map(([value, label]) => (
                       <label
                         key={value}
-                        className="pressable relative flex h-12 cursor-pointer items-center justify-center rounded-control border-2 border-line-strong bg-surface px-2 text-center text-sm font-extrabold leading-tight text-ink [--lip:var(--color-line-strong)] hover:bg-canvas has-[:checked]:border-go has-[:checked]:bg-go-soft has-[:checked]:text-go-strong has-[:checked]:[--lip:var(--color-go)] has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-go-strong"
+                        className={CHOICE_CARD}
                       >
                         <input
                           type="radio"
@@ -510,6 +536,30 @@ export function ItemForm(props: {
                   </Field>
                 </div>
 
+                {produto || servico ? (
+                  <fieldset className="flex min-w-0 flex-col gap-2">
+                    <legend className="mb-2 text-[0.9375rem] font-extrabold leading-5 text-ink">Disponibilidade</legend>
+                    <div className="grid grid-cols-2 gap-2">
+                      {([['', 'Ativo'], ['on', 'Inativo']] as const).map(([value, label]) => (
+                        <label key={label} className={CHOICE_CARD}>
+                          <input
+                            type="radio"
+                            name="soldOut"
+                            value={value}
+                            defaultChecked={inactive === (value === 'on')}
+                            className="absolute inset-0 m-0 size-full cursor-pointer appearance-none rounded-control opacity-0"
+                          />
+                          {label}
+                        </label>
+                      ))}
+                    </div>
+                    <p className="text-sm font-semibold leading-snug text-ink-muted">
+                      {servico
+                        ? 'Inativo: o serviço continua na vitrine, mas não pode ser solicitado.'
+                        : 'Inativo: o produto continua na vitrine, mas não pode ser adicionado à sacola.'}
+                    </p>
+                  </fieldset>
+                ) : (
                 <label className="group flex cursor-pointer items-center justify-between gap-4 rounded-control border-2 border-line bg-surface p-4 has-[:checked]:border-danger/40 has-[:checked]:bg-danger-soft/50 has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-go-strong">
                   <span className="flex min-w-0 flex-col gap-0.5">
                     <span className="font-extrabold text-ink">Esgotado</span>
@@ -531,12 +581,17 @@ export function ItemForm(props: {
                     <span className="block size-6 translate-x-0.5 rounded-full group-has-[:checked]:translate-x-[1.625rem] bg-white shadow-[0_2px_0_rgb(29_17_71/0.18)] transition-transform duration-300 ease-out-back" />
                   </span>
                 </label>
+                )}
               </FormSection>
 
               <fieldset className="flex min-w-0 flex-col gap-3 border-t-2 border-line pt-6">
                 <legend className="float-left mb-1 w-full text-lg font-black leading-snug tracking-[-0.02em] text-ink">Variações</legend>
                 <p className="-mt-1 text-sm font-semibold leading-snug text-ink-muted">
-                  Com variações, o cliente escolhe uma e o preço dela substitui o do item.
+                  {produto
+                    ? 'Opcionais, como tamanho ou cor: o cliente escolhe uma e o preço dela substitui o do produto.'
+                    : servico
+                      ? 'Opcionais, como pacotes: o cliente escolhe uma e o preço dela substitui o do serviço.'
+                      : 'Com variações, o cliente escolhe uma e o preço dela substitui o do item.'}
                 </p>
                 {errors.variations ? (
                   <p role="alert" className="flex items-start gap-1.5 text-sm font-bold leading-5 text-danger">
@@ -568,7 +623,7 @@ export function ItemForm(props: {
                             </span>
                             <Input
                               aria-label={`Nome da variação ${n}`}
-                              placeholder="Nome (ex.: Grande)"
+                              placeholder={produto ? 'Nome (ex.: Tamanho M)' : 'Nome (ex.: Grande)'}
                               value={row.name}
                               maxLength={40}
                               onChange={(event) => updateVariation(row.key, { name: event.target.value })}
@@ -627,72 +682,8 @@ export function ItemForm(props: {
               </fieldset>
             </div>
 
-            {/* Passo 4: complementos e ajustes do WhatsApp (tudo opcional). */}
+            {/* Passo 4: ajustes do WhatsApp (tudo opcional). */}
             <div hidden={step !== 3} className="flex flex-col gap-7">
-              <FormSection
-                title="Complementos"
-                description="Os grupos aparecem na ordem em que foram marcados. Com dois ou mais, arraste para mudar a ordem."
-              >
-                {props.addonGroups.length === 0 ? (
-                  <p className="rounded-control border-2 border-dashed border-line-strong px-4 py-4 text-sm font-semibold text-ink-muted">
-                    Nenhum grupo criado. Crie grupos na aba Complementos.
-                  </p>
-                ) : (
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {props.addonGroups.map((group) => {
-                      const order = groupIds.indexOf(group.id)
-                      return (
-                        <ChoiceCard
-                          key={group.id}
-                          type="checkbox"
-                          aria-label={group.name}
-                          title={group.name}
-                          description={order >= 0 ? `${order + 1}º na ordem` : undefined}
-                          checked={order >= 0}
-                          onChange={(event) =>
-                            setGroupIds((ids) => (event.target.checked ? [...ids, group.id] : ids.filter((id) => id !== group.id)))
-                          }
-                        />
-                      )
-                    })}
-                  </div>
-                )}
-                {groupIds.length >= 2 ? (
-                  <div className="flex flex-col gap-2">
-                    <p id="ordem-complementos" className="text-[0.9375rem] font-extrabold leading-5 text-ink">
-                      Ordem na vitrine
-                    </p>
-                    <SortableList
-                      entries={groupIds.map((id) => ({ id, label: groupName(id) }))}
-                      onReorder={(orderedIds) => {
-                        setGroupIds(orderedIds)
-                        markDirty()
-                      }}
-                    >
-                      <ol aria-labelledby="ordem-complementos" className="flex flex-col rounded-control border-2 border-line bg-surface">
-                        {groupIds.map((id, index) => (
-                          <SortableItem
-                            key={id}
-                            id={id}
-                            className={`flex items-center gap-2 py-1 pl-1 pr-3 ${index > 0 ? 'border-t-2 border-line' : ''}`}
-                          >
-                            {/* Rótulo sem o nome do grupo: o nome já rotula a caixa de marcar lá em cima. */}
-                            <DragHandle label={`Reordenar ${index + 1}º grupo`} className="h-11 w-9 rounded-control" />
-                            <span
-                              aria-hidden="true"
-                              className="flex size-7 shrink-0 items-center justify-center rounded-full bg-deep text-xs font-black text-deep-ink numeric"
-                            >
-                              {index + 1}
-                            </span>
-                            <span className="min-w-0 truncate font-extrabold text-ink">{groupName(id)}</span>
-                          </SortableItem>
-                        ))}
-                      </ol>
-                    </SortableList>
-                  </div>
-                ) : null}
-              </FormSection>
-
               <details ref={advancedRef} className="group rounded-card border-2 border-line bg-surface">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-card p-5 [&::-webkit-details-marker]:hidden">
                   <span className="flex flex-col gap-0.5">

@@ -1,14 +1,20 @@
 'use client'
 
-import { ChevronLeft, ChevronRight, CircleAlert, Clock } from 'lucide-react'
-import { useEffect, useId, useRef, useState } from 'react'
+import { ArrowLeft, ChevronLeft, ChevronRight, CircleAlert, Clock } from 'lucide-react'
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import type { PublicItem, PublicVitrine } from '@/features/public/build-catalog'
-import { validateAddonSelections, type AddonSelection } from '@/lib/addons/addons'
 import type { CartLine, NewCartLine } from '@/lib/cart/cart'
 import { lineUnitCents } from '@/lib/cart/reconcile'
+import { todayInSaoPaulo } from '@/lib/cart/checkout'
 import { formatBRL } from '@/lib/money/money'
 import { formatPriceLabel, priceLabel } from '@/lib/pricing/price'
-import { AddonPicker } from './addon-picker'
+import {
+  EMPTY_SERVICE_REQUEST,
+  validateServiceRequest,
+  type ServiceRequestErrors,
+  type ServiceRequestInput,
+  type ServiceRequestValue,
+} from '@/lib/services/request'
 import { sendDirect } from './send-direct'
 import { VideoPlayer } from './video-player'
 import {
@@ -24,6 +30,34 @@ import {
   WhatsAppIcon,
 } from './vitrine-ui'
 
+// Campo da etapa de solicitação do serviço (rótulo, campo e o erro logo abaixo).
+function RequestField({
+  label,
+  htmlFor,
+  error,
+  children,
+}: {
+  label: string
+  htmlFor: string
+  error: string | undefined
+  children: ReactNode
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <label htmlFor={htmlFor} className="text-[0.9375rem] font-bold">
+        {label}
+      </label>
+      {children}
+      {error ? (
+        <p role="alert" className="flex items-center gap-1.5 text-sm font-semibold text-danger">
+          <CircleAlert aria-hidden="true" className="size-4 shrink-0" strokeWidth={2.5} />
+          {error}
+        </p>
+      ) : null}
+    </div>
+  )
+}
+
 export type ItemSheetProps = {
   vitrine: PublicVitrine
   item: PublicItem
@@ -32,18 +66,23 @@ export type ItemSheetProps = {
 }
 
 export default function ItemSheet({ vitrine, item, onClose, cart }: ItemSheetProps) {
+  // Serviços: depois do CTA vem uma etapa curta (nome, data, horário e observação)
+  // antes de abrir o WhatsApp. Não há sacola nem agenda.
+  const isService = !cart && vitrine.type === 'servicos'
   const [variationId, setVariationId] = useState<string | null>(cart?.initial?.variationId ?? null)
-  const [addons, setAddons] = useState<AddonSelection[]>(cart?.initial?.addons ?? [])
   const [qty, setQty] = useState(cart?.initial?.qty ?? 1)
   const [note, setNote] = useState(cart?.initial?.note ?? '')
   const [missingVariation, setMissingVariation] = useState(false)
-  const [addonError, setAddonError] = useState<{ groupId: string | null; message: string } | null>(null)
   const [sending, setSending] = useState(false)
   const [activeIndex, setActiveIndex] = useState(0)
+  const [asking, setAsking] = useState(false)
+  const [request, setRequest] = useState<ServiceRequestInput>(EMPTY_SERVICE_REQUEST)
+  const [requestErrors, setRequestErrors] = useState<ServiceRequestErrors>({})
   const closeRef = useRef<HTMLButtonElement>(null)
   const choicesRef = useRef<HTMLFieldSetElement>(null)
   const galleryRef = useRef<HTMLDivElement>(null)
   const noteId = useId()
+  const fieldId = (field: keyof ServiceRequestInput) => `${noteId}-${field}`
 
   useEffect(() => {
     closeRef.current?.focus()
@@ -62,9 +101,9 @@ export default function ItemSheet({ vitrine, item, onClose, cart }: ItemSheetPro
   const variation = item.variations.find((v) => v.id === variationId) ?? null
   const phone = item.whatsappPhone ?? vitrine.primaryPhone
   const images = [item.cover, ...item.gallery].filter((image) => image !== null)
-  const line: NewCartLine = { itemId: item.id, variationId, qty, note, addons }
+  const line: NewCartLine = { itemId: item.id, variationId, qty, note }
   const unitCents = lineUnitCents(line, item)
-  const hasChoice = variation !== null || addons.length > 0
+  const hasChoice = variation !== null
   const showPrice = vitrine.showPrices && !(variation && item.priceType === 'on_request')
   const baseLabel = priceLabel(item, item.variations)
   const headerPrice = hasChoice && unitCents !== null ? formatBRL(unitCents) : formatPriceLabel(baseLabel)
@@ -78,31 +117,39 @@ export default function ItemSheet({ vitrine, item, onClose, cart }: ItemSheetPro
       choicesRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' })
       return false
     }
-    const check = validateAddonSelections(item.addonGroups, addons)
-    if (!check.ok) {
-      setAddonError({ groupId: check.groupId, message: check.message })
-      if (check.groupId) {
-        document.getElementById(`addon-group-${check.groupId}`)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
-      }
-      return false
-    }
-    setAddonError(null)
     return true
   }
 
   async function onPrimary() {
-    if (!validate()) return
-    const normalized = validateAddonSelections(item.addonGroups, addons)
-    const chosen = normalized.ok ? normalized.selections : addons
+    if (!asking && !validate()) return
     if (cart) {
-      cart.onSubmit({ itemId: item.id, variationId, qty, note: note.trim(), addons: chosen })
+      cart.onSubmit({ itemId: item.id, variationId, qty, note: note.trim() })
       return
     }
+    // Serviços: o CTA leva à etapa de solicitação; o envio acontece no passo seguinte.
+    if (isService && !asking) {
+      setAsking(true)
+      return
+    }
+
+    let value: ServiceRequestValue | null = null
+    if (isService) {
+      const result = validateServiceRequest(request, todayInSaoPaulo())
+      if (!result.ok) {
+        setRequestErrors(result.errors)
+        return
+      }
+      setRequestErrors({})
+      value = result.value
+    }
+
     setSending(true)
     await sendDirect(vitrine, item, {
       variation: variation ? { id: variation.id, name: variation.name } : null,
-      addons: chosen,
-      note,
+      note: value ? (value.notes ?? '') : note,
+      request: value
+        ? { priceText: vitrine.showPrices ? headerPrice : null, name: value.name, date: value.date, time: value.time }
+        : null,
     })
     // Se o navegador bloquear a abertura do WhatsApp, o botão volta a funcionar.
     setTimeout(() => setSending(false), 3000)
@@ -116,14 +163,16 @@ export default function ItemSheet({ vitrine, item, onClose, cart }: ItemSheetPro
 
   let buttonLabel: string
   if (cart) {
-    const verb = cart.initial ? 'Salvar alterações' : 'Adicionar'
+    const verb = cart.initial ? 'Salvar alterações' : 'Adicionar à sacola'
     buttonLabel = vitrine.showPrices && unitCents !== null ? `${verb} · ${formatBRL(unitCents * qty)}` : verb
+  } else if (asking) {
+    buttonLabel = 'Enviar pelo WhatsApp'
   } else {
     buttonLabel = item.buttonText ?? vitrine.defaultButtonText
   }
   let disabled = sending
   if (item.soldOut) {
-    buttonLabel = 'Esgotado'
+    buttonLabel = isService ? 'Indisponível' : 'Esgotado'
     disabled = true
   } else if (!cart && !phone) {
     buttonLabel = 'WhatsApp não configurado'
@@ -247,8 +296,67 @@ export default function ItemSheet({ vitrine, item, onClose, cart }: ItemSheetPro
               {item.durationMinutes} min
             </p>
           ) : null}
+
+          {asking ? (
+            <div className="mt-6 flex flex-col gap-5">
+              {variation ? <p className="-mt-2 text-[0.9375rem] font-semibold text-ink-muted">Opção: {variation.name}</p> : null}
+              <p className="text-[0.9375rem] leading-relaxed text-ink-muted">
+                Preencha e a gente abre o WhatsApp com a mensagem pronta. O horário é combinado na conversa.
+              </p>
+              <RequestField label="Nome" htmlFor={fieldId('name')} error={requestErrors.name}>
+                <input
+                  id={fieldId('name')}
+                  className={fieldClass}
+                  value={request.name}
+                  maxLength={60}
+                  autoComplete="name"
+                  aria-invalid={requestErrors.name ? true : undefined}
+                  onChange={(event) => setRequest((current) => ({ ...current, name: event.target.value }))}
+                />
+              </RequestField>
+              <div className="grid grid-cols-2 gap-3">
+                <RequestField label="Data desejada" htmlFor={fieldId('date')} error={requestErrors.date}>
+                  <input
+                    id={fieldId('date')}
+                    type="date"
+                    className={fieldClass}
+                    value={request.date}
+                    min={todayInSaoPaulo()}
+                    aria-invalid={requestErrors.date ? true : undefined}
+                    onChange={(event) => setRequest((current) => ({ ...current, date: event.target.value }))}
+                  />
+                </RequestField>
+                <RequestField label="Horário desejado" htmlFor={fieldId('time')} error={requestErrors.time}>
+                  <input
+                    id={fieldId('time')}
+                    type="time"
+                    className={fieldClass}
+                    value={request.time}
+                    aria-invalid={requestErrors.time ? true : undefined}
+                    onChange={(event) => setRequest((current) => ({ ...current, time: event.target.value }))}
+                  />
+                </RequestField>
+              </div>
+              <RequestField label="Observação" htmlFor={fieldId('notes')} error={requestErrors.notes}>
+                <textarea
+                  id={fieldId('notes')}
+                  rows={3}
+                  maxLength={300}
+                  placeholder="Algum detalhe? Escreva aqui."
+                  value={request.notes}
+                  aria-invalid={requestErrors.notes ? true : undefined}
+                  onChange={(event) => setRequest((current) => ({ ...current, notes: event.target.value }))}
+                  className={`${fieldClass} h-auto resize-none py-3 leading-snug`}
+                />
+              </RequestField>
+              <p className="text-sm text-ink-muted">Data e horário são opcionais.</p>
+            </div>
+          ) : (
+          <>
           {item.soldOut ? (
-            <p className="mt-3 w-fit rounded-full bg-ink px-3 py-1 text-sm font-bold text-canvas">Item esgotado no momento</p>
+            <p className="mt-3 w-fit rounded-full bg-ink px-3 py-1 text-sm font-bold text-canvas">
+              {isService ? 'Serviço indisponível no momento' : 'Item esgotado no momento'}
+            </p>
           ) : null}
           {item.description ? <p className="mt-3 whitespace-pre-line leading-relaxed text-ink-muted">{item.description}</p> : null}
           <TagList tags={item.tags} className="mt-3" />
@@ -306,41 +414,26 @@ export default function ItemSheet({ vitrine, item, onClose, cart }: ItemSheetPro
             </fieldset>
           ) : null}
 
-          {item.addonGroups.length > 0 ? (
-            <AddonPicker
-              groups={item.addonGroups}
-              showPrices={vitrine.showPrices}
-              selections={addons}
-              onChange={(next) => {
-                setAddons(next)
-                setAddonError(null)
-              }}
-              errorGroupId={addonError?.groupId ?? null}
-              errorMessage={addonError?.message ?? null}
-            />
-          ) : null}
-          {addonError && !addonError.groupId ? (
-            <p role="alert" className="mt-3 flex items-center gap-1.5 text-sm font-semibold text-danger">
-              <CircleAlert aria-hidden="true" className="size-4 shrink-0" strokeWidth={2.5} />
-              {addonError.message}
-            </p>
-          ) : null}
-
-          <div className="mt-7 flex flex-col gap-2">
-            <label htmlFor={noteId} className="text-lg font-extrabold tracking-[-0.01em]">
-              Observação
-            </label>
-            <textarea
-              id={noteId}
-              value={note}
-              maxLength={140}
-              rows={2}
-              placeholder="Algum detalhe? Escreva aqui."
-              onChange={(event) => setNote(event.target.value)}
-              className={`${fieldClass} h-auto resize-none py-3 leading-snug`}
-            />
-            <span className="numeric self-end text-xs text-ink-muted">{note.length}/140</span>
-          </div>
+          {/* Serviços pedem a observação junto com os dados, no passo seguinte. */}
+          {isService ? null : (
+            <div className="mt-7 flex flex-col gap-2">
+              <label htmlFor={noteId} className="text-lg font-extrabold tracking-[-0.01em]">
+                Observação
+              </label>
+              <textarea
+                id={noteId}
+                value={note}
+                maxLength={140}
+                rows={2}
+                placeholder="Algum detalhe? Escreva aqui."
+                onChange={(event) => setNote(event.target.value)}
+                className={`${fieldClass} h-auto resize-none py-3 leading-snug`}
+              />
+              <span className="numeric self-end text-xs text-ink-muted">{note.length}/140</span>
+            </div>
+          )}
+          </>
+          )}
         </div>
 
         <div className="sticky bottom-0 z-10 mt-auto flex items-center gap-3 border-t border-line bg-surface px-4 pb-[calc(0.875rem+env(safe-area-inset-bottom))] pt-3.5 md:static md:col-start-2 md:px-7 md:pb-5 md:pt-4">
@@ -363,6 +456,16 @@ export default function ItemSheet({ vitrine, item, onClose, cart }: ItemSheetPro
                 onClick={() => setQty((value) => Math.min(99, value + 1))}
               />
             </div>
+          ) : null}
+          {asking ? (
+            <button
+              type="button"
+              aria-label="Voltar"
+              onClick={() => setAsking(false)}
+              className="flex size-12 shrink-0 items-center justify-center rounded-full border-2 border-line-strong bg-surface text-ink transition-transform duration-150 active:scale-95"
+            >
+              <ArrowLeft aria-hidden="true" className="size-5" strokeWidth={2.5} />
+            </button>
           ) : null}
           <button
             type="button"

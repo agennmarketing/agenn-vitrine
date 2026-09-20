@@ -1,5 +1,3 @@
-import type { AddonSelection } from '@/lib/addons/addons'
-
 export const MAX_LINE_QTY = 99
 const MAX_LINES = 50
 
@@ -9,17 +7,12 @@ export type CartLine = {
   variationId: string | null
   qty: number
   note: string
-  addons: AddonSelection[]
 }
 
 export type NewCartLine = Omit<CartLine, 'key'>
 
 export function cartLineKey(line: NewCartLine): string {
-  const addons = [...line.addons]
-    .sort((a, b) => a.optionId.localeCompare(b.optionId))
-    .map((addon) => `${addon.optionId}x${addon.qty}`)
-    .join(',')
-  return [line.itemId, line.variationId ?? '-', addons, line.note.trim()].join('|')
+  return [line.itemId, line.variationId ?? '-', line.note.trim()].join('|')
 }
 
 const clampQty = (qty: number) => Math.max(1, Math.min(MAX_LINE_QTY, Math.floor(qty)))
@@ -61,7 +54,7 @@ export function cartStorageKey(vitrineId: string): string {
 
 // Validação escrita à mão (sem zod): este arquivo vai para o navegador da vitrine,
 // e o zod sozinho pesaria mais que a página. Mesmas regras do formato versão 1.
-type StoredLine = Pick<CartLine, 'itemId' | 'variationId' | 'qty' | 'note' | 'addons'>
+type StoredLine = Pick<CartLine, 'itemId' | 'variationId' | 'qty' | 'note'>
 
 const isInt = (value: unknown, min: number, max: number): value is number =>
   typeof value === 'number' && Number.isInteger(value) && value >= min && value <= max
@@ -73,15 +66,7 @@ function readLine(value: unknown): StoredLine | null {
   if (line.variationId !== null && typeof line.variationId !== 'string') return null
   if (!isInt(line.qty, 1, MAX_LINE_QTY)) return null
   if (typeof line.note !== 'string' || line.note.length > 140) return null
-  if (!Array.isArray(line.addons) || line.addons.length > 30) return null
-  const addons: StoredLine['addons'] = []
-  for (const addon of line.addons as unknown[]) {
-    if (!addon || typeof addon !== 'object') return null
-    const { optionId, qty } = addon as Record<string, unknown>
-    if (typeof optionId !== 'string' || optionId.length < 1 || !isInt(qty, 1, 20)) return null
-    addons.push({ optionId, qty })
-  }
-  return { itemId: line.itemId, variationId: line.variationId as string | null, qty: line.qty, note: line.note, addons }
+  return { itemId: line.itemId, variationId: line.variationId as string | null, qty: line.qty, note: line.note }
 }
 
 export function parseStoredCart(raw: string | null): CartLine[] {
@@ -102,5 +87,5 @@ export function parseStoredCart(raw: string | null): CartLine[] {
 }
 
 export function serializeCart(lines: CartLine[]): string {
-  return JSON.stringify({ version: 1, lines: lines.map(({ itemId, variationId, qty, note, addons }) => ({ itemId, variationId, qty, note, addons })) })
+  return JSON.stringify({ version: 1, lines: lines.map(({ itemId, variationId, qty, note }) => ({ itemId, variationId, qty, note })) })
 }

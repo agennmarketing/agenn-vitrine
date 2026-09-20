@@ -13,7 +13,8 @@ export function mapDbError(error: DbError): string {
   const limit = Number(error.hint)
   switch (error.message) {
     case 'plan_limit:vitrines':
-      return `Seu plano permite até ${limit} ${limit === 1 ? 'vitrine' : 'vitrines'}. Assine o Pro para criar mais.`
+      // Uma vitrine por conta: não é convite para o Pro, é a regra do produto.
+      return 'Cada conta pode ter uma vitrine. Edite a que você já tem.'
     case 'plan_limit:items':
       return `Seu plano permite até ${limit} itens por vitrine. Assine o Pro para cadastrar mais.`
     case 'plan_limit:videos_vitrine':

@@ -1,8 +1,8 @@
 import type { InputHTMLAttributes, ReactNode } from 'react'
 
 /*
- * Peças das seções de configuração da vitrine (Complementos, WhatsApp, Sacola e mensagens,
- * Aparência, Configurações): título da seção, blocos, interruptor e barra de salvar.
+ * Peças das seções de configuração da vitrine (WhatsApp, Sacola e mensagens, Aparência,
+ * Configurações): título da seção, blocos, interruptor e barra de salvar.
  */
 
 // Título da seção dentro do editor (o h1 com o nome da vitrine vem do layout).

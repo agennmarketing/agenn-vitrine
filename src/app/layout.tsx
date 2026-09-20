@@ -3,7 +3,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: { default: 'Vitrimove', template: '%s · Vitrimove' },
-  description: 'Catálogos e cardápios com vídeo, prontos para o WhatsApp.',
+  description: 'Catálogos de produtos e serviços com vídeo, prontos para o WhatsApp.',
   applicationName: 'Vitrimove',
   openGraph: { locale: 'pt_BR', siteName: 'Vitrimove' },
 }

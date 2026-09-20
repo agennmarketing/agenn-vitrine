@@ -16,17 +16,24 @@ import { fetchAvailability } from '@/lib/forms/availability'
 import { initialFormState, type FormState } from '@/lib/forms/form-state'
 
 const STEPS = [
-  { label: 'Tipo', question: 'Qual é o seu negócio?', help: 'Isso define o botão e o jeito da vitrine. Não dá para trocar depois.' },
-  { label: 'Nome e endereço', question: 'Como a vitrine vai se chamar?', help: 'O endereço é o link que você vai divulgar.' },
-  { label: 'WhatsApp', question: 'Para onde vão os pedidos?', help: 'Os pedidos chegam prontos neste WhatsApp.' },
+  { label: 'Tipo de negócio', question: 'Qual é o seu negócio?', help: 'Isso define o jeito da vitrine. Não dá para trocar depois.' },
+  { label: 'Sua vitrine', question: 'Como a vitrine vai se chamar?', help: 'Use o nome da sua empresa. O endereço é o link que você vai divulgar.' },
+  { label: 'Contato', question: 'Para onde vão as mensagens?', help: 'As mensagens da vitrine chegam neste WhatsApp.' },
   { label: 'Aparência', question: 'Clara ou escura?', help: 'Dá para trocar quando quiser, em Aparência.' },
 ] as const
 
 const TYPES = [
-  ['comida', 'Comida', 'Hamburguerias, pizzarias e lanchonetes. Botão "Pedir" e sacola ligada.'],
-  ['servicos', 'Serviços', 'Profissionais e clínicas. Botão "Agendar".'],
-  ['produtos', 'Produtos', 'Lojas e catálogos. Botão "Solicitar orçamento".'],
+  ['produtos', 'Produtos', 'Loja, catálogo ou revenda. O cliente manda o pedido pelo WhatsApp.'],
+  ['servicos', 'Serviços', 'Profissionais e clínicas. O cliente pede um orçamento pelo WhatsApp.'],
 ] as const
+
+type WizardType = (typeof TYPES)[number][0]
+
+// O passo do contato fala a língua do negócio: produtos recebem pedidos, serviços recebem orçamentos.
+const CONTACT_STEP: Record<WizardType, { question: string; help: string }> = {
+  produtos: { question: 'Para onde vão os pedidos?', help: 'Os pedidos da vitrine chegam neste WhatsApp.' },
+  servicos: { question: 'Para onde vão as solicitações?', help: 'Os pedidos de orçamento chegam neste WhatsApp.' },
+}
 
 function stepForErrors(errors: FormState['fieldErrors']): number | null {
   if (!errors) return null
@@ -38,6 +45,7 @@ function stepForErrors(errors: FormState['fieldErrors']): number | null {
 
 export function VitrineWizard({ rootDomain }: { rootDomain: string }) {
   const [step, setStep] = useState(0)
+  const [type, setType] = useState<WizardType | null>(null)
   const [state, formAction, pending] = useActionState(async (prev: FormState, formData: FormData) => {
     const result = await createVitrineAction(prev, formData)
     const errorStep = stepForErrors(result.fieldErrors)
@@ -73,7 +81,8 @@ export function VitrineWizard({ rootDomain }: { rootDomain: string }) {
 
   const errors = state.fieldErrors ?? {}
   const values = state.values ?? {}
-  const current = STEPS[step]
+  const chosenType = type ?? (values.type === 'produtos' || values.type === 'servicos' ? values.type : null)
+  const current = step === 2 && chosenType ? { ...STEPS[2], ...CONTACT_STEP[chosenType] } : STEPS[step]
   const last = step === STEPS.length - 1
 
   return (
@@ -103,13 +112,14 @@ export function VitrineWizard({ rootDomain }: { rootDomain: string }) {
 
       <form action={formAction} noValidate className="flex flex-col gap-7">
         <fieldset hidden={step !== 0} className="flex flex-col gap-3.5">
-          <legend className="sr-only">Que tipo de vitrine?</legend>
+          <legend className="sr-only">Tipo de negócio</legend>
           {TYPES.map(([value, label, hint]) => (
             <ChoiceCard
               key={value}
               name="type"
               value={value}
               defaultChecked={values.type === value}
+              onChange={() => setType(value)}
               aria-label={label}
               title={label}
               description={hint}
@@ -120,14 +130,14 @@ export function VitrineWizard({ rootDomain }: { rootDomain: string }) {
         </fieldset>
 
         <fieldset hidden={step !== 1} className="flex flex-col gap-5">
-          <legend className="sr-only">Nome e endereço</legend>
+          <legend className="sr-only">Sua vitrine</legend>
           <Field label="Nome da vitrine" htmlFor="name" error={errors.name}>
             <Input
               id="name"
               name="name"
               defaultValue={values.name}
               maxLength={60}
-              placeholder="Ex.: Burger do Zé"
+              placeholder="Ex.: Loja da Ana"
               invalid={!!errors.name}
             />
           </Field>
@@ -141,7 +151,7 @@ export function VitrineWizard({ rootDomain }: { rootDomain: string }) {
                 autoCapitalize="none"
                 autoCorrect="off"
                 spellCheck={false}
-                placeholder="burgerdoze"
+                placeholder="lojadaana"
                 invalid={!!errors.subdomain}
                 className="rounded-none border-0 bg-transparent"
                 onChange={(event) => onSubdomainChange(event.target.value)}
@@ -160,7 +170,7 @@ export function VitrineWizard({ rootDomain }: { rootDomain: string }) {
         </fieldset>
 
         <fieldset hidden={step !== 2} className="flex flex-col gap-5">
-          <legend className="sr-only">WhatsApp</legend>
+          <legend className="sr-only">Contato</legend>
           <Field label="WhatsApp" htmlFor="whatsappPhone" error={errors.whatsappPhone}>
             <Input
               id="whatsappPhone"
@@ -173,13 +183,13 @@ export function VitrineWizard({ rootDomain }: { rootDomain: string }) {
               invalid={!!errors.whatsappPhone}
             />
           </Field>
-          <Field label="Nome do contato" htmlFor="whatsappLabel" error={errors.whatsappLabel} hint="Aparece só para você. Ex.: Balcão, Delivery.">
+          <Field label="Nome do contato" htmlFor="whatsappLabel" error={errors.whatsappLabel} hint="Aparece só para você. Ex.: Balcão, Atendimento.">
             <Input id="whatsappLabel" name="whatsappLabel" placeholder="Principal" defaultValue={values.whatsappLabel} />
           </Field>
         </fieldset>
 
         <fieldset hidden={step !== 3} className="flex flex-col gap-3.5">
-          <legend className="sr-only">Tema</legend>
+          <legend className="sr-only">Aparência</legend>
           <div className="grid grid-cols-2 gap-3.5">
             {(
               [
