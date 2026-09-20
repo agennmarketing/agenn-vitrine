@@ -2,11 +2,12 @@ import { expect, test } from '@playwright/test'
 import { createConfirmedUser, seedVitrine, signIn, uniqueSubdomain } from './helpers'
 import { APP_URL } from '../playwright.config'
 
-test('cria vitrine pelo assistente e respeita o limite do gratuito', async ({ page }) => {
+test('cria vitrine pelo assistente e respeita a vitrine única da conta', async ({ page }) => {
   const user = await createConfirmedUser('assistente')
   await signIn(page, user.email, user.password)
 
-  await page.getByRole('link', { name: 'Nova vitrine' }).click()
+  await page.getByRole('link', { name: 'Criar minha vitrine' }).click()
+  await expect(page.getByLabel('Comida')).toHaveCount(0)
   await page.getByLabel('Produtos').check()
   await page.getByRole('button', { name: 'Continuar' }).click()
 
@@ -26,9 +27,13 @@ test('cria vitrine pelo assistente e respeita o limite do gratuito', async ({ pa
   await expect(page.getByRole('heading', { name: 'Destaques' })).toBeVisible()
 
   await page.goto('/painel')
-  await expect(page.getByText('1 de 1 vitrine do seu plano')).toBeVisible()
+  await expect(page.getByText('Sua vitrine', { exact: true })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Nova vitrine' })).toHaveCount(0)
-  await expect(page.getByText('Seu plano permite até 1 vitrine. Assine o Pro para criar mais.')).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Criar minha vitrine' })).toHaveCount(0)
+
+  // Quem já tem vitrine não entra mais no assistente.
+  await page.goto('/painel/vitrines/nova')
+  await expect(page.getByRole('heading', { name: 'Você já tem uma vitrine' })).toBeVisible()
 })
 
 test('telefone inválido volta ao passo do WhatsApp; endereço em uso é avisado', async ({ page }) => {

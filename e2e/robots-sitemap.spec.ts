@@ -28,8 +28,10 @@ test('cada host tem seu robots.txt e a vitrine tem sitemap', async ({ request })
 
   // Congelada some dos buscadores. Uma vitrine nova, já congelada, nunca foi gerada
   // antes: o primeiro acesso já mostra o estado certo, sem depender de revalidação.
-  await setSubscription(user.id, { status: 'active' })
-  const congelada = await seedVitrine(user.id, { subdomain: uniqueSubdomain('rb-frozen') })
+  // Cada conta tem uma vitrine só, então a congelada é de outro dono.
+  const outro = await createConfirmedUser('robots-congelada')
+  await setSubscription(outro.id, { status: 'active' })
+  const congelada = await seedVitrine(outro.id, { subdomain: uniqueSubdomain('rb-frozen') })
   await createAdminClient().from('vitrines').update({ status: 'frozen' }).eq('id', congelada.id).throwOnError()
   const baseCongelada = `http://${congelada.subdomain}.localhost:3000`
   expect(await (await request.get(`${baseCongelada}/robots.txt`)).text()).toContain('Disallow: /')

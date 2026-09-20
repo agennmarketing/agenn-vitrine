@@ -4,10 +4,7 @@ import { isPlanLimitError, mapDbError } from './db-errors'
 describe('mapDbError', () => {
   it('limites viram convite para o Pro', () => {
     expect(mapDbError({ code: 'P0001', message: 'plan_limit:vitrines', hint: '1' })).toBe(
-      'Seu plano permite até 1 vitrine. Assine o Pro para criar mais.',
-    )
-    expect(mapDbError({ code: 'P0001', message: 'plan_limit:vitrines', hint: '3' })).toBe(
-      'Seu plano permite até 3 vitrines. Assine o Pro para criar mais.',
+      'Cada conta pode ter uma vitrine. Edite a que você já tem.',
     )
     expect(mapDbError({ code: 'P0001', message: 'plan_limit:items', hint: '10' })).toBe(
       'Seu plano permite até 10 itens por vitrine. Assine o Pro para cadastrar mais.',

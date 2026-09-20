@@ -41,7 +41,6 @@ function comparisonRows(free: PlanRow, pro: PlanRow): { label: string; free: Cel
       ? `${plan.max_videos_per_account} na conta`
       : `${plan.max_videos_per_vitrine} por vitrine`
   return [
-    { label: 'Vitrines', free: String(free.max_vitrines), pro: String(pro.max_vitrines) },
     { label: 'Itens por vitrine', free: String(free.max_items_per_vitrine), pro: String(pro.max_items_per_vitrine) },
     { label: 'Vídeos', free: videos(free), pro: videos(pro) },
     { label: 'Duração do vídeo', free: `até ${free.max_video_seconds} s`, pro: `até ${pro.max_video_seconds} s` },
@@ -155,7 +154,6 @@ export default async function PlanoPage({ searchParams }: { searchParams: Promis
           </header>
           <div className="flex flex-col gap-5 p-5 sm:p-6">
             <div className="grid gap-4 sm:grid-cols-2">
-              <UsageRow label="Vitrines" value={vitrines.length} max={plan.max_vitrines} />
               <UsageRow label="Vídeos" value={usage.videosCount} max={plan.max_videos_per_account} />
             </div>
             <dl className="grid gap-x-4 gap-y-1 text-sm sm:grid-cols-2">

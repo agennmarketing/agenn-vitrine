@@ -11,11 +11,15 @@ insert into public.subscriptions (user_id, plan_id, status) values
   ('00000000-0000-0000-0000-0000000005c1', 'pro', 'active'),
   ('00000000-0000-0000-0000-0000000005c2', 'pro', 'active');
 
+-- Conta antiga, de quando o Pro dava três vitrines: a trava de uma vitrine por conta
+-- fica desligada só para montar o cenário do congelamento.
+alter table public.vitrines disable trigger vitrines_enforce_limit;
 insert into public.vitrines (id, owner_id, type, subdomain, name, default_button_text, position) values
   ('00000000-0000-0000-0000-00000000f501', '00000000-0000-0000-0000-0000000005c1', 'produtos', 'plano-um', 'Primeira', 'Solicitar orçamento', 0),
   ('00000000-0000-0000-0000-00000000f502', '00000000-0000-0000-0000-0000000005c1', 'produtos', 'plano-dois', 'Segunda', 'Solicitar orçamento', 1),
   ('00000000-0000-0000-0000-00000000f503', '00000000-0000-0000-0000-0000000005c1', 'produtos', 'plano-tres', 'Terceira', 'Solicitar orçamento', 2),
   ('00000000-0000-0000-0000-00000000f504', '00000000-0000-0000-0000-0000000005c2', 'produtos', 'plano-assinante', 'Do assinante', 'Solicitar orçamento', 0);
+alter table public.vitrines enable trigger vitrines_enforce_limit;
 
 insert into public.categories (id, owner_id, vitrine_id, name) values
   ('00000000-0000-0000-0000-00000000c501', '00000000-0000-0000-0000-0000000005c1', '00000000-0000-0000-0000-00000000f501', 'Geral'),
@@ -76,8 +80,8 @@ select lives_ok(
 );
 select is(
   (select count(*)::int from public.vitrines where owner_id = '00000000-0000-0000-0000-0000000005c1' and status = 'active'),
-  3,
-  'no Pro todas as vitrines voltam a ativas'
+  1,
+  'uma vitrine por conta: no Pro continua só uma ativa'
 );
 
 update public.subscriptions set status = 'canceled', pro_ended_at = now() - interval '100 days'

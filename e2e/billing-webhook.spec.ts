@@ -24,17 +24,14 @@ test('webhook recusa assinatura inválida e ignora evento fora da lista', async 
   expect(await outroTipo.json()).toEqual({ ignored: true })
 })
 
-test('checkout completo deixa a conta Pro e descongela as vitrines', async ({ request }) => {
+test('checkout completo deixa a conta Pro e descongela a vitrine', async ({ request }) => {
   const user = await createConfirmedUser('webhook-pro')
   const customerId = `cus_fake_${crypto.randomUUID()}`
   await setSubscription(user.id, { status: 'none', planId: 'free', customerId })
 
-  const primeira = await seedVitrine(user.id, { subdomain: uniqueSubdomain('wh-a') })
-  await setSubscription(user.id, { status: 'active', customerId })
-  const segunda = await seedVitrine(user.id, { subdomain: uniqueSubdomain('wh-b') })
-  await setSubscription(user.id, { status: 'none', planId: 'free', customerId })
-  // Como se a conta tivesse voltado ao gratuito antes: a segunda vitrine está congelada.
-  await setVitrineStatus(segunda.id, 'frozen')
+  const vitrine = await seedVitrine(user.id, { subdomain: uniqueSubdomain('wh-a') })
+  // Como se a vitrine tivesse sido congelada antes: o checkout precisa devolvê-la ao ar.
+  await setVitrineStatus(vitrine.id, 'frozen')
 
   const subscriptionId = await fakeSubscription({ customerId, userId: user.id })
   const response = await sendStripeEvent(request, 'checkout.session.completed', {
@@ -48,9 +45,9 @@ test('checkout completo deixa a conta Pro e descongela as vitrines', async ({ re
 
   const row = await readSubscription(user.id)
   expect([row?.status, row?.plan_id, row?.interval]).toEqual(['active', 'pro', 'month'])
-  expect(await vitrineStatuses(user.id)).toEqual([`${primeira.subdomain}:active`, `${segunda.subdomain}:active`])
+  expect(await vitrineStatuses(user.id)).toEqual([`${vitrine.subdomain}:active`])
   await expect
-    .poll(async () => (await request.get(`http://${segunda.subdomain}.localhost:3000/`)).text())
+    .poll(async () => (await request.get(`http://${vitrine.subdomain}.localhost:3000/`)).text())
     .not.toContain('Vitrine indisponível no momento')
 })
 
@@ -69,12 +66,11 @@ test('evento repetido não é processado duas vezes', async ({ request }) => {
   expect(await repetida.json()).toEqual({ duplicated: true })
 })
 
-test('falha de pagamento dá carência de 7 dias e o cancelamento congela o excedente', async ({ request }) => {
+test('falha de pagamento dá carência de 7 dias e o cancelamento encerra o Pro', async ({ request }) => {
   const user = await createConfirmedUser('webhook-carencia')
   const customerId = `cus_fake_${crypto.randomUUID()}`
   await setSubscription(user.id, { status: 'active', customerId })
-  const antiga = await seedVitrine(user.id, { subdomain: uniqueSubdomain('wh-c') })
-  const nova = await seedVitrine(user.id, { subdomain: uniqueSubdomain('wh-d') })
+  const vitrine = await seedVitrine(user.id, { subdomain: uniqueSubdomain('wh-c') })
 
   const pastDue = await fakeSubscription({ customerId, userId: user.id, status: 'past_due' })
   await sendStripeEvent(request, 'invoice.payment_failed', {
@@ -86,8 +82,8 @@ test('falha de pagamento dá carência de 7 dias e o cancelamento congela o exce
   const emCarencia = await readSubscription(user.id)
   expect(emCarencia?.status).toBe('past_due')
   expect(new Date(emCarencia!.grace_until!).getTime()).toBeGreaterThan(Date.now() + 6 * 86_400_000)
-  // Ainda é Pro: as duas vitrines continuam no ar.
-  expect((await request.get(`http://${nova.subdomain}.localhost:3000/`)).status()).toBe(200)
+  // Ainda é Pro: a vitrine continua no ar.
+  expect((await request.get(`http://${vitrine.subdomain}.localhost:3000/`)).status()).toBe(200)
 
   const cancelada = await fakeSubscription({ customerId, userId: user.id, status: 'canceled' })
   await sendStripeEvent(request, 'customer.subscription.deleted', {
@@ -98,13 +94,18 @@ test('falha de pagamento dá carência de 7 dias e o cancelamento congela o exce
   const encerrada = await readSubscription(user.id)
   expect(encerrada?.status).toBe('canceled')
   expect(encerrada?.pro_ended_at).not.toBeNull()
-  expect(await vitrineStatuses(user.id)).toEqual([`${antiga.subdomain}:active`, `${nova.subdomain}:frozen`])
-
-  // Spec 7.1: vitrine congelada continua respondendo 200, com o aviso no lugar do catálogo.
-  await expect
-    .poll(async () => (await request.get(`http://${nova.subdomain}.localhost:3000/`)).text())
-    .toContain('Vitrine indisponível no momento')
-  expect(await (await request.get(`http://${antiga.subdomain}.localhost:3000/`)).text()).not.toContain(
+  // Uma vitrine por conta: no gratuito ela continua ativa, não há excedente para congelar.
+  expect(await vitrineStatuses(user.id)).toEqual([`${vitrine.subdomain}:active`])
+  expect(await (await request.get(`http://${vitrine.subdomain}.localhost:3000/`)).text()).not.toContain(
     'Vitrine indisponível no momento',
   )
+
+  // Spec 7.1: vitrine congelada continua respondendo 200, com o aviso no lugar do catálogo.
+  // Cada conta tem uma vitrine, então a congelada é de outro dono, ainda não gerada.
+  const outro = await createConfirmedUser('webhook-congelada')
+  const congelada = await seedVitrine(outro.id, { subdomain: uniqueSubdomain('wh-d') })
+  await setVitrineStatus(congelada.id, 'frozen')
+  const resposta = await request.get(`http://${congelada.subdomain}.localhost:3000/`)
+  expect(resposta.status()).toBe(200)
+  expect(await resposta.text()).toContain('Vitrine indisponível no momento')
 })

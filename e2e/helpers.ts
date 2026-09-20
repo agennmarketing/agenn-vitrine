@@ -96,16 +96,23 @@ export async function itemStep(page: Page, label: 'Fotos' | 'Detalhes' | 'Preço
 
 export async function seedVitrine(
   ownerId: string,
-  options: { type?: 'produtos' | 'servicos' | 'comida'; name?: string; subdomain?: string; phone?: string } = {},
+  options: {
+    type?: 'produtos' | 'servicos' | 'comida'
+    name?: string
+    subdomain?: string
+    phone?: string
+    cartEnabled?: boolean
+  } = {},
 ): Promise<SeededVitrine> {
   const admin = createAdminClient()
   const type = options.type ?? 'produtos'
   const subdomain = options.subdomain ?? uniqueSubdomain('seed')
   const name = options.name ?? 'Vitrine Seed'
   const phone = options.phone ?? '+5511987654321'
+  const cartEnabled = options.cartEnabled ?? type === 'comida'
   const { data: vitrine } = await admin
     .from('vitrines')
-    .insert({ owner_id: ownerId, type, subdomain, name, default_button_text: { produtos: 'Solicitar orçamento', servicos: 'Agendar', comida: 'Pedir' }[type], cart_enabled: type === 'comida' })
+    .insert({ owner_id: ownerId, type, subdomain, name, default_button_text: { produtos: 'Solicitar orçamento', servicos: 'Agendar', comida: 'Pedir' }[type], cart_enabled: cartEnabled })
     .select('id')
     .single()
     .throwOnError()

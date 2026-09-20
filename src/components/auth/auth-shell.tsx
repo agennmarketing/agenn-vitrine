@@ -51,7 +51,7 @@ export function AuthShell({
           </ol>
         </div>
 
-        <p className="text-sm font-semibold text-deep-muted">Catálogos e cardápios com vídeo, prontos para o WhatsApp.</p>
+        <p className="text-sm font-semibold text-deep-muted">Catálogos de produtos e serviços com vídeo, prontos para o WhatsApp.</p>
       </aside>
 
       <main className="flex min-w-0 flex-1 justify-center px-5 py-10 sm:items-center sm:px-6">

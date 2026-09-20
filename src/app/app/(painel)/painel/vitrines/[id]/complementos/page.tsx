@@ -7,9 +7,10 @@ import { AddonGroups } from './addon-groups'
 export const metadata = { title: 'Complementos' }
 
 const EXAMPLES: Record<VitrineType, string> = {
-  comida: 'Adicionais, ponto da carne, sabores.',
   produtos: 'Tamanho, cor, embalagem para presente.',
   servicos: 'Profissional, período, serviços extras.',
+  // Vitrines antigas, de quando existia o tipo Comida.
+  comida: 'Adicionais, tamanho, opções do item.',
 }
 
 export default async function ComplementosPage({ params }: { params: Promise<{ id: string }> }) {

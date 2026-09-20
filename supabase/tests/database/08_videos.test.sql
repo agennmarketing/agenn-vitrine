@@ -8,10 +8,14 @@ insert into auth.users (id, email) values
 insert into public.subscriptions (user_id, plan_id, status) values
   ('00000000-0000-0000-0000-0000000003c2', 'pro', 'active');
 
+-- Hoje cada conta tem uma vitrine só; a conta com duas vitrines é de antes dessa regra,
+-- então o cenário é montado com a trava desligada.
+alter table public.vitrines disable trigger vitrines_enforce_limit;
 insert into public.vitrines (id, owner_id, type, subdomain, name, default_button_text) values
   ('00000000-0000-0000-0000-00000000f301', '00000000-0000-0000-0000-0000000003c1', 'produtos', 'videos-livre', 'Livre', 'Solicitar orçamento'),
   ('00000000-0000-0000-0000-00000000f302', '00000000-0000-0000-0000-0000000003c2', 'produtos', 'videos-pro-1', 'Pro 1', 'Solicitar orçamento'),
   ('00000000-0000-0000-0000-00000000f303', '00000000-0000-0000-0000-0000000003c2', 'produtos', 'videos-pro-2', 'Pro 2', 'Solicitar orçamento');
+alter table public.vitrines enable trigger vitrines_enforce_limit;
 insert into public.categories (id, owner_id, vitrine_id, name) values
   ('00000000-0000-0000-0000-00000000c301', '00000000-0000-0000-0000-0000000003c1', '00000000-0000-0000-0000-00000000f301', 'Geral'),
   ('00000000-0000-0000-0000-00000000c302', '00000000-0000-0000-0000-0000000003c2', '00000000-0000-0000-0000-00000000f302', 'Geral');

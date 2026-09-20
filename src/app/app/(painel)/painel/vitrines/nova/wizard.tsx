@@ -23,9 +23,8 @@ const STEPS = [
 ] as const
 
 const TYPES = [
-  ['comida', 'Comida', 'Hamburguerias, pizzarias e lanchonetes. Botão "Pedir" e sacola ligada.'],
-  ['servicos', 'Serviços', 'Profissionais e clínicas. Botão "Agendar".'],
   ['produtos', 'Produtos', 'Lojas e catálogos. Botão "Solicitar orçamento".'],
+  ['servicos', 'Serviços', 'Profissionais e clínicas. Botão "Agendar".'],
 ] as const
 
 function stepForErrors(errors: FormState['fieldErrors']): number | null {
@@ -127,7 +126,7 @@ export function VitrineWizard({ rootDomain }: { rootDomain: string }) {
               name="name"
               defaultValue={values.name}
               maxLength={60}
-              placeholder="Ex.: Burger do Zé"
+              placeholder="Ex.: Loja da Ana"
               invalid={!!errors.name}
             />
           </Field>
@@ -141,7 +140,7 @@ export function VitrineWizard({ rootDomain }: { rootDomain: string }) {
                 autoCapitalize="none"
                 autoCorrect="off"
                 spellCheck={false}
-                placeholder="burgerdoze"
+                placeholder="lojadaana"
                 invalid={!!errors.subdomain}
                 className="rounded-none border-0 bg-transparent"
                 onChange={(event) => onSubdomainChange(event.target.value)}
@@ -173,7 +172,7 @@ export function VitrineWizard({ rootDomain }: { rootDomain: string }) {
               invalid={!!errors.whatsappPhone}
             />
           </Field>
-          <Field label="Nome do contato" htmlFor="whatsappLabel" error={errors.whatsappLabel} hint="Aparece só para você. Ex.: Balcão, Delivery.">
+          <Field label="Nome do contato" htmlFor="whatsappLabel" error={errors.whatsappLabel} hint="Aparece só para você. Ex.: Balcão, Atendimento.">
             <Input id="whatsappLabel" name="whatsappLabel" placeholder="Principal" defaultValue={values.whatsappLabel} />
           </Field>
         </fieldset>

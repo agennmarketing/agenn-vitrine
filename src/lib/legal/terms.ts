@@ -8,7 +8,7 @@ export const TERMS: LegalSection[] = [
     title: '1. Quem somos',
     paragraphs: [
       `O ${COMPANY.tradeName} é um serviço de ${COMPANY.legalName}, inscrita no CNPJ ${COMPANY.cnpj}, com endereço em ${COMPANY.address}.`,
-      `O serviço permite criar vitrines e cardápios na internet, com fotos e vídeos, e receber pedidos e orçamentos pelo WhatsApp. Ao criar uma conta, você concorda com estes Termos de uso. Dúvidas: ${COMPANY.contactEmail}.`,
+      `O serviço permite criar vitrines e catálogos na internet, com fotos e vídeos, e receber pedidos e orçamentos pelo WhatsApp. Ao criar uma conta, você concorda com estes Termos de uso. Dúvidas: ${COMPANY.contactEmail}.`,
     ],
   },
   {

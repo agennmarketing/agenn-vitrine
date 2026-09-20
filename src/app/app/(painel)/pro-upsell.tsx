@@ -14,7 +14,7 @@ export function ProUpsell({ className = '' }: { className?: string }) {
         <p className="text-[0.9375rem] font-black leading-snug tracking-[-0.015em] text-ink">
           Vá mais longe com o Plano Pro
         </p>
-        <p className="text-sm font-semibold leading-snug text-ink-muted">Mais vitrines, mais vídeos e mais possibilidades.</p>
+        <p className="text-sm font-semibold leading-snug text-ink-muted">Mais itens, mais vídeos e mais possibilidades.</p>
       </div>
       <Link href="/painel/plano" className={buttonClasses('primary', 'mt-1 w-full', 'sm')}>
         Fazer upgrade

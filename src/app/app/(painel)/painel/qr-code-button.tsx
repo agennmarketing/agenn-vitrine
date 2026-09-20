@@ -80,7 +80,7 @@ export function QrCodeButton({ url, name, subdomain, className = '', size }: { u
           <X aria-hidden="true" className="size-5" strokeWidth={3} />
         </button>
         <h2 className="px-10 text-xl font-black tracking-[-0.02em]">{name}</h2>
-        <p className="-mt-2 text-sm font-semibold text-ink-muted">Imprima e cole no balcão, na embalagem ou no cardápio.</p>
+        <p className="-mt-2 text-sm font-semibold text-ink-muted">Imprima e cole no balcão, na vitrine ou na embalagem.</p>
         <div className="rounded-card border-2 border-line p-2">
           {failed ? (
             <p className="flex size-64 items-center justify-center p-4 text-sm font-bold text-danger">
