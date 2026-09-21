@@ -64,6 +64,11 @@ export function AppearanceForm({
   const [state, formAction, pending] = useActionState(updateAppearanceAction.bind(null, vitrineId), initialFormState)
   const [color, setColor] = useState(initial.brandColor)
   const previewColor = HEX.test(color) ? color : '#673de6'
+  // Enviar um banner já o liga no servidor; o interruptor acompanha para o "Salvar" não desligá-lo.
+  const [bannerOn, setBannerOn] = useState(initial.bannerEnabled)
+  const turnBannerOn = (media: unknown) => {
+    if (media) setBannerOn(true)
+  }
 
   return (
     <>
@@ -172,7 +177,8 @@ export function AppearanceForm({
               name="bannerEnabled"
               title="Mostrar banner"
               description="A imagem ou o vídeo do banner aparece no topo."
-              defaultChecked={initial.bannerEnabled}
+              key={String(bannerOn)}
+              defaultChecked={bannerOn}
             />
           </fieldset>
         </ConfigBlock>
@@ -194,13 +200,14 @@ export function AppearanceForm({
       >
         <div className="grid gap-5 sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)]">
           <ImageSlot label="Logo" role="logo" vitrineId={vitrineId} initial={logo} removable disabled={!allowBranding} />
-          <ImageSlot label="Banner" role="banner" vitrineId={vitrineId} initial={banner} removable disabled={!allowBranding} />
+          <ImageSlot label="Banner" role="banner" vitrineId={vitrineId} initial={banner} removable disabled={!allowBranding} onChange={turnBannerOn} />
         </div>
         <VideoSlot
           label="Banner em vídeo"
           role="banner"
           vitrineId={vitrineId}
           initial={bannerVideo}
+          onChange={turnBannerOn}
           limits={videoLimits}
           disabled={!allowBranding}
         />

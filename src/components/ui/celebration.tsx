@@ -1,5 +1,7 @@
-import { Check } from 'lucide-react'
-import type { ReactNode } from 'react'
+'use client'
+
+import { Check, X } from 'lucide-react'
+import { useState, type ReactNode } from 'react'
 
 /*
  * Comemoração da trilha: o check "pula" dentro de um anel que se expande e some.
@@ -7,6 +9,8 @@ import type { ReactNode } from 'react'
  */
 // announce=false quando outro aviso (ex.: "Item salvo.") já fala pelo leitor de tela.
 export function Celebration({ title, children, announce = true }: { title: string; children?: ReactNode; announce?: boolean }) {
+  const [open, setOpen] = useState(true)
+  if (!open) return null
   return (
     <section
       role={announce ? 'status' : undefined}
@@ -18,10 +22,18 @@ export function Celebration({ title, children, announce = true }: { title: strin
           <Check aria-hidden="true" className="size-6" strokeWidth={3.5} />
         </span>
       </span>
-      <div className="flex min-w-0 flex-col gap-0.5">
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <p className="text-lg font-black leading-tight tracking-[-0.02em] text-ink">{title}</p>
         {children ? <p className="text-sm font-semibold text-ink-muted">{children}</p> : null}
       </div>
+      <button
+        type="button"
+        onClick={() => setOpen(false)}
+        aria-label="Fechar aviso"
+        className="flex size-9 shrink-0 items-center justify-center self-start rounded-full text-ink-muted transition-colors hover:bg-go/15 hover:text-ink focus-visible:outline-2 focus-visible:outline-go"
+      >
+        <X aria-hidden="true" className="size-5" strokeWidth={2.5} />
+      </button>
     </section>
   )
 }

@@ -43,7 +43,7 @@ export function SubscribeForm({ options }: { options: SubscribeOption[] }) {
     <form action={formAction} className="flex flex-col gap-4">
       <fieldset className="flex flex-col gap-3">
         <legend className="sr-only">Forma de cobrança</legend>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
           {options.map((option) => (
             <ChoiceCard
               key={option.interval}
@@ -70,7 +70,7 @@ export function SubscribeForm({ options }: { options: SubscribeOption[] }) {
           ))}
         </div>
       </fieldset>
-      <Button type="submit" variant="sun" size="lg" disabled={busy} aria-busy={busy} className="w-full sm:w-auto sm:self-start">
+      <Button type="submit" variant="sun" size="lg" disabled={busy} aria-busy={busy} className="w-full sm:w-auto sm:self-start lg:w-full">
         {busy ? <Spinner /> : null}
         {selected?.label}
         {busy ? null : <ArrowRight aria-hidden="true" className="size-5" strokeWidth={3} />}

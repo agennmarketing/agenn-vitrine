@@ -1,11 +1,11 @@
 import { Scissors, ShoppingBag, UtensilsCrossed } from 'lucide-react'
 import type { VitrineType } from '@/lib/vitrines/vitrine-types'
 
-// Ícone de cada tipo de vitrine num quadrado colorido (a única área onde as cores de tipo aparecem).
+// Ícone de cada tipo de vitrine num quadrado roxo da marca.
 const TYPE_STYLE: Record<VitrineType, { Icon: typeof Scissors; className: string }> = {
-  comida: { Icon: UtensilsCrossed, className: 'bg-type-comida text-white [--lip:#c94a14]' },
-  servicos: { Icon: Scissors, className: 'bg-type-servicos text-white [--lip:#b0266a]' },
-  produtos: { Icon: ShoppingBag, className: 'bg-type-produtos text-white [--lip:#1c5cb8]' },
+  comida: { Icon: UtensilsCrossed, className: 'bg-go-strong text-white [--lip:var(--color-go-lip)]' },
+  servicos: { Icon: Scissors, className: 'bg-go-strong text-white [--lip:var(--color-go-lip)]' },
+  produtos: { Icon: ShoppingBag, className: 'bg-go-strong text-white [--lip:var(--color-go-lip)]' },
 }
 
 export function TypeIcon({ type, size = 'md' }: { type: VitrineType; size?: 'sm' | 'md' | 'lg' | 'xl' }) {

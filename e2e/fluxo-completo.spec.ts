@@ -38,7 +38,7 @@ test('criar vitrine → cadastrar item com vídeo → vitrine pública → Whats
   await itemStep(page, 'Preço')
   await page.getByLabel('Preço', { exact: true }).fill('25,90')
   await page.getByRole('button', { name: 'Salvar item' }).click()
-  await expect(page.getByText('Item salvo.')).toBeVisible()
+  await expect(page.getByText('Primeiro item no ar!')).toBeVisible()
 
   // Vídeo no item (conta gratuita: 1 vídeo permitido)
   await page.getByRole('link', { name: 'Editar' }).click()
@@ -103,7 +103,7 @@ test('sacola: vitrine → item → sacola → WhatsApp → simulador', async ({ 
   await itemStep(page, 'Preço')
   await page.getByLabel('Preço', { exact: true }).fill('22,00')
   await page.getByRole('button', { name: 'Salvar item' }).click()
-  await expect(page.getByText('Item salvo.')).toBeVisible()
+  await expect(page.getByText('Primeiro item no ar!')).toBeVisible()
 
   await page.goto(`http://${subdomain}.localhost:3000/`)
   await page.getByRole('button', { name: 'Camisa Linho' }).click()

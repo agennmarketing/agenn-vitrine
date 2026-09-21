@@ -26,13 +26,15 @@ export async function ItemsView({ id, salvo, criada }: { id: string; salvo?: str
 
   return (
     <div className="flex flex-col gap-5">
-      {criada === '1' || salvo === '1' ? <ClearSearchParams keys={['criada', 'salvo']} /> : null}
+      {criada === '1' || salvo ? <ClearSearchParams keys={['criada', 'salvo']} /> : null}
       {criada === '1' ? (
         <Celebration title="Vitrine criada!">O próximo passo é cadastrar o primeiro item: foto, nome e preço.</Celebration>
       ) : null}
-      {salvo === '1' ? <FormMessage success="Item salvo." /> : null}
-      {salvo === '1' && (items ?? []).length === 1 ? (
-        <Celebration title="Primeiro item no ar!" announce={false}>Ele já aparece na sua vitrine. Que tal mais alguns?</Celebration>
+      {/* No primeiro item criado, só a comemoração (sem o "Item salvo." junto). */}
+      {salvo === 'novo' && (items ?? []).length === 1 ? (
+        <Celebration title="Primeiro item no ar!">Ele já aparece na sua vitrine. Que tal mais alguns?</Celebration>
+      ) : salvo === '1' || salvo === 'novo' ? (
+        <FormMessage success="Item salvo." />
       ) : null}
       <ItemList
         vitrineId={id}

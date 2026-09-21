@@ -22,7 +22,10 @@ test('cadastra item com capa e variações, edita código, esgota, duplica e exc
   await page.getByLabel('Preço da variação 2').fill('44,90')
   await page.getByRole('button', { name: 'Salvar item' }).click()
 
-  await expect(page.getByText('Item salvo.')).toBeVisible()
+  await expect(page.getByText('Primeiro item no ar!')).toBeVisible()
+  await expect(page.getByText('Item salvo.')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Fechar aviso' }).click()
+  await expect(page.getByText('Primeiro item no ar!')).toHaveCount(0)
   await expect(page.getByText('Camiseta')).toBeVisible()
   await expect(page.getByText('A partir de R$ 39,90')).toBeVisible()
 
@@ -84,7 +87,7 @@ test('formulário do produto: sem duração, etiquetas ou tipo de preço, com di
   await page.getByLabel('Preço', { exact: true }).fill('25,00')
   await page.getByRole('radio', { name: 'Inativo', exact: true }).check()
   await page.getByRole('button', { name: 'Salvar item' }).click()
-  await expect(page.getByText('Item salvo.')).toBeVisible()
+  await expect(page.getByText('Primeiro item no ar!')).toBeVisible()
   await expect(page.getByRole('switch', { name: 'Caneca disponível' })).toHaveAttribute('aria-checked', 'false')
 })
 

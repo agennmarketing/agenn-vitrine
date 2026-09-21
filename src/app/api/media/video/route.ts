@@ -120,7 +120,7 @@ export async function POST(request: Request) {
     }
 
     if (input.role === 'banner') {
-      const { error: linkError } = await admin.from('vitrines').update({ banner_media_id: mediaId }).eq('id', input.vitrineId)
+      const { error: linkError } = await admin.from('vitrines').update({ banner_media_id: mediaId, banner_enabled: true }).eq('id', input.vitrineId)
       if (linkError) throw linkError
     }
 
