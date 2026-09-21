@@ -28,8 +28,9 @@ test('cria vitrine pelo assistente e respeita a vitrine única da conta', async 
   await expect(page.getByRole('heading', { name: 'Loja Teste' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Destaques' })).toBeVisible()
 
+  // Uma vitrine por conta: o painel abre direto no editor dela.
   await page.goto('/painel')
-  await expect(page.getByText('Sua vitrine', { exact: true })).toBeVisible()
+  await expect(page).toHaveURL(/\/painel\/vitrines\/[0-9a-f-]+\/itens$/)
   await expect(page.getByRole('link', { name: 'Nova vitrine' })).toHaveCount(0)
   await expect(page.getByRole('link', { name: 'Criar minha vitrine' })).toHaveCount(0)
 

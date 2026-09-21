@@ -73,7 +73,8 @@ export async function signIn(page: Page, email: string, password: string) {
   await page.getByLabel('E-mail').fill(email)
   await page.getByLabel('Senha', { exact: true }).fill(password)
   await page.getByRole('button', { name: 'Entrar', exact: true }).click()
-  await expect(page).toHaveURL(/\/painel$/)
+  // Quem já tem vitrine cai direto no editor dela; quem não tem fica no convite para criar.
+  await expect(page).toHaveURL(/\/painel(\/vitrines\/[0-9a-f-]+\/itens)?$/)
 }
 export function uniqueSubdomain(prefix: string) {
   return `${prefix}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`.slice(0, 30)

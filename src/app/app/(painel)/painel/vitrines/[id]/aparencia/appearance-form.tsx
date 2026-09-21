@@ -102,7 +102,7 @@ export function AppearanceForm({
         </ConfigBlock>
 
         <ConfigBlock title="Exibição" description="O que aparece em cada item da vitrine.">
-          <div className="flex flex-col divide-y-2 divide-line">
+          <div className="flex flex-col divide-y divide-line">
             <ConfigToggle
               id="showPrices"
               name="showPrices"

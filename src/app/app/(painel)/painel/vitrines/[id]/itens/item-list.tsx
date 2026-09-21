@@ -127,7 +127,7 @@ export function ItemList({
             href={newItemHref}
             className={buttonClasses(
               'primary',
-              'fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-4 z-30 lg:static lg:shrink-0',
+              'fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-4 z-30 lg:static lg:h-12 lg:shrink-0 lg:rounded-control lg:px-5 lg:text-base',
               'lg',
             )}
           >
@@ -139,12 +139,12 @@ export function ItemList({
 
       {categoryManager}
 
-      <div aria-live="polite">
+      <div aria-live="polite" className="empty:absolute">
         <FormMessage error={message.error} success={message.success} />
       </div>
 
       {empty ? (
-        <section className="flex flex-col items-center gap-4 rounded-card border-2 border-dashed border-line-strong bg-surface px-6 py-10 text-center">
+        <section className="flex flex-col items-center gap-4 rounded-card border border-dashed border-line-strong bg-surface px-6 py-10 text-center">
           <span
             aria-hidden="true"
             className="flex size-16 items-center justify-center rounded-card bg-go-soft text-go-strong shadow-[0_4px_0_var(--color-go)]"
@@ -167,7 +167,7 @@ export function ItemList({
       ) : null}
       {/* Sem itens, as categorias continuam na tela (vazias) abaixo do convite. */}
       {search && visible.length === 0 && !empty ? (
-        <p className="rounded-card border-2 border-dashed border-line-strong bg-surface px-5 py-8 text-center font-bold text-ink-muted">
+        <p className="rounded-card border border-dashed border-line-strong bg-surface px-5 py-8 text-center font-bold text-ink-muted">
           Nenhum item encontrado para “{query.trim()}”.
         </p>
       ) : (
@@ -186,7 +186,7 @@ export function ItemList({
                 </span>
               </div>
               {categoryItems.length === 0 ? (
-                <p className="rounded-card border-2 border-dashed border-line px-4 py-5 text-sm font-semibold text-ink-muted">
+                <p className="rounded-card border border-dashed border-line-strong bg-surface/60 px-4 py-4 text-center text-sm font-semibold text-ink-muted">
                   Nenhum item nesta categoria.
                 </p>
               ) : (
@@ -197,12 +197,12 @@ export function ItemList({
                   handleDisabled={search !== ''}
                   renderOverlay={(id) => <ItemOverlay item={categoryItems.find((item) => item.id === id)} />}
                 >
-                  <ul className="flex flex-col rounded-card border-2 border-line bg-surface">
+                  <ul className="flex flex-col rounded-card border border-line bg-surface">
                     {categoryItems.map((item, index) => (
                       <SortableItem
                         key={item.id}
                         id={item.id}
-                        className={`flex items-center gap-1 py-2.5 pl-0.5 pr-1.5 sm:gap-2 sm:pl-1 ${index > 0 ? 'border-t-2 border-line' : ''} ${
+                        className={`flex items-center gap-1 py-2.5 pl-0.5 pr-1.5 sm:gap-2 sm:pl-1 ${index > 0 ? 'border-t border-line' : ''} ${
                           busyId === item.id ? 'opacity-60' : ''
                         }`}
                       >

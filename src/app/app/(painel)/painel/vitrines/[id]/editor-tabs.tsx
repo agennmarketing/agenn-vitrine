@@ -6,7 +6,7 @@ import { useEffect, useRef } from 'react'
 import { editorSections } from '@/lib/vitrines/editor-sections'
 import type { VitrineType } from '@/lib/vitrines/vitrine-types'
 
-// Seções do editor como pílulas: a ativa vira a placa índigo-escura. No celular a fileira rola de lado.
+// Seções do editor como pílulas: a ativa ganha borda e texto roxos. No celular a fileira rola de lado.
 export function EditorTabs({ vitrineId, type }: { vitrineId: string; type: VitrineType }) {
   const pathname = usePathname()
   const listRef = useRef<HTMLUListElement>(null)
@@ -37,13 +37,13 @@ export function EditorTabs({ vitrineId, type }: { vitrineId: string; type: Vitri
               <Link
                 href={href}
                 aria-current={active ? 'page' : undefined}
-                className={`flex h-11 items-center gap-2 whitespace-nowrap rounded-full border-2 px-4 text-[0.9375rem] font-extrabold transition-colors duration-150 ease-out-quint ${
+                className={`flex h-10 items-center gap-2 whitespace-nowrap rounded-full border-2 px-3.5 text-[0.9375rem] font-extrabold transition-colors duration-150 ease-out-quint ${
                   active
-                    ? 'border-deep bg-deep text-deep-ink shadow-[0_3px_0_#000]'
+                    ? 'border-go-strong bg-surface text-go-strong'
                     : 'border-line bg-surface text-ink-muted hover:border-line-strong hover:text-ink'
                 }`}
               >
-                <Icon aria-hidden="true" className="size-[1.125rem] shrink-0" strokeWidth={active ? 2.75 : 2.5} />
+                <Icon aria-hidden="true" className="size-[1.0625rem] shrink-0" strokeWidth={active ? 2.75 : 2.25} />
                 {label}
               </Link>
             </li>

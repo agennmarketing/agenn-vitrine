@@ -2,12 +2,12 @@ import { ArrowRight, Crown } from 'lucide-react'
 import Link from 'next/link'
 import { buttonClasses } from '@/components/ui/button'
 
-// Convite para o Pro (só no plano Gratuito): na barra lateral e, no celular, no fim de Minhas vitrines.
+// Convite para o Pro (só no plano Gratuito), no rodapé da barra lateral.
 export function ProUpsell({ className = '' }: { className?: string }) {
   return (
     <aside
       aria-label="Plano Pro"
-      className={`flex flex-col gap-3 rounded-card border-2 border-go/25 bg-go-soft p-4 ${className}`}
+      className={`flex flex-col gap-3 rounded-card border border-go/25 bg-go-soft p-4 ${className}`}
     >
       <Crown aria-hidden="true" className="size-6 text-go-strong" strokeWidth={2.5} />
       <div className="flex flex-col gap-1">

@@ -9,8 +9,8 @@ import type { InputHTMLAttributes, ReactNode } from 'react'
 export function SectionIntro({ title, description }: { title: ReactNode; description: ReactNode }) {
   return (
     <div className="flex flex-col gap-1">
-      <h2 className="text-[1.375rem] font-black leading-tight tracking-[-0.025em] text-ink sm:text-2xl">{title}</h2>
-      <p className="max-w-prose font-semibold text-ink-muted">{description}</p>
+      <h2 className="text-xl font-black leading-tight tracking-[-0.02em] text-ink">{title}</h2>
+      <p className="max-w-prose text-[0.9375rem] font-semibold text-ink-muted">{description}</p>
     </div>
   )
 }
@@ -33,7 +33,7 @@ export function ConfigBlock({
 }) {
   return (
     <section
-      className={`flex min-w-0 flex-col gap-5 rounded-card border-2 bg-surface p-5 sm:p-6 ${
+      className={`flex min-w-0 flex-col gap-5 rounded-card border bg-surface p-5 sm:p-6 ${
         tone === 'danger' ? 'border-danger/45' : 'border-line'
       } ${className}`}
     >
@@ -99,7 +99,7 @@ export function ConfigToggle({
  */
 export function SaveBar({ children }: { children: ReactNode }) {
   return (
-    <div className="sticky bottom-[calc(4.125rem+env(safe-area-inset-bottom))] z-20 -mx-4 flex flex-col gap-3 border-t-2 border-line bg-canvas px-4 py-3 sm:mx-0 sm:rounded-card sm:border-2 sm:px-4 lg:static lg:border-0 lg:bg-transparent lg:p-0">
+    <div className="sticky bottom-[calc(4.125rem+env(safe-area-inset-bottom))] z-20 -mx-4 flex flex-col gap-3 border-t border-line bg-canvas px-4 py-3 sm:mx-0 sm:rounded-card sm:border-2 sm:px-4 lg:static lg:border-0 lg:bg-transparent lg:p-0">
       {children}
     </div>
   )

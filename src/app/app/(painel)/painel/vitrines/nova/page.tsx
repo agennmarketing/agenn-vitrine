@@ -14,7 +14,7 @@ export default async function NovaVitrinePage() {
   if (vitrines.length > 0) {
     return (
       <>
-        <PanelTopBar back={{ href: '/painel', label: 'Voltar para Minhas vitrines' }} title="Nova vitrine" />
+        <PanelTopBar back={{ href: '/painel', label: 'Voltar ao painel' }} title="Nova vitrine" />
         <PanelBody>
           <section className="mx-auto flex w-full max-w-md flex-col items-center gap-5 py-6 text-center">
             <span
@@ -26,7 +26,7 @@ export default async function NovaVitrinePage() {
             <h2 className="text-[1.75rem] font-black tracking-[-0.025em]">Você já tem uma vitrine</h2>
             <p className="font-semibold text-ink-muted">Cada conta tem uma vitrine. Edite a sua quando quiser.</p>
             <Link href="/painel" className={buttonClasses('primary', 'w-full', 'lg')}>
-              Voltar para Minhas vitrines
+              Ir para minha vitrine
             </Link>
           </section>
         </PanelBody>

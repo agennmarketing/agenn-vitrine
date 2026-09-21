@@ -28,21 +28,21 @@ export default async function PainelLayout({ children }: { children: ReactNode }
 
   return (
     // Modo foco (assistente de nova vitrine marca data-focus-mode): some a navegação, fica só a trilha.
-    // Cada página desenha o próprio cabeçalho índigo (PanelTopBar) com o nome da seção.
-    <div className="group/shell min-h-dvh lg:grid lg:grid-cols-[15.5rem_minmax(0,1fr)] lg:has-[[data-focus-mode]]:grid-cols-1">
-      <aside className="sticky top-0 hidden group-has-[[data-focus-mode]]/shell:!hidden h-dvh flex-col gap-8 overflow-y-auto border-r-2 border-line bg-surface px-4 py-6 lg:flex">
-        <Link href="/painel" className="flex items-center gap-2.5 px-2">
-          <LogoMark size={44} />
-          <Wordmark className="text-xl" />
+    // Cada página desenha o próprio cabeçalho (PanelTopBar) com o nome da seção.
+    <div className="group/shell min-h-dvh lg:grid lg:grid-cols-[14.5rem_minmax(0,1fr)] lg:has-[[data-focus-mode]]:grid-cols-1">
+      <aside className="sticky top-0 hidden group-has-[[data-focus-mode]]/shell:!hidden h-dvh flex-col gap-6 overflow-y-auto border-r border-line bg-surface px-3 py-4 lg:flex">
+        <Link href="/painel" className="flex h-12 items-center gap-2 px-2.5">
+          <LogoMark size={34} />
+          <Wordmark className="text-lg" />
         </Link>
         <SideNav />
 
-        <div className="mt-auto flex flex-col gap-4">
+        <div className="mt-auto flex flex-col gap-3">
           {isPro ? null : <ProUpsell />}
-          <div className="flex items-center gap-2.5 border-t-2 border-line pt-4">
+          <div className="flex items-center gap-2.5 border-t border-line px-1 pt-3">
             <span
               aria-hidden="true"
-              className="flex size-10 shrink-0 items-center justify-center rounded-full bg-deep text-[0.9375rem] font-black text-deep-ink"
+              className="flex size-9 shrink-0 items-center justify-center rounded-full bg-go-soft text-sm font-black text-go-strong"
             >
               {displayName.trim().charAt(0).toUpperCase() || '?'}
             </span>

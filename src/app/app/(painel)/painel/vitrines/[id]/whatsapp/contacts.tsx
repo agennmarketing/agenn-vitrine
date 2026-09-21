@@ -46,7 +46,7 @@ export function Contacts({
 
   return (
     <div className="flex flex-col gap-6">
-      <div aria-live="polite">
+      <div aria-live="polite" className="empty:absolute">
         <FormMessage error={message.error} success={message.success} />
       </div>
 
@@ -57,13 +57,13 @@ export function Contacts({
             return (
               <li
                 key={contact.id}
-                className={`flex flex-col gap-4 rounded-card border-2 bg-surface p-5 sm:p-6 ${primary ? 'border-go' : 'border-line'}`}
+                className={`flex flex-col gap-4 rounded-card border bg-surface p-5 sm:p-6 ${primary ? 'border-go-strong' : 'border-line'}`}
               >
                 <div className="flex items-center gap-3.5">
                   <span
                     aria-hidden="true"
                     className={`flex size-12 shrink-0 items-center justify-center rounded-control ${
-                      primary ? 'bg-deep text-deep-ink' : 'bg-go-soft text-go-strong'
+                      primary ? 'border-2 border-go-strong bg-surface text-go-strong' : 'bg-go-soft text-go-strong'
                     }`}
                   >
                     <Phone className="size-6" strokeWidth={2.5} />
@@ -110,7 +110,7 @@ export function Contacts({
                   </div>
                 )}
 
-                <details className="group/edit border-t-2 border-line pt-4">
+                <details className="group/edit border-t border-line pt-4">
                   <summary
                     className={buttonClasses(
                       'ghost',
