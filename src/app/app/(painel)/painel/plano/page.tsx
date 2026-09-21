@@ -7,7 +7,6 @@ import { getMySubscription, getPlanPrices } from '@/features/billing/queries'
 import { getEntitlements, getPanelSession, getVideoUsage, listMyVitrines } from '@/features/vitrines/queries'
 import { priceCards } from '@/lib/billing/prices'
 import { describeSubscription } from '@/lib/billing/status'
-import { formatGigabytes } from '@/lib/video/rules'
 import type { VitrineType } from '@/lib/vitrines/vitrine-types'
 import { ActiveVitrineForm } from './active-vitrine-form'
 import { PortalForm, SubscribeForm, type SubscribeOption } from './subscribe-form'
@@ -38,13 +37,12 @@ type Cell = string | boolean
 function comparisonRows(free: PlanRow, pro: PlanRow): { label: string; free: Cell; pro: Cell }[] {
   const videos = (plan: PlanRow) =>
     plan.max_videos_per_account !== null
-      ? `${plan.max_videos_per_account} na conta`
-      : `${plan.max_videos_per_vitrine} por vitrine`
+      ? String(plan.max_videos_per_account)
+      : String(plan.max_videos_per_vitrine)
   return [
-    { label: 'Itens por vitrine', free: String(free.max_items_per_vitrine), pro: String(pro.max_items_per_vitrine) },
+    { label: 'Itens', free: String(free.max_items_per_vitrine), pro: String(pro.max_items_per_vitrine) },
     { label: 'Vídeos', free: videos(free), pro: videos(pro) },
     { label: 'Duração do vídeo', free: `até ${free.max_video_seconds} s`, pro: `até ${pro.max_video_seconds} s` },
-    { label: 'Franquia de vídeo', free: `${free.monthly_video_gb} GB/mês`, pro: `${pro.monthly_video_gb} GB/mês` },
     { label: 'Logo, cor da marca e banner', free: free.allow_branding, pro: pro.allow_branding },
     { label: 'Sem marca d’água', free: !free.show_watermark, pro: !pro.show_watermark },
   ]
@@ -132,7 +130,7 @@ export default async function PlanoPage({ searchParams }: { searchParams: Promis
         </p>
       ) : null}
 
-      {/* 1. Plano atual e o uso, em três números alinhados. */}
+      {/* 1. Plano atual e o uso, em dois números alinhados. */}
       <section aria-labelledby="plano-atual" className="overflow-hidden rounded-card border border-line bg-surface">
         <header className="flex flex-col gap-4 border-b border-line px-5 py-5 sm:flex-row sm:items-center sm:px-6">
           <div className="flex min-w-0 flex-1 items-start gap-4">
@@ -153,18 +151,13 @@ export default async function PlanoPage({ searchParams }: { searchParams: Promis
           </div>
           {summary.showPortal ? <PortalForm /> : null}
         </header>
-        <div className="grid gap-3 p-5 sm:grid-cols-3 sm:p-6">
+        <div className="grid gap-3 p-5 sm:grid-cols-2 sm:p-6">
           <StatTile
             label="Vídeos"
             value={plan.max_videos_per_account !== null ? `${usage.videosCount} de ${plan.max_videos_per_account}` : String(usage.videosCount)}
             progress={plan.max_videos_per_account !== null ? { value: usage.videosCount, max: plan.max_videos_per_account } : undefined}
           />
-          <StatTile label="Itens por vitrine" value={`até ${plan.max_items_per_vitrine}`} />
-          <StatTile
-            label="Franquia do mês"
-            value={`${formatGigabytes(usage.bytesDelivered)} de ${plan.monthly_video_gb} GB`}
-            progress={{ value: usage.bytesDelivered, max: plan.monthly_video_gb * 1024 ** 3 }}
-          />
+          <StatTile label="Itens" value={`até ${plan.max_items_per_vitrine}`} />
         </div>
       </section>
 
