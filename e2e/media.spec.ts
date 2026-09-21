@@ -15,7 +15,12 @@ test('Pro envia logo e banner; gratuito vê bloqueado', async ({ page }) => {
   await uploadImage(page, 'Logo', image)
   await uploadImage(page, 'Banner', image)
 
-  await page.reload()
+  // Enviar o banner já o liga: ele aparece na vitrine sem mexer no "Mostrar banner".
+  await expect(page.getByRole('switch', { name: 'Mostrar banner' }).or(page.getByLabel('Mostrar banner'))).toBeChecked()
+  await page.goto(`http://${vitrine.subdomain}.localhost:3000/`)
+  await expect(page.locator('img[fetchpriority="high"]')).toHaveCount(1)
+
+  await page.goto(`/painel/vitrines/${vitrine.id}/aparencia`)
   await expect(page.getByRole('img', { name: 'Logo', exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Remover imagem' }).first().click()
   await expect(page.getByRole('img', { name: 'Logo', exact: true })).toHaveCount(0)

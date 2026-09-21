@@ -67,20 +67,17 @@ function CellValue({ value, pro }: { value: Cell; pro?: boolean }) {
   return <span className="numeric">{value}</span>
 }
 
-function UsageRow({ label, value, max }: { label: string; value: number; max: number | null }) {
+// Um número do uso atual, no mesmo formato para todos: rótulo, valor e (quando há teto) a barra.
+function StatTile({ label, value, progress }: { label: string; value: string; progress?: { value: number; max: number } }) {
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-baseline justify-between gap-3 text-sm">
-        <span className="font-extrabold text-ink">{label}</span>
-        <span className="numeric font-black text-ink-muted">
-          {value}
-          {max !== null ? ` de ${max}` : ''}
-        </span>
-      </div>
-      {max !== null ? <ProgressBar value={value} max={max} label={label} className="h-3" /> : null}
+    <div className="flex flex-col gap-2 rounded-control border border-line bg-canvas px-4 py-3.5">
+      <span className="text-sm font-extrabold text-ink-muted">{label}</span>
+      <span className="numeric text-xl font-black leading-tight tracking-[-0.02em] text-ink">{value}</span>
+      {progress ? <ProgressBar value={progress.value} max={progress.max} label={label} className="h-2.5" /> : null}
     </div>
   )
 }
+
 
 export default async function PlanoPage({ searchParams }: { searchParams: Promise<{ assinatura?: string }> }) {
   const [{ assinatura }, subscription, plan, vitrines, usage, prices, { supabase }] = await Promise.all([
@@ -135,10 +132,10 @@ export default async function PlanoPage({ searchParams }: { searchParams: Promis
         </p>
       ) : null}
 
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
-        {/* Plano atual: cabeçalho claro com título roxo; no Pro ganha a coroa dourada. */}
-        <section className="overflow-hidden rounded-card border border-line bg-surface">
-          <header className="flex items-start gap-4 border-b border-line px-5 py-5 sm:px-6">
+      {/* 1. Plano atual e o uso, em três números alinhados. */}
+      <section aria-labelledby="plano-atual" className="overflow-hidden rounded-card border border-line bg-surface">
+        <header className="flex flex-col gap-4 border-b border-line px-5 py-5 sm:flex-row sm:items-center sm:px-6">
+          <div className="flex min-w-0 flex-1 items-start gap-4">
             <span
               aria-hidden="true"
               className={`flex size-12 shrink-0 items-center justify-center rounded-control ${
@@ -147,96 +144,106 @@ export default async function PlanoPage({ searchParams }: { searchParams: Promis
             >
               {summary.pro ? <Crown className="size-6" strokeWidth={2.5} /> : <Sparkles className="size-6" strokeWidth={2.5} />}
             </span>
-            <div className="flex min-w-0 flex-col gap-1.5">
-              <h2 className="text-2xl font-black leading-tight tracking-[-0.02em] text-go-strong">{summary.title}</h2>
+            <div className="flex min-w-0 flex-col gap-1">
+              <h2 id="plano-atual" className="text-2xl font-black leading-tight tracking-[-0.02em] text-go-strong">
+                {summary.title}
+              </h2>
               <p className="text-[0.9375rem] font-semibold leading-snug text-ink-muted">{summary.detail}</p>
             </div>
-          </header>
-          <div className="flex flex-col gap-5 p-5 sm:p-6">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <UsageRow label="Vídeos" value={usage.videosCount} max={plan.max_videos_per_account} />
-            </div>
-            <dl className="grid gap-x-4 gap-y-1 text-sm sm:grid-cols-2">
-              <div className="flex justify-between gap-3 border-t border-line pt-3 sm:block">
-                <dt className="font-extrabold text-ink">Itens por vitrine</dt>
-                <dd className="numeric font-bold text-ink-muted">até {plan.max_items_per_vitrine}</dd>
-              </div>
-              <div className="flex justify-between gap-3 border-t border-line pt-3 sm:block">
-                <dt className="font-extrabold text-ink">Franquia do mês</dt>
-                <dd className="numeric font-bold text-ink-muted">
-                  {formatGigabytes(usage.bytesDelivered)} de {plan.monthly_video_gb} GB
-                </dd>
-              </div>
-            </dl>
-            {summary.showPortal ? <PortalForm /> : null}
           </div>
-        </section>
+          {summary.showPortal ? <PortalForm /> : null}
+        </header>
+        <div className="grid gap-3 p-5 sm:grid-cols-3 sm:p-6">
+          <StatTile
+            label="Vídeos"
+            value={plan.max_videos_per_account !== null ? `${usage.videosCount} de ${plan.max_videos_per_account}` : String(usage.videosCount)}
+            progress={plan.max_videos_per_account !== null ? { value: usage.videosCount, max: plan.max_videos_per_account } : undefined}
+          />
+          <StatTile label="Itens por vitrine" value={`até ${plan.max_items_per_vitrine}`} />
+          <StatTile
+            label="Franquia do mês"
+            value={`${formatGigabytes(usage.bytesDelivered)} de ${plan.monthly_video_gb} GB`}
+            progress={{ value: usage.bytesDelivered, max: plan.monthly_video_gb * 1024 ** 3 }}
+          />
+        </div>
+      </section>
 
-        {freePlan && proPlan ? (
-          <section aria-labelledby="comparacao" className="rounded-card border border-line bg-surface p-5 sm:p-6">
-            <h2 id="comparacao" className="text-xl font-black leading-tight tracking-[-0.02em] text-ink">
-              Gratuito × Pro
-            </h2>
-            <table className="mt-4 w-full border-collapse text-sm">
-              <thead>
-                <tr>
-                  <th scope="col" className="w-[44%] pb-3 text-left">
-                    <span className="sr-only">Recurso</span>
-                  </th>
-                  <th scope="col" className="pb-3 text-center align-bottom">
-                    <span className="flex flex-col items-center gap-1 font-extrabold text-ink-muted">
-                      Gratuito
-                      {summary.pro ? null : <Badge className="h-5 px-2 text-[0.6875rem]">Seu plano</Badge>}
-                    </span>
-                  </th>
-                  <th scope="col" className="pb-3 text-center align-bottom">
-                    <span className="flex flex-col items-center gap-1 font-black text-ink">
-                      <span className="inline-flex items-center gap-1">
-                        <Crown aria-hidden="true" className="size-4 text-sun-lip" strokeWidth={2.75} />
-                        Pro
-                      </span>
-                      {summary.pro ? <Badge tone="sun" className="h-5 px-2 text-[0.6875rem]">Seu plano</Badge> : null}
-                    </span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {comparisonRows(freePlan, proPlan).map((row) => (
-                  <tr key={row.label} className="border-t border-line">
-                    <th scope="row" className="py-3 pr-2 text-left font-extrabold leading-snug text-ink">
-                      {row.label}
+      {/* 2. Assinar: à esquerda o que muda, à direita a cobrança e o botão. */}
+      {summary.showSubscribe || (freePlan && proPlan) ? (
+        <section
+          aria-labelledby="assinar-pro"
+          className={`grid overflow-hidden rounded-card bg-surface ${
+            summary.showSubscribe ? 'border-2 border-sun/70 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)]' : 'border border-line'
+          }`}
+        >
+          {freePlan && proPlan ? (
+            <div className="flex flex-col gap-4 p-5 sm:p-6">
+              <h2 id={summary.showSubscribe ? undefined : 'assinar-pro'} className="text-xl font-black leading-tight tracking-[-0.02em] text-ink">
+                Gratuito × Pro
+              </h2>
+              <table className="w-full border-collapse text-sm">
+                <thead>
+                  <tr>
+                    <th scope="col" className="w-[44%] pb-3 text-left">
+                      <span className="sr-only">Recurso</span>
                     </th>
-                    <td className="px-1 py-3 text-center font-bold text-ink-muted">
-                      <CellValue value={row.free} />
-                    </td>
-                    <td className="bg-sun-soft/60 px-1 py-3 text-center font-black text-ink">
-                      <CellValue value={row.pro} pro />
-                    </td>
+                    <th scope="col" className="pb-3 text-center align-bottom">
+                      <span className="flex flex-col items-center gap-1 font-extrabold text-ink-muted">
+                        Gratuito
+                        {summary.pro ? null : <Badge className="h-5 px-2 text-[0.6875rem]">Seu plano</Badge>}
+                      </span>
+                    </th>
+                    <th scope="col" className="rounded-t-control bg-sun-soft/60 pb-3 pt-2 text-center align-bottom">
+                      <span className="flex flex-col items-center gap-1 font-black text-ink">
+                        <span className="inline-flex items-center gap-1">
+                          <Crown aria-hidden="true" className="size-4 text-sun-lip" strokeWidth={2.75} />
+                          Pro
+                        </span>
+                        {summary.pro ? <Badge tone="sun" className="h-5 px-2 text-[0.6875rem]">Seu plano</Badge> : null}
+                      </span>
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </section>
-        ) : null}
-      </div>
-
-      {summary.showSubscribe ? (
-        <section className="flex min-w-0 flex-col gap-5 rounded-card border-2 border-sun/70 bg-surface p-5 sm:p-6">
-          <div className="flex items-start gap-3.5">
-            <span
-              aria-hidden="true"
-              className="flex size-11 shrink-0 items-center justify-center rounded-control bg-sun text-sun-ink shadow-[0_3px_0_var(--color-sun-lip)]"
-            >
-              <Crown className="size-6" strokeWidth={2.5} />
-            </span>
-            <div className="flex flex-col gap-1">
-              <h2 className="text-xl font-black leading-tight tracking-[-0.02em] text-ink">Assinar o Pro</h2>
-              <p className="text-[0.9375rem] font-semibold text-ink-muted">
-                Pagamento no cartão, pelo Stripe. Cancele quando quiser.
-              </p>
+                </thead>
+                <tbody>
+                  {comparisonRows(freePlan, proPlan).map((row) => (
+                    <tr key={row.label} className="border-t border-line">
+                      <th scope="row" className="py-3 pr-2 text-left font-extrabold leading-snug text-ink">
+                        {row.label}
+                      </th>
+                      <td className="px-1 py-3 text-center font-bold text-ink-muted">
+                        <CellValue value={row.free} />
+                      </td>
+                      <td className="bg-sun-soft/60 px-1 py-3 text-center font-black text-ink">
+                        <CellValue value={row.pro} pro />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          </div>
-          <SubscribeForm options={options} />
+          ) : null}
+
+          {summary.showSubscribe ? (
+            <div className="flex min-w-0 flex-col gap-5 border-t border-sun/40 bg-sun-soft/40 p-5 sm:p-6 lg:border-l lg:border-t-0">
+              <div className="flex items-start gap-3.5">
+                <span
+                  aria-hidden="true"
+                  className="flex size-11 shrink-0 items-center justify-center rounded-control bg-sun text-sun-ink shadow-[0_3px_0_var(--color-sun-lip)]"
+                >
+                  <Crown className="size-6" strokeWidth={2.5} />
+                </span>
+                <div className="flex flex-col gap-1">
+                  <h2 id="assinar-pro" className="text-xl font-black leading-tight tracking-[-0.02em] text-ink">
+                    Assinar o Pro
+                  </h2>
+                  <p className="text-[0.9375rem] font-semibold text-ink-muted">
+                    Pagamento no cartão, pelo Stripe. Cancele quando quiser.
+                  </p>
+                </div>
+              </div>
+              <SubscribeForm options={options} />
+            </div>
+          ) : null}
         </section>
       ) : null}
 

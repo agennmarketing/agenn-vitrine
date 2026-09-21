@@ -93,7 +93,8 @@ export async function saveItemAction(
   await linkPendingMedia(admin, { userId: user.id, vitrineId, itemId: savedId!, input })
 
   revalidateVitrine(vitrine.subdomain)
-  redirect(`/painel/vitrines/${vitrineId}/itens?salvo=1`)
+  // "novo" deixa a lista comemorar o primeiro item só quando ele acabou de ser criado.
+  redirect(`/painel/vitrines/${vitrineId}/itens?salvo=${itemId ? '1' : 'novo'}`)
 }
 
 function itemError(error: { code?: string; message?: string; hint?: string }, keep: FormState): FormState {

@@ -130,7 +130,7 @@ export async function POST(request: Request) {
     const { error } = await admin.from('media').insert(insertRow)
     if (error) throw error
     if (role === 'logo' || role === 'banner') {
-      const link = role === 'logo' ? { logo_media_id: mediaId } : { banner_media_id: mediaId }
+      const link = role === 'logo' ? { logo_media_id: mediaId } : { banner_media_id: mediaId, banner_enabled: true }
       const { error: linkError } = await admin.from('vitrines').update(link).eq('id', vitrineId)
       if (linkError) throw linkError
     }
