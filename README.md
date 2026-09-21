@@ -40,7 +40,7 @@ Tudo o mais roda no GitHub Actions (workflow `CI`) a cada PR:
 
 Acompanhe com `gh pr checks --watch`. Quando uma migração muda o banco, baixe os tipos gerados (`gh run download <run-id> --name database-types --dir <pasta-temporária>`) e copie o arquivo para `src/lib/supabase/database.types.ts`.
 
-Os testes de vídeo usam o driver `fake` do Stream e vídeos WebM gerados com ffmpeg no CI (`scripts/make-video-fixtures.mjs`). Os e-mails usam o driver `fake` (gravados em disco). A reprodução real (HLS do Bunny) e o envio real pelo Resend são conferidos na nuvem.
+Os testes de vídeo usam o driver `fake` do VideoService e vídeos WebM gerados com ffmpeg no CI (`scripts/make-video-fixtures.mjs`). Os e-mails usam o driver `fake` (gravados em disco). A reprodução real (HLS do Mux) e o envio real pelo Resend são conferidos na nuvem.
 
 ## Endereços locais
 

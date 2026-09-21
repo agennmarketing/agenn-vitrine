@@ -27,7 +27,7 @@ Vídeo nos itens (9:16 e 16:9) sem pesar a vitrine, e o pedido chegando pronto n
 
 ## Capabilities and Constraints
 
-- Stack: Next.js 16 (App Router), Tailwind 4, Supabase, Bunny (imagens e vídeo), Stripe, Vercel. Repositório em drive FAT32; sem Docker.
+- Stack: Next.js 16 (App Router), Tailwind 4, Supabase, Bunny Storage (imagens), Mux Video (vídeos), Stripe, Vercel. Repositório em drive FAT32; sem Docker.
 - Planos Gratuito/Pro: logo, cor da marca e banner só no Pro; tema claro/escuro para todos; marca d'água no Gratuito.
 - **Toda funcionalidade existente deve continuar funcionando.** A fase de design melhora o visual e a usabilidade; não remove recursos (decisão do usuário, 2026-09-18).
 - Não existem hoje: avaliações, "seguir", selo de verificado, métricas de vendas/visualizações. As referências mostram isso, mas nada disso pode aparecer como se fosse real.

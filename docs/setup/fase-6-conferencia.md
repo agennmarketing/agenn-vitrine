@@ -46,4 +46,4 @@ entregue aqui é um rascunho, não um parecer jurídico.
   já gerados seguem funcionando pelo redirecionamento 301.
 - Consentimento de termos dentro do Checkout do Stripe (`consent_collection`) não está ligado;
   o aceite acontece no cadastro.
-- Bunny Stream travado em "Processing" continua aberto (ticket do fornecedor).
+- Bunny Stream saiu: o vídeo agora é o Mux Video (ticket do fornecedor encerrado).

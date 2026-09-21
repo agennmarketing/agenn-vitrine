@@ -5,7 +5,7 @@ import { getApiUser } from '@/lib/auth/require-user'
 import { deleteMediaRows } from '@/lib/media/remove-media'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { validateVideoFile } from '@/lib/video/rules'
-import { getVideoStream } from '@/lib/video/stream'
+import { getVideoService } from '@/lib/video/video-service'
 import { isPlanLimitError, mapDbError } from '@/lib/vitrines/db-errors'
 
 const bodySchema = z
@@ -56,10 +56,10 @@ export async function POST(request: Request) {
   )
   if (!check.ok) return fail(422, check.message)
 
-  let stream: ReturnType<typeof getVideoStream>
+  let videos: ReturnType<typeof getVideoService>
   let admin: ReturnType<typeof createSupabaseAdminClient>
   try {
-    stream = getVideoStream()
+    videos = getVideoService()
     admin = createSupabaseAdminClient()
   } catch (error) {
     Sentry.captureException(error)
@@ -69,9 +69,16 @@ export async function POST(request: Request) {
   const { data: overQuota } = await admin.rpc('is_over_video_quota', { p_user_id: userId })
   if (overQuota) return fail(403, 'A franquia de vídeo deste mês acabou. Os vídeos voltam no próximo mês.')
 
-  let guid: string
+  let upload: Awaited<ReturnType<typeof videos.upload>>
   try {
-    guid = await stream.createVideo(`${vitrine.subdomain} · ${input.role}`, input)
+    upload = await videos.upload({
+      title: `${vitrine.subdomain} · ${input.role}`,
+      // O envio direto só é aceito se vier da origem do painel.
+      corsOrigin: new URL(request.url).origin,
+      durationSeconds: input.durationSeconds,
+      width: input.width,
+      height: input.height,
+    })
   } catch (error) {
     Sentry.captureException(error)
     return fail(502, PREPARE_FAILED)
@@ -82,7 +89,7 @@ export async function POST(request: Request) {
     if (input.itemId || input.role === 'banner') {
       let previousQuery = admin
         .from('media')
-        .select('id, storage_paths, bunny_video_id')
+        .select('id, storage_paths, mux_upload_id, mux_asset_id')
         .eq('vitrine_id', input.vitrineId)
         .eq('role', input.role)
       if (input.itemId) previousQuery = previousQuery.eq('item_id', input.itemId)
@@ -100,7 +107,7 @@ export async function POST(request: Request) {
       role: input.role,
       kind: 'video',
       status: 'processing',
-      bunny_video_id: guid,
+      mux_upload_id: upload.uploadId,
       duration_seconds: check.durationSeconds,
       aspect: check.aspect,
       width: input.width,
@@ -108,7 +115,6 @@ export async function POST(request: Request) {
       bytes: input.sizeBytes,
     })
     if (insertError) {
-      await stream.deleteVideo(guid).catch(() => undefined)
       if (isPlanLimitError(insertError)) return fail(403, mapDbError(insertError))
       throw insertError
     }
@@ -118,10 +124,9 @@ export async function POST(request: Request) {
       if (linkError) throw linkError
     }
 
-    return NextResponse.json({ id: mediaId, upload: stream.uploadTicket(guid) }, { status: 201 })
+    return NextResponse.json({ id: mediaId, upload: { url: upload.url } }, { status: 201 })
   } catch (error) {
     Sentry.captureException(error)
-    await stream.deleteVideo(guid).catch(() => undefined)
     return fail(500, PREPARE_FAILED)
   }
 }

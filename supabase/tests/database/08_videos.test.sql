@@ -26,32 +26,32 @@ insert into public.items (id, owner_id, vitrine_id, category_id, name, price_cen
   ('00000000-0000-0000-0000-00000000e304', '00000000-0000-0000-0000-0000000003c2', '00000000-0000-0000-0000-00000000f302', '00000000-0000-0000-0000-00000000c302', 'D', 100);
 
 -- Gratuito: 1 vídeo
-insert into public.media (id, owner_id, vitrine_id, item_id, role, kind, status, bunny_video_id) values
+insert into public.media (id, owner_id, vitrine_id, item_id, role, kind, status, mux_asset_id) values
   ('00000000-0000-0000-0000-00000000d301', '00000000-0000-0000-0000-0000000003c1', '00000000-0000-0000-0000-00000000f301', '00000000-0000-0000-0000-00000000e301', 'video', 'video', 'ready', 'guid-livre-1');
 select throws_ok(
-  $$ insert into public.media (owner_id, vitrine_id, item_id, role, kind, status, bunny_video_id) values ('00000000-0000-0000-0000-0000000003c1', '00000000-0000-0000-0000-00000000f301', '00000000-0000-0000-0000-00000000e302', 'video', 'video', 'processing', 'guid-livre-2') $$,
+  $$ insert into public.media (owner_id, vitrine_id, item_id, role, kind, status, mux_asset_id) values ('00000000-0000-0000-0000-0000000003c1', '00000000-0000-0000-0000-00000000f301', '00000000-0000-0000-0000-00000000e302', 'video', 'video', 'processing', 'guid-livre-2') $$,
   'P0001', 'plan_limit:videos_vitrine', 'gratuito não passa de 1 vídeo'
 );
 
 update public.media set status = 'failed' where id = '00000000-0000-0000-0000-00000000d301';
 select lives_ok(
-  $$ insert into public.media (owner_id, vitrine_id, item_id, role, kind, status, bunny_video_id) values ('00000000-0000-0000-0000-0000000003c1', '00000000-0000-0000-0000-00000000f301', '00000000-0000-0000-0000-00000000e302', 'video', 'video', 'processing', 'guid-livre-3') $$,
+  $$ insert into public.media (owner_id, vitrine_id, item_id, role, kind, status, mux_asset_id) values ('00000000-0000-0000-0000-0000000003c1', '00000000-0000-0000-0000-00000000f301', '00000000-0000-0000-0000-00000000e302', 'video', 'video', 'processing', 'guid-livre-3') $$,
   'vídeo com falha não conta no limite'
 );
 select throws_ok(
-  $$ insert into public.media (owner_id, vitrine_id, item_id, role, kind, status, bunny_video_id) values ('00000000-0000-0000-0000-0000000003c1', '00000000-0000-0000-0000-00000000f301', null, 'banner', 'video', 'processing', 'guid-livre-3') $$,
-  '23505', null, 'bunny_video_id é único'
+  $$ insert into public.media (owner_id, vitrine_id, item_id, role, kind, status, mux_asset_id) values ('00000000-0000-0000-0000-0000000003c1', '00000000-0000-0000-0000-00000000f301', null, 'banner', 'video', 'processing', 'guid-livre-3') $$,
+  '23505', null, 'mux_asset_id é único'
 );
 select lives_ok(
-  $$ insert into public.media (owner_id, vitrine_id, item_id, role, kind, status, bunny_video_id) values ('00000000-0000-0000-0000-0000000003c1', '00000000-0000-0000-0000-00000000f301', null, 'banner', 'video', 'processing', 'guid-livre-banner') $$,
+  $$ insert into public.media (owner_id, vitrine_id, item_id, role, kind, status, mux_asset_id) values ('00000000-0000-0000-0000-0000000003c1', '00000000-0000-0000-0000-00000000f301', null, 'banner', 'video', 'processing', 'guid-livre-banner') $$,
   'banner em vídeo não conta no limite de vídeos de item'
 );
 
 -- Pro: vários vídeos e em mais de uma vitrine
-insert into public.media (owner_id, vitrine_id, item_id, role, kind, status, bunny_video_id) values
+insert into public.media (owner_id, vitrine_id, item_id, role, kind, status, mux_asset_id) values
   ('00000000-0000-0000-0000-0000000003c2', '00000000-0000-0000-0000-00000000f302', '00000000-0000-0000-0000-00000000e303', 'video', 'video', 'ready', 'guid-pro-1');
 select lives_ok(
-  $$ insert into public.media (owner_id, vitrine_id, item_id, role, kind, status, bunny_video_id) values ('00000000-0000-0000-0000-0000000003c2', '00000000-0000-0000-0000-00000000f302', '00000000-0000-0000-0000-00000000e304', 'video', 'video', 'ready', 'guid-pro-2') $$,
+  $$ insert into public.media (owner_id, vitrine_id, item_id, role, kind, status, mux_asset_id) values ('00000000-0000-0000-0000-0000000003c2', '00000000-0000-0000-0000-00000000f302', '00000000-0000-0000-0000-00000000e304', 'video', 'video', 'ready', 'guid-pro-2') $$,
   'Pro envia mais de um vídeo'
 );
 
@@ -65,17 +65,17 @@ select is(
   'vídeo que não está pronto não soma'
 );
 select is(
-  (select crossed_quota from public.add_video_usage((select id from public.media where bunny_video_id = 'guid-pro-1'), 1000)),
+  (select crossed_quota from public.add_video_usage((select id from public.media where mux_asset_id = 'guid-pro-1'), 1000)),
   false,
   'primeira soma não estoura'
 );
 select is(
-  (select crossed_quota from public.add_video_usage((select id from public.media where bunny_video_id = 'guid-pro-1'), 1099511627776)),
+  (select crossed_quota from public.add_video_usage((select id from public.media where mux_asset_id = 'guid-pro-1'), 1099511627776)),
   true,
   'passar de 1024 GB estoura e avisa'
 );
 select is(
-  (select crossed_quota from public.add_video_usage((select id from public.media where bunny_video_id = 'guid-pro-1'), 10)),
+  (select crossed_quota from public.add_video_usage((select id from public.media where mux_asset_id = 'guid-pro-1'), 10)),
   false,
   'depois de estourado não avisa de novo'
 );
@@ -93,7 +93,7 @@ insert into public.media (owner_id, vitrine_id, item_id, role, kind, status, sto
   ('00000000-0000-0000-0000-0000000003c1', '00000000-0000-0000-0000-00000000f301', null, 'cover', 'image', 'ready', '{"480":"nova"}', now(), now());
 -- O trigger set_updated_at sobrescreveria a data; desligado só nesta atualização.
 alter table public.media disable trigger media_set_updated_at;
-update public.media set updated_at = now() - interval '2 days' where bunny_video_id = 'guid-livre-1';
+update public.media set updated_at = now() - interval '2 days' where mux_asset_id = 'guid-livre-1';
 alter table public.media enable trigger media_set_updated_at;
 insert into public.order_snapshots (owner_id, vitrine_id, code, payload, expires_at) values
   ('00000000-0000-0000-0000-0000000003c1', '00000000-0000-0000-0000-00000000f301', 'AB23', '{}', now() - interval '1 day');
@@ -111,7 +111,7 @@ select ok(
   'envio recente não é candidato'
 );
 select ok(
-  exists (select 1 from public.media_cleanup_candidates() c where c.bunny_video_id = 'guid-livre-1'),
+  exists (select 1 from public.media_cleanup_candidates() c where c.mux_asset_id = 'guid-livre-1'),
   'vídeo com falha antiga é candidato'
 );
 select results_eq(

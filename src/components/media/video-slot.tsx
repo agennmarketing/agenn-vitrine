@@ -6,8 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/submit-button'
 import { validateVideoFile } from '@/lib/video/rules'
 
-type SlotMedia = { id: string; status: 'processing' | 'ready' | 'failed' }
-type UploadTicket = { mode: 'tus'; endpoint: string; headers: Record<string, string> } | { mode: 'put'; url: string }
+type SlotMedia = { id: string; status: 'processing' | 'ready' | 'failed'; thumbnailUrl?: string | null }
 
 function readMetadata(file: File): Promise<{ durationSeconds: number; width: number; height: number }> {
   return new Promise((resolve) => {
@@ -32,6 +31,7 @@ function readMetadata(file: File): Promise<{ durationSeconds: number; width: num
   })
 }
 
+// Envio direto do navegador para o provedor: o endereço vem assinado do servidor.
 function putWithProgress(url: string, file: File, onProgress: (ratio: number) => void): Promise<void> {
   return new Promise((resolve, reject) => {
     const request = new XMLHttpRequest()
@@ -55,17 +55,24 @@ export function VideoSlot(props: {
 }) {
   const [media, setMedia] = useState<SlotMedia | null>(props.initial)
   const [progress, setProgress] = useState<number | null>(null)
-  const [notice, setNotice] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  // Preview do arquivo escolhido: aparece antes de o envio começar e some ao sair da tela.
+  const [preview, setPreview] = useState<string | null>(null)
   const onChangeRef = useRef(props.onChange)
   // Atualizado em efeito: escrever em ref durante a renderização é recusado pelo lint do React.
   useEffect(() => {
     onChangeRef.current = props.onChange
   })
 
+  useEffect(() => () => void (preview && URL.revokeObjectURL(preview)), [preview])
+
   function update(next: SlotMedia | null) {
     setMedia(next)
     onChangeRef.current?.(next)
+  }
+
+  function showPreview(file: File | null) {
+    setPreview(file ? URL.createObjectURL(file) : null)
   }
 
   // Enquanto processa, consulta o status a cada 5 s.
@@ -75,10 +82,10 @@ export function VideoSlot(props: {
     const timer = setInterval(async () => {
       const response = await fetch(`/api/media/${id}`, { cache: 'no-store' }).catch(() => null)
       if (!response?.ok) return
-      const { status } = (await response.json()) as { status: SlotMedia['status'] }
-      if (status !== 'processing') {
-        setMedia({ id, status })
-        onChangeRef.current?.({ id, status })
+      const next = (await response.json()) as { status: SlotMedia['status']; thumbnailUrl: string | null }
+      if (next.status !== 'processing') {
+        setMedia({ id, status: next.status, thumbnailUrl: next.thumbnailUrl })
+        onChangeRef.current?.({ id, status: next.status, thumbnailUrl: next.thumbnailUrl })
       }
     }, 5000)
     return () => clearInterval(timer)
@@ -86,10 +93,11 @@ export function VideoSlot(props: {
 
   async function onFile(file: File) {
     setError(null)
-    setNotice(null)
+    showPreview(file)
     const meta = await readMetadata(file)
     const check = validateVideoFile({ ...meta, sizeBytes: file.size }, props.limits, props.role)
     if (!check.ok) {
+      showPreview(null)
       setError(check.message)
       return
     }
@@ -107,8 +115,9 @@ export function VideoSlot(props: {
         height: meta.height,
       }),
     }).catch(() => null)
-    const result = (await response?.json().catch(() => ({}))) as { id?: string; upload?: UploadTicket; error?: string }
+    const result = (await response?.json().catch(() => ({}))) as { id?: string; upload?: { url: string }; error?: string }
     if (!response?.ok || !result.id || !result.upload) {
+      showPreview(null)
       setError(result.error ?? 'Não foi possível preparar o envio. Tente novamente.')
       return
     }
@@ -117,46 +126,13 @@ export function VideoSlot(props: {
     update({ id: mediaId, status: 'processing' })
     setProgress(0)
     try {
-      if (result.upload.mode === 'put') {
-        await putWithProgress(result.upload.url, file, setProgress)
-      } else {
-        const ticket = result.upload
-        const tus = await import('tus-js-client')
-        await new Promise<void>((resolve, reject) => {
-          const upload = new tus.Upload(file, {
-            endpoint: ticket.endpoint,
-            headers: ticket.headers,
-            metadata: { filetype: file.type, title: file.name },
-            retryDelays: [0, 3000, 5000, 10000, 20000, 60000],
-            // A retomada é por vídeo: sem isto, reenviar o mesmo arquivo "continuava" o envio
-            // de um vídeo anterior e o novo ficava com 0 bytes no Bunny.
-            fingerprint: async () => `bunny-stream-${ticket.headers.VideoId}`,
-            removeFingerprintOnSuccess: true,
-            onShouldRetry: (uploadError) => {
-              const status = uploadError.originalResponse?.getStatus() ?? 0
-              const retry = status === 0 || status >= 500 || status === 409 || status === 423 || status === 429
-              if (retry) setNotice('Conexão caiu, retomando…')
-              return retry
-            },
-            onProgress: (sent, total) => {
-              setNotice(null)
-              setProgress(total ? sent / total : 0)
-            },
-            onError: reject,
-            onSuccess: () => resolve(),
-          })
-          upload.findPreviousUploads().then((previous) => {
-            if (previous.length) upload.resumeFromPreviousUpload(previous[0])
-            upload.start()
-          })
-        })
-      }
+      await putWithProgress(result.upload.url, file, setProgress)
       setProgress(null)
-      setNotice(null)
     } catch (uploadError) {
       setProgress(null)
-      const status = (uploadError as { originalResponse?: { getStatus(): number } | null }).originalResponse?.getStatus()
-      setError(`Não foi possível enviar o vídeo${status ? ` (erro ${status})` : ''}. Tente novamente.`)
+      showPreview(null)
+      const status = (uploadError as Error).message
+      setError(`Não foi possível enviar o vídeo${/^\d+$/.test(status) ? ` (erro ${status})` : ''}. Tente novamente.`)
       await fetch(`/api/media/${mediaId}`, { method: 'DELETE' }).catch(() => null)
       update(null)
     }
@@ -165,8 +141,10 @@ export function VideoSlot(props: {
   async function remove() {
     if (!media) return
     const response = await fetch(`/api/media/${media.id}`, { method: 'DELETE' }).catch(() => null)
-    if (response?.status === 204) update(null)
-    else setError('Não foi possível remover o vídeo.')
+    if (response?.status === 204) {
+      showPreview(null)
+      update(null)
+    } else setError('Não foi possível remover o vídeo.')
   }
 
   const uploading = progress !== null
@@ -175,6 +153,7 @@ export function VideoSlot(props: {
     : media === null
       ? 'empty'
       : media.status
+  const poster = state === 'ready' ? (media?.thumbnailUrl ?? preview) : preview
   const tone = {
     empty: 'border-dashed border-line-strong bg-canvas',
     uploading: 'border-line bg-surface',
@@ -197,19 +176,30 @@ export function VideoSlot(props: {
           props.disabled ? 'opacity-60' : state === 'empty' ? 'hover:border-go hover:bg-go-soft/60' : ''
         }`}
       >
-        <span aria-hidden="true" className={`flex size-14 shrink-0 items-center justify-center rounded-control ${iconTone}`}>
-          {state === 'ready' ? (
-            <CircleCheck className="size-7 animate-pop" strokeWidth={2.5} />
-          ) : state === 'failed' ? (
-            <CircleAlert className="size-7" strokeWidth={2.5} />
-          ) : state === 'processing' ? (
-            <Spinner className="size-6" />
-          ) : state === 'uploading' ? (
-            <Upload className="size-6" strokeWidth={2.75} />
-          ) : (
-            <Clapperboard className="size-6" strokeWidth={2.5} />
-          )}
-        </span>
+        {poster ? (
+          <video
+            aria-hidden="true"
+            src={preview ?? undefined}
+            poster={preview ? undefined : (poster ?? undefined)}
+            muted
+            loop
+            autoPlay
+            playsInline
+            className="size-14 shrink-0 rounded-control border border-line object-cover"
+          />
+        ) : (
+          <span aria-hidden="true" className={`flex size-14 shrink-0 items-center justify-center rounded-control ${iconTone}`}>
+            {state === 'failed' ? (
+              <CircleAlert className="size-7" strokeWidth={2.5} />
+            ) : state === 'processing' ? (
+              <Spinner className="size-6" />
+            ) : state === 'uploading' ? (
+              <Upload className="size-6" strokeWidth={2.75} />
+            ) : (
+              <Clapperboard className="size-6" strokeWidth={2.5} />
+            )}
+          </span>
+        )}
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <span className="font-extrabold leading-tight text-ink">{props.label}</span>
           <div aria-live="polite" className="flex flex-col gap-1.5 text-sm font-bold leading-snug">
@@ -225,9 +215,13 @@ export function VideoSlot(props: {
                 </span>
               </>
             ) : null}
-            {notice ? <p className="text-sun-ink">{notice}</p> : null}
             {media?.status === 'processing' && !uploading ? <p className="text-ink-muted">Processando o vídeo…</p> : null}
-            {media?.status === 'ready' ? <p className="text-go-strong">Vídeo pronto</p> : null}
+            {media?.status === 'ready' ? (
+              <p className="flex items-center gap-1.5 text-go-strong">
+                <CircleCheck aria-hidden="true" className="size-4 animate-pop" strokeWidth={2.75} />
+                Vídeo pronto
+              </p>
+            ) : null}
             {media?.status === 'failed' ? <p className="text-danger">O processamento falhou.</p> : null}
           </div>
         </div>

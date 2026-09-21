@@ -28,15 +28,14 @@ export function validateVideoFile(
   return { ok: true, aspect: aspectFor(meta.width, meta.height), durationSeconds: Math.round(meta.durationSeconds) }
 }
 
-// Códigos do webhook do Bunny Stream: 3 = pronto, 4 = já tocável em uma resolução,
-// 5 = falha na codificação, 8 = falha no envio pré-assinado.
-export function bunnyStatusToMedia(status: number): MediaStatus {
-  if (status === 3 || status === 4) return 'ready'
-  if (status === 5 || status === 8) return 'failed'
+// Estados do asset no Mux: preparing (ainda codificando), ready e errored.
+export function muxStatusToMedia(status: string): MediaStatus {
+  if (status === 'ready') return 'ready'
+  if (status === 'errored') return 'failed'
   return 'processing'
 }
 
-// Teto por segundo: 720p do Bunny fica abaixo de 4 Mbps; a margem cobre o buffer à frente.
+// Teto por segundo: a qualidade Basic do Mux fica abaixo de 4 Mbps; a margem cobre o buffer à frente.
 export const MAX_VIDEO_BITRATE_BPS = 4_000_000
 export const NATIVE_HLS_ESTIMATED_BPS = 2_800_000
 export const MAX_REPORT_SECONDS = 120

@@ -1,27 +1,29 @@
-import { createHash, createHmac } from 'node:crypto'
+import { createHmac } from 'node:crypto'
 import { describe, expect, it } from 'vitest'
-import { signWebhookBody, tusSignature, verifyWebhookSignature } from './signatures'
+import { muxSignatureHeader, signMuxBody, verifyMuxSignature } from './signatures'
 
-describe('tusSignature', () => {
-  it('SHA-256 hex de libraryId + apiKey + expires + videoId, nessa ordem', () => {
-    const expected = createHash('sha256').update('123chave1700000000guid-1').digest('hex')
-    expect(tusSignature({ libraryId: '123', apiKey: 'chave', expires: 1700000000, videoId: 'guid-1' })).toBe(expected)
-  })
-})
+const body = '{"type":"video.asset.ready","data":{"id":"asset-1"}}'
+const now = 1_700_000_000
 
-describe('webhook', () => {
-  const body = '{"VideoLibraryId":123,"VideoGuid":"guid-1","Status":3}'
-
-  it('assina com HMAC-SHA256 hex do corpo cru', () => {
-    expect(signWebhookBody(body, 'segredo')).toBe(createHmac('sha256', 'segredo').update(body).digest('hex'))
+describe('assinatura do Mux', () => {
+  it('assina com HMAC-SHA256 hex de timestamp.corpo', () => {
+    expect(signMuxBody(body, '1700000000', 'segredo')).toBe(
+      createHmac('sha256', 'segredo').update(`1700000000.${body}`).digest('hex'),
+    )
   })
 
   it('verifica a assinatura', () => {
-    const signature = signWebhookBody(body, 'segredo')
-    expect(verifyWebhookSignature(body, signature, 'segredo')).toBe(true)
-    expect(verifyWebhookSignature(body, signature, 'outro')).toBe(false)
-    expect(verifyWebhookSignature(`${body} `, signature, 'segredo')).toBe(false)
-    expect(verifyWebhookSignature(body, null, 'segredo')).toBe(false)
-    expect(verifyWebhookSignature(body, 'zz', 'segredo')).toBe(false)
+    const header = muxSignatureHeader(body, 'segredo', now)
+    expect(verifyMuxSignature(body, header, 'segredo', now)).toBe(true)
+    expect(verifyMuxSignature(body, header, 'outro', now)).toBe(false)
+    expect(verifyMuxSignature(`${body} `, header, 'segredo', now)).toBe(false)
+    expect(verifyMuxSignature(body, null, 'segredo', now)).toBe(false)
+    expect(verifyMuxSignature(body, 'v1=zz', 'segredo', now)).toBe(false)
+  })
+
+  it('recusa aviso velho (repetição)', () => {
+    const header = muxSignatureHeader(body, 'segredo', now)
+    expect(verifyMuxSignature(body, header, 'segredo', now + 301)).toBe(false)
+    expect(verifyMuxSignature(body, header, 'segredo', now + 299)).toBe(true)
   })
 })

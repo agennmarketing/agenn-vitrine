@@ -7,7 +7,7 @@ import {
   parseOrderRateLimit,
   parseRateLimitSalt,
   parseSupabaseSecretKey,
-  parseVideoStreamEnv,
+  parseVideoServiceEnv,
   parseWebhookSecret,
 } from './server-env-schema'
 
@@ -16,7 +16,7 @@ export const getSupabaseSecretKey = () => parseSupabaseSecretKey(process.env)
 export const getMediaStorageEnv = () => parseMediaStorageEnv(process.env)
 export const getRateLimitSalt = () => parseRateLimitSalt(process.env)
 export const getOrderRateLimit = () => parseOrderRateLimit(process.env)
-export const getVideoStreamEnv = () => parseVideoStreamEnv(process.env)
+export const getVideoServiceEnv = () => parseVideoServiceEnv(process.env)
 export const getWebhookSecret = () => parseWebhookSecret(process.env)
 export const getCronSecret = () => parseCronSecret(process.env)
 export const getEmailEnv = () => parseEmailEnv(process.env)

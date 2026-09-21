@@ -446,7 +446,6 @@ export type Database = {
       media: {
         Row: {
           aspect: string | null
-          bunny_video_id: string | null
           bytes: number | null
           created_at: string
           duration_seconds: number | null
@@ -454,18 +453,21 @@ export type Database = {
           id: string
           item_id: string | null
           kind: string
+          mux_asset_id: string | null
+          mux_playback_id: string | null
+          mux_upload_id: string | null
           owner_id: string
           position: number
           role: string
           status: string
           storage_paths: Json | null
+          thumbnail_url: string | null
           updated_at: string
           vitrine_id: string
           width: number | null
         }
         Insert: {
           aspect?: string | null
-          bunny_video_id?: string | null
           bytes?: number | null
           created_at?: string
           duration_seconds?: number | null
@@ -473,18 +475,21 @@ export type Database = {
           id?: string
           item_id?: string | null
           kind: string
+          mux_asset_id?: string | null
+          mux_playback_id?: string | null
+          mux_upload_id?: string | null
           owner_id: string
           position?: number
           role: string
           status?: string
           storage_paths?: Json | null
+          thumbnail_url?: string | null
           updated_at?: string
           vitrine_id: string
           width?: number | null
         }
         Update: {
           aspect?: string | null
-          bunny_video_id?: string | null
           bytes?: number | null
           created_at?: string
           duration_seconds?: number | null
@@ -492,11 +497,15 @@ export type Database = {
           id?: string
           item_id?: string | null
           kind?: string
+          mux_asset_id?: string | null
+          mux_playback_id?: string | null
+          mux_upload_id?: string | null
           owner_id?: string
           position?: number
           role?: string
           status?: string
           storage_paths?: Json | null
+          thumbnail_url?: string | null
           updated_at?: string
           vitrine_id?: string
           width?: number | null
@@ -927,8 +936,8 @@ export type Database = {
       excess_video_media: {
         Args: { p_user_ids: string[] }
         Returns: {
-          bunny_video_id: string
           id: string
+          mux_asset_id: string
           owner_id: string
           storage_paths: Json
           subdomain: string
@@ -955,8 +964,8 @@ export type Database = {
       media_cleanup_candidates: {
         Args: { p_older_than?: string }
         Returns: {
-          bunny_video_id: string
           id: string
+          mux_asset_id: string
           storage_paths: Json
         }[]
       }
@@ -1005,8 +1014,8 @@ export type Database = {
       videos_to_delete_after_pro: {
         Args: { p_days?: number }
         Returns: {
-          bunny_video_id: string
           id: string
+          mux_asset_id: string
           owner_id: string
           storage_paths: Json
           subdomain: string

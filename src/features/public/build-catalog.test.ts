@@ -32,11 +32,11 @@ const base: CatalogRows = {
     payment_options: ['Pix'],
   },
   media: [
-    { id: 'm1', item_id: 'i2', role: 'cover', kind: 'image', position: 0, storage_paths: { '480': 'a-480.webp', '1080': 'a-1080.webp' }, bunny_video_id: null, aspect: null },
-    { id: 'logo', item_id: null, role: 'logo', kind: 'image', position: 0, storage_paths: { '128': 'l-128.webp', '512': 'l-512.webp' }, bunny_video_id: null, aspect: null },
-    { id: 'banner', item_id: null, role: 'banner', kind: 'image', position: 0, storage_paths: { '960': 'b-960.webp', '1920': 'b-1920.webp' }, bunny_video_id: null, aspect: null },
-    { id: 'v-i2', item_id: 'i2', role: 'video', kind: 'video', position: 0, storage_paths: null, bunny_video_id: 'g2', aspect: '9:16' },
-    { id: 'v-i1', item_id: 'i1', role: 'video', kind: 'video', position: 0, storage_paths: null, bunny_video_id: 'g1', aspect: '16:9' },
+    { id: 'm1', item_id: 'i2', role: 'cover', kind: 'image', position: 0, storage_paths: { '480': 'a-480.webp', '1080': 'a-1080.webp' }, mux_playback_id: null, thumbnail_url: null, aspect: null },
+    { id: 'logo', item_id: null, role: 'logo', kind: 'image', position: 0, storage_paths: { '128': 'l-128.webp', '512': 'l-512.webp' }, mux_playback_id: null, thumbnail_url: null, aspect: null },
+    { id: 'banner', item_id: null, role: 'banner', kind: 'image', position: 0, storage_paths: { '960': 'b-960.webp', '1920': 'b-1920.webp' }, mux_playback_id: null, thumbnail_url: null, aspect: null },
+    { id: 'v-i2', item_id: 'i2', role: 'video', kind: 'video', position: 0, storage_paths: null, mux_playback_id: 'g2', thumbnail_url: null, aspect: '9:16' },
+    { id: 'v-i1', item_id: 'i1', role: 'video', kind: 'video', position: 0, storage_paths: null, mux_playback_id: 'g1', thumbnail_url: null, aspect: '16:9' },
   ],
 }
 
@@ -83,7 +83,7 @@ describe('buildPublicCatalog', () => {
 describe('vídeos', () => {
   it('gratuito mostra só o primeiro vídeo na ordem da vitrine (4.7)', () => {
     const [first, second] = buildPublicCatalog(base, 'https://cdn', 'https://vz').categories[0].items
-    expect(first.video).toEqual({ mediaId: 'v-i2', playlistUrl: 'https://vz/g2/playlist.m3u8', posterUrl: 'https://cdn/a-1080.webp', aspect: '9:16' })
+    expect(first.video).toEqual({ mediaId: 'v-i2', playlistUrl: 'https://vz/g2.m3u8', posterUrl: 'https://cdn/a-1080.webp', aspect: '9:16' })
     expect(second.video).toBeNull()
   })
 
@@ -107,12 +107,12 @@ describe('vídeos', () => {
       plan: { max_items_per_vitrine: 300, max_videos_per_vitrine: 50, allow_branding: true, show_watermark: false },
       media: [
         ...base.media.filter((m) => m.id !== 'banner'),
-        { id: 'banner', item_id: null, role: 'banner', kind: 'video', position: 0, storage_paths: null, bunny_video_id: 'gb', aspect: '16:9' },
+        { id: 'banner', item_id: null, role: 'banner', kind: 'video', position: 0, storage_paths: null, mux_playback_id: 'gb', thumbnail_url: 'https://image.mux.com/gb/thumbnail.jpg', aspect: '16:9' },
       ],
     }
     const catalog = buildPublicCatalog(rows, 'https://cdn', 'https://vz')
     expect(catalog.banner).toBeNull()
-    expect(catalog.bannerVideo).toEqual({ mediaId: 'banner', playlistUrl: 'https://vz/gb/playlist.m3u8', posterUrl: 'https://vz/gb/thumbnail.jpg', aspect: '16:9' })
+    expect(catalog.bannerVideo).toEqual({ mediaId: 'banner', playlistUrl: 'https://vz/gb.m3u8', posterUrl: 'https://image.mux.com/gb/thumbnail.jpg', aspect: '16:9' })
     expect(buildPublicCatalog({ ...rows, overQuota: true }, 'https://cdn', 'https://vz').bannerVideo).toBeNull()
     expect(buildPublicCatalog(base, 'https://cdn', 'https://vz').bannerVideo).toBeNull()
   })

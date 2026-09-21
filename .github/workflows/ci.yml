@@ -58,8 +58,8 @@ jobs:
       MEDIA_STORAGE_DRIVER: fake
       RATE_LIMIT_SALT: ci-salt-somente-para-testes
       ORDER_RATE_LIMIT_PER_HOUR: '1000'
-      VIDEO_STREAM_DRIVER: fake
-      BUNNY_STREAM_WEBHOOK_SECRET: ci-webhook-secret
+      VIDEO_DRIVER: fake
+      MUX_WEBHOOK_SECRET: ci-webhook-secret
       NEXT_PUBLIC_VIDEO_CDN_BASE_URL: /api/dev-video
       CRON_SECRET: ci-cron-secret-somente-para-testes
       EMAIL_DRIVER: fake

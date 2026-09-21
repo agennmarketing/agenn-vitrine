@@ -14,7 +14,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   // RLS: só encontra mídia do próprio dono.
   const { data: media } = await session.supabase
     .from('media')
-    .select('id, role, item_id, storage_paths, bunny_video_id, vitrines!media_vitrine_id_fkey(subdomain)')
+    .select('id, role, item_id, storage_paths, mux_upload_id, mux_asset_id, vitrines!media_vitrine_id_fkey(subdomain)')
     .eq('id', id)
     .maybeSingle()
   if (!media) return new NextResponse(null, { status: 204 })
@@ -38,17 +38,28 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   if (!session) return NextResponse.json({ error: 'Sua sessão expirou. Entre novamente.' }, { status: 401 })
   const { id } = await params
   // RLS: só encontra mídia do próprio dono.
-  const { data: media } = await session.supabase.from('media').select(SYNC_MEDIA_COLUMNS).eq('id', id).maybeSingle()
+  const { data: media } = await session.supabase
+    .from('media')
+    .select(`${SYNC_MEDIA_COLUMNS}, thumbnail_url`)
+    .eq('id', id)
+    .maybeSingle()
   if (!media) return NextResponse.json({ error: 'Mídia não encontrada.' }, { status: 404 })
 
   let status = media.status
-  // Enquanto processa, consulta o Stream: o painel não depende só do webhook.
-  if (status === 'processing' && media.bunny_video_id) {
+  // Enquanto processa, consulta o provedor: o painel não depende só do webhook.
+  if (status === 'processing' && (media.mux_upload_id || media.mux_asset_id)) {
     try {
       status = await syncVideoStatus(createSupabaseAdminClient(), media)
     } catch (error) {
       Sentry.captureException(error)
     }
   }
-  return NextResponse.json({ status }, { headers: { 'Cache-Control': 'no-store' } })
+
+  // A miniatura só existe depois de pronto: relê a linha que o sync acabou de atualizar.
+  let thumbnailUrl = media.thumbnail_url
+  if (status === 'ready' && !thumbnailUrl) {
+    const { data: fresh } = await session.supabase.from('media').select('thumbnail_url').eq('id', id).maybeSingle()
+    thumbnailUrl = fresh?.thumbnail_url ?? null
+  }
+  return NextResponse.json({ status, thumbnailUrl }, { headers: { 'Cache-Control': 'no-store' } })
 }

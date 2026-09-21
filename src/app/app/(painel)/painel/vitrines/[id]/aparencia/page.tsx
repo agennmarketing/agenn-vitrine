@@ -16,7 +16,7 @@ export default async function AparenciaPage({ params }: { params: Promise<{ id: 
   ])
   const { data: media } = await supabase
     .from('media')
-    .select('id, role, kind, status, storage_paths')
+    .select('id, role, kind, status, storage_paths, thumbnail_url')
     .eq('vitrine_id', id)
     .in('role', ['logo', 'banner'])
   const slot = (role: 'logo' | 'banner') => {
@@ -27,7 +27,7 @@ export default async function AparenciaPage({ params }: { params: Promise<{ id: 
 
   const bannerVideoRow = (media ?? []).find((m) => m.role === 'banner' && m.kind === 'video')
   const bannerVideo = bannerVideoRow
-    ? { id: bannerVideoRow.id, status: bannerVideoRow.status as 'processing' | 'ready' | 'failed' }
+    ? { id: bannerVideoRow.id, status: bannerVideoRow.status as 'processing' | 'ready' | 'failed', thumbnailUrl: bannerVideoRow.thumbnail_url }
     : null
 
   return (
