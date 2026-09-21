@@ -335,6 +335,16 @@ export async function setVitrineStatus(vitrineId: string, status: 'active' | 'fr
   await createAdminClient().from('vitrines').update({ status }).eq('id', vitrineId).throwOnError()
 }
 
+export async function vitrineBySubdomain(subdomain: string) {
+  const { data } = await createAdminClient()
+    .from('vitrines')
+    .select('type, service_segment, instagram, address, business_hours, theme')
+    .eq('subdomain', subdomain)
+    .single()
+    .throwOnError()
+  return data
+}
+
 export async function vitrineStatuses(ownerId: string) {
   const { data } = await createAdminClient()
     .from('vitrines')

@@ -14,6 +14,7 @@ export async function NewItemDialog({ id, intercepted = false }: { id: string; i
         <ItemForm
           vitrineId={id}
           vitrineType={options.vitrine.type}
+          serviceSegment={vitrine.service_segment}
           defaultButtonText={vitrine.default_button_text}
           categories={options.categories}
           contacts={options.contacts}
@@ -39,6 +40,7 @@ export async function EditItemDialog({ id, itemId, intercepted = false }: { id: 
         key={item.updated_at}
         vitrineId={id}
         vitrineType={options.vitrine.type}
+        serviceSegment={vitrine.service_segment}
         defaultButtonText={vitrine.default_button_text}
         categories={options.categories}
         contacts={options.contacts}

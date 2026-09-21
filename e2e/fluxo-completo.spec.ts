@@ -18,17 +18,10 @@ test('criar vitrine → cadastrar item com vídeo → vitrine pública → Whats
   const user = await createConfirmedUser('fluxo')
   await signIn(page, user.email, user.password)
 
+  // O modo Produtos saiu do assistente, mas continua no banco: a vitrine nasce semeada.
   const subdomain = uniqueSubdomain('fluxo')
-  await page.goto('/painel/vitrines/nova')
-  await page.getByLabel('Produtos').check()
-  await page.getByRole('button', { name: 'Continuar' }).click()
-  await page.getByLabel('Nome da vitrine').fill('Loja do Zé')
-  await page.getByLabel('Endereço da vitrine').fill(subdomain)
-  await page.getByRole('button', { name: 'Continuar' }).click()
-  await page.getByLabel('WhatsApp', { exact: true }).fill('(11) 98765-4321')
-  await page.getByRole('button', { name: 'Continuar' }).click()
-  await page.getByRole('button', { name: 'Criar vitrine' }).click()
-  await expect(page).toHaveURL(/\/itens(\?criada=1)?$/)
+  const vitrine = await seedVitrine(user.id, { type: 'produtos', name: 'Loja do Zé', subdomain })
+  await page.goto(`/painel/vitrines/${vitrine.id}/itens`)
 
   await page.getByRole('link', { name: 'Novo item' }).click()
   await uploadImage(page, 'Capa', await makeTestImage(page))
@@ -75,17 +68,8 @@ test('sacola: vitrine → item → sacola → WhatsApp → simulador', async ({ 
   await signIn(page, user.email, user.password)
 
   const subdomain = uniqueSubdomain('loja-sacola')
-  await page.goto('/painel/vitrines/nova')
-  await page.getByLabel('Produtos').check()
-  await page.getByRole('button', { name: 'Continuar' }).click()
-  await page.getByLabel('Nome da vitrine').fill('Loja Sacola')
-  await page.getByLabel('Endereço da vitrine', { exact: true }).fill(subdomain)
-  await page.getByRole('button', { name: 'Continuar' }).click()
-  await page.getByLabel('WhatsApp', { exact: true }).fill('(11) 98765-4321')
-  await page.getByRole('button', { name: 'Continuar' }).click()
-  await page.getByRole('button', { name: 'Criar vitrine' }).click()
-  await expect(page).toHaveURL(/\/itens(\?criada=1)?$/)
-  const vitrinePath = page.url().replace(/\/itens(\?.*)?$/, '')
+  const vitrine = await seedVitrine(user.id, { type: 'produtos', name: 'Loja Sacola', subdomain })
+  const vitrinePath = `/painel/vitrines/${vitrine.id}`
 
   // A sacola e o formulário do pedido são ligados pelo dono, em Sacola e mensagens.
   await page.goto(`${vitrinePath}/mensagens`)

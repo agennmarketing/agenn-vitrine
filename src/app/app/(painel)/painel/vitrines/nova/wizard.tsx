@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowLeft, ArrowRight, Crown, Moon, Sun, X } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Brush, Crown, Eye, Hand, Moon, Scissors, Sparkles, Store, Sun, X } from 'lucide-react'
 import Link from 'next/link'
 import { useActionState, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
@@ -10,42 +10,64 @@ import { FormMessage } from '@/components/ui/form-message'
 import { Input } from '@/components/ui/input'
 import { ProgressBar } from '@/components/ui/progress'
 import { Spinner } from '@/components/ui/submit-button'
-import { TypeIcon } from '@/components/ui/type-icon'
+import { Switch } from '@/components/ui/switch'
 import { createVitrineAction } from '@/features/vitrines/actions'
 import { fetchAvailability } from '@/lib/forms/availability'
 import { initialFormState, type FormState } from '@/lib/forms/form-state'
+import {
+  DEFAULT_BUSINESS_HOURS,
+  isServiceSegment,
+  SEGMENT_COPY,
+  SERVICE_SEGMENTS,
+  WEEKDAYS,
+  type BusinessHours,
+  type ServiceSegment,
+} from '@/lib/vitrines/service-segments'
 
+// Por enquanto o Vitrimove é só para serviços com agendamento: toda vitrine nasce 'servicos'
+// e o segmento escolhido no primeiro passo só personaliza textos e exemplos.
 const STEPS = [
-  { label: 'Tipo de negócio', question: 'Qual é o seu negócio?', help: 'Isso define o jeito da vitrine. Não dá para trocar depois.' },
-  { label: 'Sua vitrine', question: 'Como a vitrine vai se chamar?', help: 'Use o nome da sua empresa. O endereço é o link que você vai divulgar.' },
-  { label: 'Contato', question: 'Para onde vão as mensagens?', help: 'As mensagens da vitrine chegam neste WhatsApp.' },
-  { label: 'Aparência', question: 'Clara ou escura?', help: 'Dá para trocar quando quiser, em Aparência.' },
+  { label: 'Tipo de negócio', question: 'Qual é o seu tipo de negócio?', help: 'Assim a vitrine já vem com exemplos do seu ramo.' },
+  { label: 'Seu negócio', question: 'Como o seu negócio se chama?', help: 'O endereço é o link que você vai divulgar para os clientes.' },
+  { label: 'Contato', question: 'Para onde vão as solicitações?', help: 'Os pedidos de horário chegam neste WhatsApp.' },
+  { label: 'Horários e aparência', question: 'Quando você atende?', help: 'Seus clientes veem os dias e horários de atendimento.' },
 ] as const
 
-const TYPES = [
-  ['produtos', 'Produtos', 'Loja, catálogo ou revenda. O cliente manda o pedido pelo WhatsApp.'],
-  ['servicos', 'Serviços', 'Profissionais e clínicas. O cliente pede um orçamento pelo WhatsApp.'],
-] as const
+const SEGMENT_ICON: Record<ServiceSegment, typeof Scissors> = {
+  nail: Hand,
+  cabelo: Scissors,
+  lash: Eye,
+  sobrancelha: Brush,
+  barbearia: Scissors,
+  estetica: Sparkles,
+  outro: Store,
+}
 
-type WizardType = (typeof TYPES)[number][0]
-
-// O passo do contato fala a língua do negócio: produtos recebem pedidos, serviços recebem orçamentos.
-const CONTACT_STEP: Record<WizardType, { question: string; help: string }> = {
-  produtos: { question: 'Para onde vão os pedidos?', help: 'Os pedidos da vitrine chegam neste WhatsApp.' },
-  servicos: { question: 'Para onde vão as solicitações?', help: 'Os pedidos de orçamento chegam neste WhatsApp.' },
+// Mesmo quadrado do TypeIcon, com o ícone do ramo.
+function SegmentIcon({ segment }: { segment: ServiceSegment }) {
+  const Icon = SEGMENT_ICON[segment]
+  return (
+    <span
+      aria-hidden="true"
+      className="inline-flex size-12 shrink-0 items-center justify-center rounded-control bg-go-strong text-white shadow-[0_3px_0_var(--lip)] [--lip:var(--color-go-lip)]"
+    >
+      <Icon className="size-6" strokeWidth={2.5} />
+    </span>
+  )
 }
 
 function stepForErrors(errors: FormState['fieldErrors']): number | null {
   if (!errors) return null
-  if (errors.type) return 0
+  if (errors.type || errors.serviceSegment) return 0
   if (errors.name || errors.subdomain) return 1
-  if (errors.whatsappPhone || errors.whatsappLabel) return 2
+  if (errors.whatsappPhone || errors.whatsappLabel || errors.instagram || errors.address) return 2
   return 3
 }
 
 export function VitrineWizard({ rootDomain }: { rootDomain: string }) {
   const [step, setStep] = useState(0)
-  const [type, setType] = useState<WizardType | null>(null)
+  const [segment, setSegment] = useState<ServiceSegment | null>(null)
+  const [hours, setHours] = useState<BusinessHours>(DEFAULT_BUSINESS_HOURS)
   const [state, formAction, pending] = useActionState(async (prev: FormState, formData: FormData) => {
     const result = await createVitrineAction(prev, formData)
     const errorStep = stepForErrors(result.fieldErrors)
@@ -81,8 +103,9 @@ export function VitrineWizard({ rootDomain }: { rootDomain: string }) {
 
   const errors = state.fieldErrors ?? {}
   const values = state.values ?? {}
-  const chosenType = type ?? (values.type === 'produtos' || values.type === 'servicos' ? values.type : null)
-  const current = step === 2 && chosenType ? { ...STEPS[2], ...CONTACT_STEP[chosenType] } : STEPS[step]
+  const chosenSegment = segment ?? (isServiceSegment(values.serviceSegment) ? values.serviceSegment : null)
+  const copy = SEGMENT_COPY[chosenSegment ?? 'outro']
+  const current = STEPS[step]
   const last = step === STEPS.length - 1
 
   return (
@@ -111,33 +134,33 @@ export function VitrineWizard({ rootDomain }: { rootDomain: string }) {
       </div>
 
       <form action={formAction} noValidate className="flex flex-col gap-7">
+        <input type="hidden" name="type" value="servicos" />
         <fieldset hidden={step !== 0} className="flex flex-col gap-3.5">
           <legend className="sr-only">Tipo de negócio</legend>
-          {TYPES.map(([value, label, hint]) => (
+          {SERVICE_SEGMENTS.map((value) => (
             <ChoiceCard
               key={value}
-              name="type"
+              name="serviceSegment"
               value={value}
-              defaultChecked={values.type === value}
-              onChange={() => setType(value)}
-              aria-label={label}
-              title={label}
-              description={hint}
-              icon={<TypeIcon type={value} />}
+              defaultChecked={values.serviceSegment === value}
+              onChange={() => setSegment(value)}
+              aria-label={SEGMENT_COPY[value].label}
+              title={SEGMENT_COPY[value].label}
+              icon={<SegmentIcon segment={value} />}
             />
           ))}
-          <FormMessage error={errors.type} />
+          <FormMessage error={errors.serviceSegment ?? errors.type} />
         </fieldset>
 
         <fieldset hidden={step !== 1} className="flex flex-col gap-5">
-          <legend className="sr-only">Sua vitrine</legend>
-          <Field label="Nome da vitrine" htmlFor="name" error={errors.name}>
+          <legend className="sr-only">Seu negócio</legend>
+          <Field label="Nome do negócio" htmlFor="name" error={errors.name}>
             <Input
               id="name"
               name="name"
               defaultValue={values.name}
               maxLength={60}
-              placeholder="Ex.: Loja da Ana"
+              placeholder={`Ex.: ${copy.businessName}`}
               invalid={!!errors.name}
             />
           </Field>
@@ -151,7 +174,7 @@ export function VitrineWizard({ rootDomain }: { rootDomain: string }) {
                 autoCapitalize="none"
                 autoCorrect="off"
                 spellCheck={false}
-                placeholder="lojadaana"
+                placeholder={copy.subdomain}
                 invalid={!!errors.subdomain}
                 className="rounded-none border-0 bg-transparent"
                 onChange={(event) => onSubdomainChange(event.target.value)}
@@ -183,13 +206,89 @@ export function VitrineWizard({ rootDomain }: { rootDomain: string }) {
               invalid={!!errors.whatsappPhone}
             />
           </Field>
-          <Field label="Nome do contato" htmlFor="whatsappLabel" error={errors.whatsappLabel} hint="Aparece só para você. Ex.: Balcão, Atendimento.">
-            <Input id="whatsappLabel" name="whatsappLabel" placeholder="Principal" defaultValue={values.whatsappLabel} />
+          <Field label="Instagram (opcional)" htmlFor="instagram" error={errors.instagram}>
+            <div className="flex items-stretch overflow-hidden rounded-control border-2 border-line-strong bg-surface focus-within:border-go-strong has-[[aria-invalid]]:border-danger">
+              <span className="flex shrink-0 items-center bg-subtle px-3 text-sm font-extrabold text-ink-muted">@</span>
+              <Input
+                id="instagram"
+                name="instagram"
+                defaultValue={values.instagram}
+                maxLength={80}
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                placeholder={copy.subdomain}
+                invalid={!!errors.instagram}
+                className="rounded-none border-0 bg-transparent"
+              />
+            </div>
+          </Field>
+          <Field
+            label="Endereço de atendimento (opcional)"
+            htmlFor="address"
+            error={errors.address}
+            hint="Rua, número e bairro. Deixe em branco se atende a domicílio."
+          >
+            <Input
+              id="address"
+              name="address"
+              maxLength={200}
+              autoComplete="street-address"
+              placeholder="Ex.: Rua das Flores, 120 - Centro"
+              defaultValue={values.address}
+              invalid={!!errors.address}
+            />
           </Field>
         </fieldset>
 
         <fieldset hidden={step !== 3} className="flex flex-col gap-3.5">
-          <legend className="sr-only">Aparência</legend>
+          <legend className="sr-only">Horários de atendimento</legend>
+          <input type="hidden" name="businessHours" value={JSON.stringify(hours)} />
+          <ul className="flex flex-col divide-y-2 divide-line rounded-card border-2 border-line-strong bg-surface">
+            {WEEKDAYS.map((dayName, day) => {
+              const entry = hours.find((item) => item.day === day)
+              const toggle = () =>
+                setHours((list) =>
+                  entry
+                    ? list.filter((item) => item.day !== day)
+                    : [...list, { day, open: '09:00', close: '18:00' }].sort((a, b) => a.day - b.day),
+                )
+              const setTime = (key: 'open' | 'close', value: string) =>
+                setHours((list) => list.map((item) => (item.day === day ? { ...item, [key]: value } : item)))
+              return (
+                <li key={dayName} className="flex min-h-14 flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2.5">
+                  <Switch checked={!!entry} onClick={toggle} aria-label={`Atende ${dayName.toLowerCase()}`} />
+                  <span className="w-20 font-extrabold text-ink">{dayName}</span>
+                  {entry ? (
+                    <span className="ml-auto flex items-center gap-2">
+                      <Input
+                        type="time"
+                        aria-label={`${dayName}: abre às`}
+                        value={entry.open}
+                        onChange={(event) => setTime('open', event.target.value)}
+                        className="h-10 w-[6.5rem] px-2"
+                      />
+                      <span className="text-sm font-bold text-ink-muted">às</span>
+                      <Input
+                        type="time"
+                        aria-label={`${dayName}: fecha às`}
+                        value={entry.close}
+                        onChange={(event) => setTime('close', event.target.value)}
+                        className="h-10 w-[6.5rem] px-2"
+                      />
+                    </span>
+                  ) : (
+                    <span className="ml-auto text-sm font-bold text-ink-muted">Fechado</span>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+          <FormMessage error={errors.businessHours} />
+        </fieldset>
+
+        <fieldset hidden={step !== 3} className="flex flex-col gap-3.5">
+          <legend className="mb-1 text-lg font-black text-ink">Aparência: clara ou escura?</legend>
           <div className="grid grid-cols-2 gap-3.5">
             {(
               [

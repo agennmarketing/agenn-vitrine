@@ -19,8 +19,7 @@ export default async function PainelHome() {
       <PanelBody>
         <section className="mx-auto flex max-w-lg animate-rise flex-col items-center gap-5 rounded-card border border-line bg-surface px-6 py-10 text-center sm:mt-6 sm:px-10 sm:py-12">
           <div aria-hidden="true" className="flex items-end gap-2">
-            <span className="-rotate-6"><TypeIcon type="produtos" size="lg" /></span>
-            <span className="rotate-6"><TypeIcon type="servicos" size="lg" /></span>
+            <span className="-rotate-6"><TypeIcon type="servicos" size="lg" /></span>
           </div>
           <div className="flex flex-col gap-2">
             <h2 className="text-2xl font-black tracking-[-0.02em] text-ink">Você ainda não tem vitrine</h2>

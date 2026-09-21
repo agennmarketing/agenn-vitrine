@@ -21,9 +21,9 @@ test('endereço passa de 404 para a vitrine assim que ela é criada no painel', 
   const user = await createConfirmedUser('nasce')
   await signIn(page, user.email, user.password)
   await page.goto('/painel/vitrines/nova')
-  await page.getByLabel('Produtos').check()
+  await page.getByLabel('Barbearia').check()
   await page.getByRole('button', { name: 'Continuar' }).click()
-  await page.getByLabel('Nome da vitrine').fill('Loja Nova')
+  await page.getByLabel('Nome do negócio').fill('Barbearia Nova')
   await page.getByLabel('Endereço da vitrine').fill(subdomain)
   await page.getByRole('button', { name: 'Continuar' }).click()
   await page.getByLabel('WhatsApp', { exact: true }).fill('(11) 98765-4321')
@@ -33,7 +33,7 @@ test('endereço passa de 404 para a vitrine assim que ela é criada no painel', 
 
   const after = await page.goto(vitrineUrl(subdomain))
   expect(after?.status()).toBe(200)
-  await expect(page.getByRole('heading', { level: 1, name: 'Loja Nova' })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: 'Barbearia Nova' })).toBeVisible()
 })
 
 test('catálogo, tela do item com variação e mensagem com código de pedido', async ({ page }) => {

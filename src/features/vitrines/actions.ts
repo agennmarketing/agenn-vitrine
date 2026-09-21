@@ -16,10 +16,22 @@ import {
   SUBDOMAIN_TAKEN_MESSAGE,
   vitrineSettingsSchema,
 } from '@/lib/vitrines/schemas'
-import { DEFAULT_BUTTON_TEXT, SAMPLE_CATEGORIES } from '@/lib/vitrines/vitrine-types'
+import { SEGMENT_COPY } from '@/lib/vitrines/service-segments'
+import { DEFAULT_BUTTON_TEXT } from '@/lib/vitrines/vitrine-types'
 
 export async function createVitrineAction(_prev: FormState, formData: FormData): Promise<FormState> {
-  const fields = readFormFields(formData, ['type', 'name', 'subdomain', 'whatsappLabel', 'whatsappPhone', 'theme'])
+  const fields = readFormFields(formData, [
+    'type',
+    'serviceSegment',
+    'name',
+    'subdomain',
+    'whatsappLabel',
+    'whatsappPhone',
+    'instagram',
+    'address',
+    'businessHours',
+    'theme',
+  ])
   const parsed = createVitrineSchema.safeParse(fields)
   if (!parsed.success) return { fieldErrors: fieldErrorsFromZod(parsed.error), values: fields }
 
@@ -33,7 +45,12 @@ export async function createVitrineAction(_prev: FormState, formData: FormData):
     p_default_button_text: DEFAULT_BUTTON_TEXT[input.type],
     p_whatsapp_label: input.whatsappLabel,
     p_whatsapp_phone: input.whatsappPhone,
-    p_categories: [...SAMPLE_CATEGORIES[input.type]],
+    // As categorias de exemplo seguem o segmento; ele só muda textos, a vitrine é sempre de serviços.
+    p_categories: [...SEGMENT_COPY[input.serviceSegment].categories],
+    p_service_segment: input.serviceSegment,
+    p_instagram: input.instagram ?? undefined,
+    p_address: input.address ?? undefined,
+    p_business_hours: input.businessHours,
   })
   if (error) {
     if (error.code === '23505') return { fieldErrors: { subdomain: SUBDOMAIN_TAKEN_MESSAGE }, values: fields }

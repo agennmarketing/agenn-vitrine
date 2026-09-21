@@ -749,20 +749,24 @@ export type Database = {
       }
       vitrines: {
         Row: {
+          address: string | null
           banner_enabled: boolean
           banner_media_id: string | null
           brand_color: string | null
+          business_hours: Json | null
           cart_button_text: string
           cart_enabled: boolean
           created_at: string
           default_button_text: string
           description: string
           id: string
+          instagram: string | null
           logo_media_id: string | null
           name: string
           owner_id: string
           position: number
           primary_whatsapp_id: string | null
+          service_segment: string | null
           show_media: boolean
           show_prices: boolean
           status: string
@@ -772,20 +776,24 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          address?: string | null
           banner_enabled?: boolean
           banner_media_id?: string | null
           brand_color?: string | null
+          business_hours?: Json | null
           cart_button_text?: string
           cart_enabled?: boolean
           created_at?: string
           default_button_text: string
           description?: string
           id?: string
+          instagram?: string | null
           logo_media_id?: string | null
           name: string
           owner_id?: string
           position?: number
           primary_whatsapp_id?: string | null
+          service_segment?: string | null
           show_media?: boolean
           show_prices?: boolean
           status?: string
@@ -795,20 +803,24 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          address?: string | null
           banner_enabled?: boolean
           banner_media_id?: string | null
           brand_color?: string | null
+          business_hours?: Json | null
           cart_button_text?: string
           cart_enabled?: boolean
           created_at?: string
           default_button_text?: string
           description?: string
           id?: string
+          instagram?: string | null
           logo_media_id?: string | null
           name?: string
           owner_id?: string
           position?: number
           primary_whatsapp_id?: string | null
+          service_segment?: string | null
           show_media?: boolean
           show_prices?: boolean
           status?: string
@@ -916,9 +928,13 @@ export type Database = {
       }
       create_vitrine: {
         Args: {
+          p_address?: string
+          p_business_hours?: Json
           p_categories: string[]
           p_default_button_text: string
+          p_instagram?: string
           p_name: string
+          p_service_segment?: string
           p_subdomain: string
           p_theme: string
           p_type: string

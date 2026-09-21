@@ -3,6 +3,7 @@ import { ITEM_CODE_MESSAGES, validateItemCode } from '@/lib/codes/item-code'
 import { validateSubdomain } from '@/lib/hosts/subdomain'
 import { parseBRLToCents } from '@/lib/money/money'
 import { normalizePhone } from '@/lib/whatsapp/phone'
+import { SERVICE_SEGMENTS } from './service-segments'
 import { WIZARD_VITRINE_TYPES } from './vitrine-types'
 
 const SUBDOMAIN_MESSAGES = {
@@ -49,12 +50,43 @@ const contactLabel = z
   .max(40, 'Use até 40 caracteres.')
   .transform((value) => value || 'Principal')
 
+// Aceita "@usuario", "usuario" ou o link do perfil; guarda só o usuário, em minúsculas.
+const instagram = z.string().transform((value, ctx) => {
+  const handle = value
+    .trim()
+    .replace(/^(https?:\/\/)?(www\.)?instagram\.com\//i, '')
+    .replace(/^@/, '')
+    .replace(/[/?#].*$/, '')
+    .toLowerCase()
+  if (!handle) return null
+  if (!/^[a-z0-9._]{1,30}$/.test(handle)) {
+    ctx.addIssue({ code: 'custom', message: 'Informe um Instagram válido. Ex.: @seuestudio' })
+    return z.NEVER
+  }
+  return handle
+})
+
+const time = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Horário inválido.')
+const businessHours = jsonArray(z.object({ day: z.number().int().min(0).max(6), open: time, close: time }), 7).superRefine(
+  (days, ctx) => {
+    if (days.length === 0) ctx.addIssue({ code: 'custom', message: 'Marque pelo menos um dia de atendimento.' })
+    else if (new Set(days.map((entry) => entry.day)).size !== days.length) ctx.addIssue({ code: 'custom', message: 'Dia repetido.' })
+    else if (days.some((entry) => entry.open >= entry.close)) {
+      ctx.addIssue({ code: 'custom', message: 'O horário de abrir deve ser antes do de fechar.' })
+    }
+  },
+)
+
 export const createVitrineSchema = z.object({
   type: z.enum(WIZARD_VITRINE_TYPES, 'Escolha o tipo da vitrine.'),
+  serviceSegment: z.enum(SERVICE_SEGMENTS, 'Escolha o tipo do seu negócio.'),
   name: vitrineName,
   subdomain: subdomainField,
   whatsappLabel: contactLabel,
   whatsappPhone: phone,
+  instagram,
+  address: optionalText(200),
+  businessHours,
   theme,
 })
 

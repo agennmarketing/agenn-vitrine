@@ -29,6 +29,7 @@ import { normalizeItemCode } from '@/lib/codes/item-code'
 import { fetchAvailability } from '@/lib/forms/availability'
 import type { FormState } from '@/lib/forms/form-state'
 import { centsToInput } from '@/lib/money/money'
+import { isServiceSegment, SEGMENT_COPY } from '@/lib/vitrines/service-segments'
 import { useCloseItemDialog } from './item-dialog'
 
 type ItemForEdit = Awaited<ReturnType<typeof getItemForEdit>>
@@ -209,6 +210,7 @@ export function NoCategoryStep() {
 export function ItemForm(props: {
   vitrineId: string
   vitrineType: string
+  serviceSegment?: string | null
   defaultButtonText: string
   categories: { id: string; name: string }[]
   contacts: { id: string; label: string }[]
@@ -221,6 +223,8 @@ export function ItemForm(props: {
   const produto = props.vitrineType === 'produtos'
   const servico = props.vitrineType === 'servicos'
   const stepList = steps(produto, servico)
+  // O segmento do negócio só troca o exemplo do nome do serviço.
+  const serviceExample = isServiceSegment(props.serviceSegment) ? SEGMENT_COPY[props.serviceSegment].serviceExample : 'Corte de cabelo'
   const [step, setStep] = useState(0)
   const [coverId, setCoverId] = useState<string>(item?.cover?.id ?? '')
   const [videoId, setVideoId] = useState<string>(item?.video?.id ?? '')
@@ -394,7 +398,7 @@ export function ItemForm(props: {
                     id="name"
                     name="name"
                     maxLength={80}
-                    placeholder={produto ? 'Ex.: Camiseta básica' : 'Ex.: Corte de cabelo'}
+                    placeholder={produto ? 'Ex.: Camiseta básica' : `Ex.: ${serviceExample}`}
                     defaultValue={values?.name ?? item?.name ?? ''}
                     invalid={!!errors.name}
                   />
