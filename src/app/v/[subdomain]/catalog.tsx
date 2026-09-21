@@ -8,7 +8,6 @@ import { formatBRL } from '@/lib/money/money'
 import { addToCart, replaceLine, type CartLine } from '@/lib/cart/cart'
 import { cartSummary } from '@/lib/cart/reconcile'
 import { formatOrderTotal, formatPriceLabel, priceLabel } from '@/lib/pricing/price'
-import { BannerVideo } from './banner-video'
 import { useCart } from './cart-store'
 import { useItemParam } from './item-param'
 import { vitrineTheme } from './theme'
@@ -137,7 +136,13 @@ export function Catalog({ vitrine, siteUrl }: { vitrine: PublicVitrine; siteUrl:
       <div className="relative mx-auto max-w-[1200px] lg:px-8 lg:pt-6">
         {vitrine.bannerVideo ? (
           <div className="overflow-hidden bg-subtle lg:rounded-[1.75rem]">
-            <BannerVideo video={vitrine.bannerVideo} className={bannerClass} />
+            {/* Na listagem nenhum vídeo toca nem carrega: do banner em vídeo fica só a capa. */}
+            {vitrine.bannerVideo.posterUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={vitrine.bannerVideo.posterUrl} alt="" fetchPriority="high" className={bannerClass} />
+            ) : (
+              <div aria-hidden="true" className={bannerClass} />
+            )}
           </div>
         ) : vitrine.banner ? (
           <div className="overflow-hidden bg-subtle lg:rounded-[1.75rem]">

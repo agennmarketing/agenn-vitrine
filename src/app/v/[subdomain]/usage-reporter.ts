@@ -2,8 +2,8 @@ import { estimateBytesFromSeconds } from '@/lib/video/rules'
 
 const REPORT_EVERY_MS = 15_000
 
-// Envia a cada 15 s e ao fechar: bytes medidos pelo hls.js ou, no HLS nativo,
-// estimativa por segundos assistidos. "seconds" é o tempo de relógio desde o último envio,
+// Envia a cada 15 s e ao fechar: bytes estimados pelos segundos assistidos no Mux Player.
+// "seconds" é o tempo de relógio desde o último envio,
 // usado no servidor como teto.
 export function createUsageReporter(mediaId: string) {
   let bytes = 0
