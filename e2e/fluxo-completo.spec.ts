@@ -52,7 +52,7 @@ test('criar vitrine → cadastrar item com vídeo → vitrine pública → Whats
   await page.goto(`http://${subdomain}.localhost:3000/`)
   await expect(page.getByRole('heading', { level: 1, name: 'Loja do Zé' })).toBeVisible()
   await page.getByRole('button', { name: 'Camiseta' }).click()
-  await expect(page.getByRole('dialog', { name: 'Camiseta' }).locator(`video[data-media-id="${media!.id}"]`)).toHaveCount(1)
+  await expect(page.getByRole('dialog', { name: 'Camiseta' }).locator(`mux-player[data-media-id="${media!.id}"]`)).toHaveCount(1)
   await page.route('https://wa.me/**', (route) => route.fulfill({ status: 200, body: 'ok' }))
   const request = page.waitForRequest(/^https:\/\/wa\.me\//)
   await page.getByRole('dialog', { name: 'Camiseta' }).getByRole('button', { name: 'Adicionar à sacola · R$ 25,90' }).click()
