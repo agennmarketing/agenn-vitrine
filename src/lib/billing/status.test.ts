@@ -107,6 +107,11 @@ describe('describeSubscription', () => {
     ])
   })
 
+  it('checkout começado e não concluído não mostra o portal', () => {
+    const summary = describeSubscription({ ...base, status: 'none', interval: null, current_period_end: null }, NOW)
+    expect([summary.pro, summary.showSubscribe, summary.showPortal]).toEqual([false, true, false])
+  })
+
   it('assinatura ativa mostra a renovação', () => {
     const summary = describeSubscription({ ...base, status: 'active' }, NOW)
     expect(summary.pro).toBe(true)

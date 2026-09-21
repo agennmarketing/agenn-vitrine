@@ -1,6 +1,6 @@
 import { Celebration } from '@/components/ui/celebration'
 import { ClearSearchParams } from '@/components/ui/clear-search-params'
-import { FormMessage } from '@/components/ui/form-message'
+import { FlashMessage } from '@/components/ui/flash-message'
 import { getMyVitrine, getPanelSession } from '@/features/vitrines/queries'
 import { env } from '@/lib/env'
 import { imageSources } from '@/lib/media/urls'
@@ -34,7 +34,7 @@ export async function ItemsView({ id, salvo, criada }: { id: string; salvo?: str
       {salvo === 'novo' && (items ?? []).length === 1 ? (
         <Celebration title="Primeiro item no ar!">Ele já aparece na sua vitrine. Que tal mais alguns?</Celebration>
       ) : salvo === '1' || salvo === 'novo' ? (
-        <FormMessage success="Item salvo." />
+        <FlashMessage message="Item salvo." />
       ) : null}
       <ItemList
         vitrineId={id}

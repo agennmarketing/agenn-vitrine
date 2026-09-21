@@ -77,11 +77,12 @@ export type SubscriptionSummary = {
 }
 
 const FREE_PITCH =
-  'Assine o Pro para ter 3 vitrines, 300 itens por vitrine, 50 vídeos por vitrine, logo, cor da marca e banner — e tirar a marca d’água.'
+  'Assine o Pro para ter 300 itens, 50 vídeos, logo, cor da marca e banner — e tirar a marca d’água.'
 
 export function describeSubscription(row: SubscriptionView | null, now: Date): SubscriptionSummary {
   const pro = isProNow(row, now)
-  const showPortal = Boolean(row?.stripe_customer_id)
+  // O portal só aparece para quem já assinou: começar o checkout e desistir não conta.
+  const showPortal = Boolean(row?.stripe_customer_id) && (pro || Boolean(row?.pro_ended_at))
 
   if (!row || !pro) {
     const detail = row?.pro_ended_at
