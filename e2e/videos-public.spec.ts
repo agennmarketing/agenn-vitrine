@@ -13,17 +13,55 @@ test('vídeo só aparece ao abrir o item; gratuito mostra só o primeiro', async
   await seedVideo(vitrine, user.id, second.id)
   await setPlan(user.id, 'free')
 
+  const playlists: string[] = []
+  page.on('request', (req) => {
+    if (req.url().includes('.m3u8')) playlists.push(req.url())
+  })
+
   await page.goto(vitrineUrl(vitrine.subdomain))
-  await expect(page.locator('video')).toHaveCount(0)
+  await expect(page.locator('video, mux-player')).toHaveCount(0)
+  expect(playlists).toEqual([])
 
   await page.getByRole('button', { name: 'Primeiro' }).click()
   const dialog = page.getByRole('dialog', { name: 'Primeiro' })
-  await expect(dialog.locator(`video[data-media-id="${firstVideo.id}"]`)).toHaveCount(1)
+  // Mux Player: começa sozinho e mudo, uma vez só (sem loop), inline.
+  const player = dialog.locator(`mux-player[data-media-id="${firstVideo.id}"]`)
+  await expect(player).toHaveCount(1)
+  await expect(player).toHaveAttribute('autoplay', 'muted')
+  await expect(player).toHaveAttribute('playsinline', '')
+  await expect(player).not.toHaveAttribute('loop')
+  await expect.poll(() => player.evaluate((el: HTMLVideoElement) => [el.muted, el.loop])).toEqual([true, false])
+  await expect(dialog.locator('video')).toHaveCount(1)
+  await expect.poll(() => playlists.length > 0 && playlists.every((url) => url.includes(firstVideo.guid))).toBe(true)
   await dialog.getByRole('button', { name: 'Fechar' }).click()
-  await expect(page.locator('video')).toHaveCount(0)
+  await expect(page.locator('video, mux-player')).toHaveCount(0)
 
   await page.getByRole('button', { name: 'Segundo' }).click()
   await expect(page.getByRole('dialog', { name: 'Segundo' }).locator('video')).toHaveCount(0)
+})
+
+test('banner em vídeo mostra só a capa na listagem, sem carregar vídeo', async ({ page }) => {
+  const user = await createConfirmedUser('video-banner-capa')
+  await setPlan(user.id, 'pro')
+  const vitrine = await seedVitrine(user.id)
+  const item = await seedItem(vitrine, user.id, { name: 'Com vídeo', priceCents: 1000 })
+  await seedVideo(vitrine, user.id, item.id)
+  const banner = await seedVideo(vitrine, user.id, null, { role: 'banner' })
+  await createAdminClient()
+    .from('vitrines')
+    .update({ banner_media_id: banner.id, banner_enabled: true })
+    .eq('id', vitrine.id)
+    .throwOnError()
+
+  const playlists: string[] = []
+  page.on('request', (req) => {
+    if (req.url().includes('.m3u8')) playlists.push(req.url())
+  })
+  await page.goto(vitrineUrl(vitrine.subdomain), { waitUntil: 'load' })
+  await expect(page.locator(`img[src*="${banner.guid}/thumbnail.jpg"]`)).toHaveCount(1)
+  await page.waitForTimeout(1000)
+  await expect(page.locator('video, mux-player')).toHaveCount(0)
+  expect(playlists).toEqual([])
 })
 
 test('relatório de consumo soma bytes e franquia estourada esconde os vídeos', async ({ page, request }) => {

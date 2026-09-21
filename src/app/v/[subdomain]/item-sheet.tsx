@@ -16,7 +16,7 @@ import {
   type ServiceRequestValue,
 } from '@/lib/services/request'
 import { sendDirect } from './send-direct'
-import { VideoPlayer } from './video-player'
+import { ItemVideo } from './item-video'
 import {
   brandButtonClass,
   CloseButton,
@@ -75,6 +75,8 @@ export default function ItemSheet({ vitrine, item, onClose, cart }: ItemSheetPro
   const [missingVariation, setMissingVariation] = useState(false)
   const [sending, setSending] = useState(false)
   const [activeIndex, setActiveIndex] = useState(0)
+  // O vídeo começa sozinho só na primeira vez; depois, só pelo Play.
+  const [videoStarted, setVideoStarted] = useState(false)
   const [asking, setAsking] = useState(false)
   const [request, setRequest] = useState<ServiceRequestInput>(EMPTY_SERVICE_REQUEST)
   const [requestErrors, setRequestErrors] = useState<ServiceRequestErrors>({})
@@ -219,11 +221,11 @@ export default function ItemSheet({ vitrine, item, onClose, cart }: ItemSheetPro
                 setActiveIndex(el.clientWidth ? Math.round(el.scrollLeft / el.clientWidth) : 0)
               }}
             >
-              {/* Spec 6.3: vídeo primeiro. Fora da vista, o player desmonta (pausa e destrói). */}
+              {/* Spec 6.3: vídeo primeiro. Fora da vista, o player desmonta (pausa e descarrega). */}
               {item.video ? (
                 <div className="aspect-[4/5] max-h-[46dvh] w-full shrink-0 snap-center md:aspect-auto md:h-full md:max-h-none">
                   {activeIndex === 0 ? (
-                    <VideoPlayer video={item.video} wrapperClassName="size-full" className="size-full bg-black object-cover" />
+                    <ItemVideo key={item.video.mediaId} video={item.video} autoPlay={!videoStarted} onPlay={() => setVideoStarted(true)} />
                   ) : item.video.posterUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={item.video.posterUrl} alt="" className="size-full object-cover" />
