@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import { LogoMark, Wordmark } from '@/components/brand/logo'
 
 // Os quatro passos reais do assistente de criação, mostrados como a trilha do produto.
-const TRAIL = ['Escolha o tipo do negócio', 'Dê nome e endereço', 'Informe o WhatsApp', 'Escolha a aparência'] as const
+const TRAIL = ['Escolha o tipo do negócio', 'Dê nome e endereço', 'Informe WhatsApp e Instagram', 'Defina horários e aparência'] as const
 
 export function AuthShell({
   title,
@@ -51,7 +51,7 @@ export function AuthShell({
           </ol>
         </div>
 
-        <p className="text-sm font-semibold text-deep-muted">Produtos e serviços em uma vitrine feita para vender.</p>
+        <p className="text-sm font-semibold text-deep-muted">Seus serviços em uma vitrine feita para agendar.</p>
       </aside>
 
       <main className="flex min-w-0 flex-1 justify-center px-5 py-10 sm:items-center sm:px-6">

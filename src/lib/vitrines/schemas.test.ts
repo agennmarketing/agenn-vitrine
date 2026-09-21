@@ -4,42 +4,64 @@ import { checkoutSettingsSchema, createVitrineSchema, itemSchema, vitrineSetting
 const uuid = '00000000-0000-4000-8000-000000000001'
 
 describe('createVitrineSchema', () => {
-  it('normaliza subdomínio e telefone', () => {
+  const hours = JSON.stringify([{ day: 1, open: '09:00', close: '18:00' }])
+
+  it('normaliza subdomínio, telefone e Instagram', () => {
     const parsed = createVitrineSchema.parse({
-      type: 'produtos',
-      name: ' Loja da Ana ',
-      subdomain: ' Loja-Ana ',
+      type: 'servicos',
+      serviceSegment: 'nail',
+      name: ' Studio Ana ',
+      subdomain: ' Studio-Ana ',
       whatsappLabel: '',
       whatsappPhone: '(11) 98765-4321',
+      instagram: 'https://www.instagram.com/Studio.Ana/',
+      address: '  ',
+      businessHours: hours,
       theme: 'dark',
     })
     expect(parsed).toEqual({
-      type: 'produtos',
-      name: 'Loja da Ana',
-      subdomain: 'loja-ana',
+      type: 'servicos',
+      serviceSegment: 'nail',
+      name: 'Studio Ana',
+      subdomain: 'studio-ana',
       whatsappLabel: 'Principal',
       whatsappPhone: '+5511987654321',
+      instagram: 'studio.ana',
+      address: null,
+      businessHours: [{ day: 1, open: '09:00', close: '18:00' }],
       theme: 'dark',
     })
+    expect(createVitrineSchema.shape.instagram.parse('@ana_nails')).toBe('ana_nails')
+    expect(createVitrineSchema.shape.instagram.parse('')).toBeNull()
   })
 
   it('mensagens em português', () => {
     const result = createVitrineSchema.safeParse({
-      type: 'bebidas',
+      type: 'produtos',
+      serviceSegment: 'padaria',
       name: '',
       subdomain: 'app',
       whatsappLabel: 'Principal',
       whatsappPhone: '123',
+      instagram: 'ana nails!',
+      address: '',
+      businessHours: JSON.stringify([{ day: 1, open: '18:00', close: '09:00' }]),
       theme: 'light',
     })
     expect(result.success).toBe(false)
     const messages = Object.fromEntries(result.error!.issues.map((issue) => [issue.path[0], issue.message]))
     expect(messages).toMatchObject({
       type: 'Escolha o tipo da vitrine.',
+      serviceSegment: 'Escolha o tipo do seu negócio.',
       name: 'Informe o nome da vitrine.',
       subdomain: 'Este endereço é reservado. Escolha outro.',
       whatsappPhone: 'Informe um WhatsApp válido com DDD.',
+      instagram: 'Informe um Instagram válido. Ex.: @seuestudio',
+      businessHours: 'O horário de abrir deve ser antes do de fechar.',
     })
+    expect(createVitrineSchema.shape.businessHours.safeParse('[]').error!.issues[0].message).toBe(
+      'Marque pelo menos um dia de atendimento.',
+    )
   })
 })
 

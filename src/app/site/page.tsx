@@ -24,19 +24,16 @@ export default function MarketingHome() {
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center gap-8 px-4 py-12 sm:px-6">
         <div aria-hidden="true" className="flex items-end gap-2">
           <span className="-rotate-6">
-            <TypeIcon type="produtos" size="lg" />
-          </span>
-          <span className="rotate-6">
             <TypeIcon type="servicos" size="lg" />
           </span>
         </div>
         <div className="flex max-w-2xl flex-col gap-4">
           <p className="text-[2.5rem] font-black leading-[1.05] tracking-[-0.03em] text-ink sm:text-[3.5rem]">
-            Sua vitrine com vídeo, com os pedidos chegando no <span className="text-go-strong">WhatsApp</span>.
+            Sua vitrine com vídeo, com os agendamentos chegando no <span className="text-go-strong">WhatsApp</span>.
           </p>
           <p className="max-w-xl text-lg font-semibold leading-relaxed text-ink-muted">
-            Catálogos de produtos e serviços com vídeo, prontos para o WhatsApp. Monte pelo celular, divulgue o link e
-            receba o pedido pronto, com código.
+            Para manicures, salões, lash e sobrancelhas, barbearias e estética. Monte pelo celular, divulgue o link e
+            receba a solicitação de horário pronta, com código.
           </p>
         </div>
         <Link

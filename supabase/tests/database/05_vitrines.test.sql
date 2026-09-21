@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(17);
+select plan(19);
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000f1', 'ana@vitrine.com'),
@@ -67,9 +67,19 @@ select throws_ok(
   $$ select public.create_vitrine('produtos', 'loja-ana', 'Cópia', 'light', 'Solicitar orçamento', 'Principal', '+5511912345678', null) $$,
   '23505', null, 'subdomínio duplicado é recusado'
 );
+select throws_ok(
+  $$ select public.create_vitrine('servicos', 'pro-um', 'Pro 1', 'dark', 'Quero esse serviço', 'Principal', '+5511912345678', null, 'padaria') $$,
+  '23514', null, 'segmento fora da lista é recusado'
+);
 select lives_ok(
-  $$ select public.create_vitrine('produtos', 'pro-um', 'Pro 1', 'dark', 'Solicitar orçamento', 'Principal', '+5511912345678', null) $$,
+  $$ select public.create_vitrine('servicos', 'pro-um', 'Pro 1', 'dark', 'Quero esse serviço', 'Principal', '+5511912345678', null,
+    'nail', 'studio.pro', 'Rua A, 10', '[{"day":2,"open":"09:00","close":"18:00"}]'::jsonb) $$,
   'pro cria a primeira'
+);
+select is(
+  (select concat_ws('|', type, service_segment, instagram, address, business_hours->0->>'open') from public.vitrines where subdomain = 'pro-um'),
+  'servicos|nail|studio.pro|Rua A, 10|09:00',
+  'segmento, Instagram, endereço e horários ficam gravados'
 );
 select throws_ok(
   $$ select public.create_vitrine('servicos', 'pro-dois', 'Pro 2', 'light', 'Agendar', 'Principal', '+5511912345678', null) $$,
