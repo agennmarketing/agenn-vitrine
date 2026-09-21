@@ -31,7 +31,7 @@ async function fetchCatalog(subdomain: string): Promise<PublicVitrine | null> {
       .is('deleted_at', null)
       .order('position')
       .order('created_at'),
-    admin.from('media').select('id, item_id, role, kind, position, storage_paths, bunny_video_id, aspect').eq('vitrine_id', vitrine.id).eq('status', 'ready'),
+    admin.from('media').select('id, item_id, role, kind, position, storage_paths, mux_playback_id, thumbnail_url, aspect').eq('vitrine_id', vitrine.id).eq('status', 'ready'),
     admin
       .from('checkout_settings')
       .select('name_mode, fulfillment_mode, payment_mode, schedule_mode, notes_mode, payment_options')

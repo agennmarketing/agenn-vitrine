@@ -38,7 +38,7 @@ export const PRIVACY: LegalSection[] = [
   {
     title: '5. Com quem compartilhamos',
     paragraphs: [
-      'Usamos empresas que nos ajudam a operar o serviço, cada uma com acesso apenas ao necessário: Supabase (banco de dados e autenticação), Vercel (hospedagem do site), Bunny (armazenamento e entrega de imagens e vídeos), Stripe (pagamentos), Resend (envio de e-mails), Cloudflare (proteção contra robôs e DNS) e Google (apenas se você escolher entrar com o Google).',
+      'Usamos empresas que nos ajudam a operar o serviço, cada uma com acesso apenas ao necessário: Supabase (banco de dados e autenticação), Vercel (hospedagem do site), Bunny (armazenamento e entrega de imagens), Mux (armazenamento e entrega de vídeos), Stripe (pagamentos), Resend (envio de e-mails), Cloudflare (proteção contra robôs e DNS) e Google (apenas se você escolher entrar com o Google).',
       'Parte desses serviços fica fora do Brasil, então pode haver transferência internacional de dados, feita com as garantias previstas na LGPD.',
       'Não vendemos seus dados nem os de seus clientes.',
     ],

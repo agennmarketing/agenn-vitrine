@@ -6,7 +6,7 @@ import {
   mediaOfItem,
   seedItem,
   seedVitrine,
-  sendBunnyWebhook,
+  sendMuxWebhook,
   signIn,
   uniqueSubdomain,
   uploadImage,
@@ -46,7 +46,7 @@ test('criar vitrine → cadastrar item com vídeo → vitrine pública → Whats
   await expect(page.getByText(/Processando o vídeo…|Vídeo pronto/)).toBeVisible({ timeout: 20_000 })
   const itemId = page.url().split('/').pop()!
   const media = await mediaOfItem(itemId)
-  await sendBunnyWebhook(api, media!.bunny_video_id!)
+  await sendMuxWebhook(api, media!.mux_upload_id!)
   await expect(page.getByText('Vídeo pronto')).toBeVisible({ timeout: 15_000 })
 
   await page.goto(`http://${subdomain}.localhost:3000/`)

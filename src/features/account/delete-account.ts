@@ -1,7 +1,7 @@
 import 'server-only'
 import * as Sentry from '@sentry/nextjs'
 import { getBilling } from '@/lib/billing/billing'
-import { removeStoredFiles, removeStreamVideos } from '@/lib/media/remove-media'
+import { removeStoredFiles, removeVideoAssets } from '@/lib/media/remove-media'
 import { storagePathList } from '@/lib/media/urls'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { revalidateVitrine } from '@/lib/vitrines/cache'
@@ -26,19 +26,19 @@ export async function deleteAccount(userId: string): Promise<void> {
   }
 
   const [{ data: mediaRows, error: mediaError }, { data: vitrines, error: vitrinesError }] = await Promise.all([
-    admin.from('media').select('storage_paths, bunny_video_id').eq('owner_id', userId),
+    admin.from('media').select('storage_paths, mux_upload_id, mux_asset_id').eq('owner_id', userId),
     admin.from('vitrines').select('subdomain').eq('owner_id', userId),
   ])
   if (mediaError) throw mediaError
   if (vitrinesError) throw vitrinesError
 
   const paths = (mediaRows ?? []).flatMap((row) => storagePathList(row.storage_paths))
-  const guids = (mediaRows ?? []).flatMap((row) => (row.bunny_video_id ? [row.bunny_video_id] : []))
+  const videos = (mediaRows ?? []).filter((row) => row.mux_upload_id || row.mux_asset_id)
 
   // Rastro para a limpeza diária de órfãos: se o processo morrer logo após apagar o
-  // usuário, a linha de `media` que apontava para esses arquivos no Bunny já não existe
+  // usuário, a linha de `media` que apontava para esses arquivos já não existe
   // mais, e a limpeza (que parte das linhas de `media`) nunca os encontraria sozinha.
-  const trace = `Excluindo conta ${userId}: ${paths.length} arquivos, ${guids.length} vídeos`
+  const trace = `Excluindo conta ${userId}: ${paths.length} arquivos, ${videos.length} vídeos`
   Sentry.captureMessage(trace)
   console.error(trace)
 
@@ -47,10 +47,10 @@ export async function deleteAccount(userId: string): Promise<void> {
   const { error } = await admin.auth.admin.deleteUser(userId)
   if (error) throw error
 
-  // Revalida assim que o dono deixa de existir, antes de mexer no Bunny: se as chamadas
+  // Revalida assim que o dono deixa de existir, antes de mexer nos provedores: se as chamadas
   // de rede abaixo falharem, a vitrine já não continua servida do cache de um dono apagado.
   revalidateVitrine(...(vitrines ?? []).map((vitrine) => vitrine.subdomain))
 
-  await Promise.all([removeStoredFiles(paths), removeStreamVideos(guids)])
+  await Promise.all([removeStoredFiles(paths), removeVideoAssets(videos)])
   Sentry.captureMessage(`Conta excluída: ${userId}`)
 }

@@ -1,6 +1,6 @@
 import type { CheckoutSettings, FieldMode } from '@/lib/cart/checkout'
 import { imageSources } from '@/lib/media/urls'
-import { videoPlaylistUrl, videoThumbnailUrl } from '@/lib/video/urls'
+import { videoPlaylistUrl } from '@/lib/video/urls'
 import type { PriceType } from '@/lib/pricing/price'
 import type { VitrineType } from '@/lib/vitrines/vitrine-types'
 
@@ -30,7 +30,8 @@ export type CatalogRows = {
     kind: string
     position: number
     storage_paths: unknown
-    bunny_video_id: string | null
+    mux_playback_id: string | null
+    thumbnail_url: string | null
     aspect: string | null
   }[]
 }
@@ -73,7 +74,7 @@ export function buildPublicCatalog(rows: CatalogRows, mediaBaseUrl: string, vide
   let videosLeft = rows.overQuota ? 0 : rows.plan.max_videos_per_vitrine
   const videoByItem = new Map<string, CatalogRows['media'][number]>()
   for (const item of visible) {
-    const video = rows.media.find((m) => m.item_id === item.id && m.role === 'video' && m.bunny_video_id)
+    const video = rows.media.find((m) => m.item_id === item.id && m.role === 'video' && m.mux_playback_id)
     if (video && videosLeft > 0) {
       videoByItem.set(item.id, video)
       videosLeft -= 1
@@ -111,7 +112,7 @@ export function buildPublicCatalog(rows: CatalogRows, mediaBaseUrl: string, vide
       video: videoRow
         ? {
             mediaId: videoRow.id,
-            playlistUrl: videoPlaylistUrl(videoBaseUrl, videoRow.bunny_video_id!),
+            playlistUrl: videoPlaylistUrl(videoBaseUrl, videoRow.mux_playback_id!),
             posterUrl: cover?.large ?? null,
             aspect: videoRow.aspect === '16:9' ? '16:9' : '9:16',
           }
@@ -134,7 +135,7 @@ export function buildPublicCatalog(rows: CatalogRows, mediaBaseUrl: string, vide
   const { vitrine } = rows
   const bannerRow = vitrine.banner_media_id ? mediaById.get(vitrine.banner_media_id) : undefined
   const bannerAllowed = branding && vitrine.banner_enabled && bannerRow !== undefined
-  const bannerIsVideo = bannerRow?.kind === 'video' && Boolean(bannerRow.bunny_video_id)
+  const bannerIsVideo = bannerRow?.kind === 'video' && Boolean(bannerRow.mux_playback_id)
   return {
     id: vitrine.id,
     subdomain: vitrine.subdomain,
@@ -157,8 +158,8 @@ export function buildPublicCatalog(rows: CatalogRows, mediaBaseUrl: string, vide
       bannerAllowed && bannerIsVideo && !rows.overQuota
         ? {
             mediaId: bannerRow!.id,
-            playlistUrl: videoPlaylistUrl(videoBaseUrl, bannerRow!.bunny_video_id!),
-            posterUrl: videoThumbnailUrl(videoBaseUrl, bannerRow!.bunny_video_id!),
+            playlistUrl: videoPlaylistUrl(videoBaseUrl, bannerRow!.mux_playback_id!),
+            posterUrl: bannerRow!.thumbnail_url,
             aspect: '16:9',
           }
         : null,

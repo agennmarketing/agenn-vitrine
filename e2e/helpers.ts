@@ -206,15 +206,17 @@ export function videoFixture(name: 'horizontal-3s' | 'vertical-3s' | 'longo-61s'
   return path.join('e2e', 'fixtures', `${name}.webm`)
 }
 
-export function signBunnyWebhook(body: string) {
-  return createHmac('sha256', process.env.BUNNY_STREAM_WEBHOOK_SECRET ?? 'ci-webhook-secret').update(body).digest('hex')
+export function signMuxWebhook(body: string, timestamp = Math.floor(Date.now() / 1000)) {
+  const secret = process.env.MUX_WEBHOOK_SECRET ?? 'ci-webhook-secret'
+  return `t=${timestamp},v1=${createHmac('sha256', secret).update(`${timestamp}.${body}`).digest('hex')}`
 }
 
-export async function sendBunnyWebhook(request: APIRequestContext, guid: string, status = 3) {
-  const body = JSON.stringify({ VideoLibraryId: 1, VideoGuid: guid, Status: status })
-  return request.post(`${APP_URL}/api/webhooks/bunny`, {
+export async function sendMuxWebhook(request: APIRequestContext, uploadId: string, type = 'video.asset.ready') {
+  // No driver fake um único id faz as vezes de envio, asset e playback.
+  const body = JSON.stringify({ type, object: { type: 'asset', id: uploadId }, data: { id: uploadId, upload_id: uploadId } })
+  return request.post(`${APP_URL}/api/webhooks/mux`, {
     data: body,
-    headers: { 'content-type': 'application/json', 'x-bunnystream-signature': signBunnyWebhook(body) },
+    headers: { 'content-type': 'application/json', 'mux-signature': signMuxWebhook(body) },
   })
 }
 
@@ -235,7 +237,10 @@ export async function seedVideo(
       role: options.role ?? 'video',
       kind: 'video',
       status: options.status ?? 'ready',
-      bunny_video_id: guid,
+      mux_upload_id: guid,
+      mux_asset_id: guid,
+      mux_playback_id: guid,
+      thumbnail_url: `/api/dev-video/${guid}/thumbnail.jpg`,
       duration_seconds: 3,
       aspect: '9:16',
       width: 360,
@@ -250,12 +255,12 @@ export async function seedVideo(
 export async function mediaOfItem(itemId: string, role: 'video' | 'cover' = 'video') {
   const { data } = await createAdminClient()
     .from('media')
-    .select('id, status, bunny_video_id')
+    .select('id, status, mux_upload_id, mux_asset_id')
     .eq('item_id', itemId)
     .eq('role', role)
     .maybeSingle()
     .throwOnError()
-  return data as { id: string; status: string; bunny_video_id: string | null } | null
+  return data as { id: string; status: string; mux_upload_id: string | null; mux_asset_id: string | null } | null
 }
 
 export async function readFakeEmails(to: string) {

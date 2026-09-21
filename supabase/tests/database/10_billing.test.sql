@@ -30,7 +30,7 @@ insert into public.items (id, owner_id, vitrine_id, category_id, name, price_cen
   ('00000000-0000-0000-0000-00000000e502', '00000000-0000-0000-0000-0000000005c1', '00000000-0000-0000-0000-00000000f502', '00000000-0000-0000-0000-00000000c502', 'B', 100),
   ('00000000-0000-0000-0000-00000000e503', '00000000-0000-0000-0000-0000000005c1', '00000000-0000-0000-0000-00000000f502', '00000000-0000-0000-0000-00000000c502', 'C', 100);
 
-insert into public.media (id, owner_id, vitrine_id, item_id, role, kind, status, bunny_video_id) values
+insert into public.media (id, owner_id, vitrine_id, item_id, role, kind, status, mux_asset_id) values
   ('00000000-0000-0000-0000-00000000d501', '00000000-0000-0000-0000-0000000005c1', '00000000-0000-0000-0000-00000000f501', '00000000-0000-0000-0000-00000000e501', 'video', 'video', 'ready', 'guid-plano-1'),
   ('00000000-0000-0000-0000-00000000d502', '00000000-0000-0000-0000-0000000005c1', '00000000-0000-0000-0000-00000000f502', '00000000-0000-0000-0000-00000000e502', 'video', 'video', 'ready', 'guid-plano-2'),
   ('00000000-0000-0000-0000-00000000d503', '00000000-0000-0000-0000-0000000005c1', '00000000-0000-0000-0000-00000000f502', '00000000-0000-0000-0000-00000000e503', 'video', 'video', 'ready', 'guid-plano-3');
@@ -89,7 +89,7 @@ where user_id = '00000000-0000-0000-0000-0000000005c1';
 
 set local role service_role;
 select set_eq(
-  $$ select bunny_video_id from public.videos_to_delete_after_pro(90) $$,
+  $$ select mux_asset_id from public.videos_to_delete_after_pro(90) $$,
   $$ values ('guid-plano-2'::text), ('guid-plano-3'::text) $$,
   'apaga só os vídeos que passam do limite do gratuito'
 );

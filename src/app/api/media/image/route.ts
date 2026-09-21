@@ -81,7 +81,7 @@ export async function POST(request: Request) {
   const storagePaths = Object.fromEntries(
     files.map((file) => [String(file.width), `${userId}/${vitrineId}/${mediaId}-${file.width}.${file.ext}`]),
   )
-  // Configuração do servidor (Bunny, chave secreta) conferida antes de enviar qualquer
+  // Configuração do servidor (armazenamento, chave secreta) conferida antes de enviar qualquer
   // arquivo: se faltar algo, nada fica órfão no Storage.
   let storage: ReturnType<typeof getMediaStorage>
   let admin: ReturnType<typeof createSupabaseAdminClient>
@@ -120,7 +120,7 @@ export async function POST(request: Request) {
   try {
     // Mídia que ocupa o mesmo espaço (capa, posição da galeria, logo ou banner) é substituída.
     if (itemId || role === 'logo' || role === 'banner') {
-      let previousQuery = admin.from('media').select('id, storage_paths, bunny_video_id').eq('vitrine_id', vitrineId).eq('role', role)
+      let previousQuery = admin.from('media').select('id, storage_paths, mux_upload_id, mux_asset_id').eq('vitrine_id', vitrineId).eq('role', role)
       if (itemId) previousQuery = previousQuery.eq('item_id', itemId)
       if (role === 'gallery') previousQuery = previousQuery.eq('position', position!)
       const { data: previous, error: previousError } = await previousQuery

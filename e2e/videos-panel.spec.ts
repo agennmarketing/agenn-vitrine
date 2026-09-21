@@ -7,7 +7,7 @@ import {
   mediaOfItem,
   seedItem,
   seedVitrine,
-  sendBunnyWebhook,
+  sendMuxWebhook,
   setPlan,
   signIn,
   videoFixture,
@@ -22,14 +22,14 @@ test('envia vídeo do item, processa pelo webhook e respeita o limite do gratuit
 
   await page.goto(`/painel/vitrines/${vitrine.id}/itens/${first.id}`)
   await page.getByLabel('Vídeo', { exact: true }).setInputFiles(videoFixture('longo-61s'))
-  await expect(page.getByText('O vídeo tem 61 s. O limite é 60 s.')).toBeVisible()
+  await expect(page.getByText('O vídeo tem 61 s. O limite é 15 s.')).toBeVisible()
 
   await page.getByLabel('Vídeo', { exact: true }).setInputFiles(videoFixture('vertical-3s'))
   await expect(page.getByText('Processando o vídeo…')).toBeVisible({ timeout: 20_000 })
 
   const media = await mediaOfItem(first.id)
   expect(media?.status).toBe('processing')
-  const response = await sendBunnyWebhook(request, media!.bunny_video_id!)
+  const response = await sendMuxWebhook(request, media!.mux_upload_id!)
   expect(response.status()).toBe(200)
   expect(await response.json()).toEqual({ status: 'ready' })
   await expect(page.getByText('Vídeo pronto')).toBeVisible({ timeout: 15_000 })
@@ -53,20 +53,23 @@ test('webhook: assinatura inválida é recusada e falha mostra Tentar novamente'
   const item = await seedItem(vitrine, user.id, { name: 'Item', priceCents: 1000 })
   await signIn(page, user.email, user.password)
 
-  const bad = await request.post('/api/webhooks/bunny', {
-    data: '{"VideoLibraryId":1,"VideoGuid":"x","Status":3}',
-    headers: { 'content-type': 'application/json', 'x-bunnystream-signature': '0'.repeat(64) },
+  const bad = await request.post('/api/webhooks/mux', {
+    data: '{"type":"video.asset.ready","data":{"id":"x"}}',
+    headers: {
+      'content-type': 'application/json',
+      'mux-signature': `t=${Math.floor(Date.now() / 1000)},v1=${'0'.repeat(64)}`,
+    },
   })
   expect(bad.status()).toBe(401)
 
   await page.goto(`/painel/vitrines/${vitrine.id}/itens/${item.id}`)
   await page.getByLabel('Vídeo', { exact: true }).setInputFiles(videoFixture('vertical-3s'))
   await expect(page.getByText('Processando o vídeo…')).toBeVisible({ timeout: 20_000 })
-  // O webhook consulta a API do Stream: para simular a falha, o "vídeo" some do driver fake.
+  // O webhook consulta a API do provedor: para simular a falha, o "vídeo" some do driver fake.
   // Playwright e next start rodam no mesmo runner e compartilham o diretório temporário.
   const media = await mediaOfItem(item.id)
-  await rm(path.join(os.tmpdir(), 'agenn-vitrine-video', `${media!.bunny_video_id}.json`), { force: true })
-  await sendBunnyWebhook(request, media!.bunny_video_id!, 5)
+  await rm(path.join(os.tmpdir(), 'agenn-vitrine-video', `${media!.mux_upload_id}.json`), { force: true })
+  await sendMuxWebhook(request, media!.mux_upload_id!, 'video.asset.errored')
   await expect(page.getByText('O processamento falhou.')).toBeVisible({ timeout: 15_000 })
   await page.getByRole('button', { name: 'Tentar novamente' }).click()
   await expect(page.getByLabel('Vídeo', { exact: true })).toBeVisible()
@@ -88,7 +91,7 @@ test('banner em vídeo: só Pro e só horizontal', async ({ page }) => {
   await expect(page.getByText('Processando o vídeo…')).toBeVisible({ timeout: 20_000 })
 })
 
-test('status sincroniza com o Stream mesmo sem webhook', async ({ page }) => {
+test('status sincroniza com o provedor mesmo sem webhook', async ({ page }) => {
   const user = await createConfirmedUser('video-sync')
   const vitrine = await seedVitrine(user.id)
   const item = await seedItem(vitrine, user.id, { name: 'Sem aviso', priceCents: 1000 })

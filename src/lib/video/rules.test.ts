@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import {
   aspectFor,
-  bunnyStatusToMedia,
+  muxStatusToMedia,
   clampReportedBytes,
   estimateBytesFromSeconds,
   formatGigabytes,
   validateVideoFile,
 } from './rules'
 
-const limits = { maxSeconds: 60, maxUploadMb: 500 }
+const limits = { maxSeconds: 15, maxUploadMb: 500 }
 const ok = { durationSeconds: 12.4, sizeBytes: 10 * 1024 * 1024, width: 1080, height: 1920 }
 
 describe('aspectFor', () => {
@@ -32,7 +32,7 @@ describe('validateVideoFile', () => {
     expect(validateVideoFile({ ...ok, width: 0 }, limits, 'video').ok).toBe(false)
     expect(validateVideoFile({ ...ok, durationSeconds: 61 }, limits, 'video')).toEqual({
       ok: false,
-      message: 'O vídeo tem 61 s. O limite é 60 s.',
+      message: 'O vídeo tem 61 s. O limite é 15 s.',
     })
     expect(validateVideoFile({ ...ok, sizeBytes: 501 * 1024 * 1024 }, limits, 'video')).toEqual({
       ok: false,
@@ -45,15 +45,15 @@ describe('validateVideoFile', () => {
   })
 
   it('tolera meio segundo acima do limite (arredondamento do arquivo)', () => {
-    expect(validateVideoFile({ ...ok, durationSeconds: 60.4 }, limits, 'video').ok).toBe(true)
+    expect(validateVideoFile({ ...ok, durationSeconds: 15.4 }, limits, 'video').ok).toBe(true)
   })
 })
 
-describe('bunnyStatusToMedia', () => {
-  it('mapeia os códigos do webhook', () => {
-    expect([3, 4].map(bunnyStatusToMedia)).toEqual(['ready', 'ready'])
-    expect([5, 8].map(bunnyStatusToMedia)).toEqual(['failed', 'failed'])
-    expect([0, 1, 2, 6, 7, 9, 10].map(bunnyStatusToMedia)).toEqual(Array(7).fill('processing'))
+describe('muxStatusToMedia', () => {
+  it('mapeia os estados do asset', () => {
+    expect(muxStatusToMedia('ready')).toBe('ready')
+    expect(muxStatusToMedia('errored')).toBe('failed')
+    expect(['preparing', 'waiting', ''].map(muxStatusToMedia)).toEqual(Array(3).fill('processing'))
   })
 })
 

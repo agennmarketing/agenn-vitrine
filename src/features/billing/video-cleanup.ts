@@ -54,7 +54,7 @@ export async function warnVideoCleanup(admin: Admin): Promise<number> {
 }
 
 // Spec 6.4: 90 dias depois do fim do Pro, os vídeos que passam do limite do
-// gratuito saem do banco e do Bunny. O primeiro vídeo fica (spec 4.7).
+// gratuito saem do banco e do Mux. O primeiro vídeo fica (spec 4.7).
 export async function deleteVideosAfterPro(admin: Admin): Promise<number> {
   const { data: rows, error } = await admin.rpc('videos_to_delete_after_pro', { p_days: DELETE_DAYS })
   if (error) throw error

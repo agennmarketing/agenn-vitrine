@@ -56,7 +56,7 @@ export function AppearanceForm({
   allowBranding: boolean
   logo: Slot
   banner: Slot
-  bannerVideo: { id: string; status: 'processing' | 'ready' | 'failed' } | null
+  bannerVideo: { id: string; status: 'processing' | 'ready' | 'failed'; thumbnailUrl: string | null } | null
   videoLimits: { maxSeconds: number; maxUploadMb: number }
   buttonText: string
   initial: Appearance
