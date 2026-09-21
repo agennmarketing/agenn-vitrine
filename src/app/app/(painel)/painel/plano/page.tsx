@@ -136,20 +136,20 @@ export default async function PlanoPage({ searchParams }: { searchParams: Promis
       ) : null}
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
-        {/* Plano atual: placa verde-escura; no Pro ganha a coroa dourada. */}
-        <section className="overflow-hidden rounded-card border-2 border-line bg-surface">
-          <header className="flex items-start gap-4 bg-deep px-5 py-5 text-deep-ink sm:px-6">
+        {/* Plano atual: cabeçalho claro com título roxo; no Pro ganha a coroa dourada. */}
+        <section className="overflow-hidden rounded-card border border-line bg-surface">
+          <header className="flex items-start gap-4 border-b border-line px-5 py-5 sm:px-6">
             <span
               aria-hidden="true"
               className={`flex size-12 shrink-0 items-center justify-center rounded-control ${
-                summary.pro ? 'bg-sun text-sun-ink shadow-[0_3px_0_var(--color-sun-lip)]' : 'bg-deep-raised text-deep-muted'
+                summary.pro ? 'bg-sun text-sun-ink shadow-[0_3px_0_var(--color-sun-lip)]' : 'bg-go-soft text-go-strong'
               }`}
             >
               {summary.pro ? <Crown className="size-6" strokeWidth={2.5} /> : <Sparkles className="size-6" strokeWidth={2.5} />}
             </span>
             <div className="flex min-w-0 flex-col gap-1.5">
-              <h2 className="text-2xl font-black leading-tight tracking-[-0.02em]">{summary.title}</h2>
-              <p className="text-[0.9375rem] font-semibold leading-snug text-deep-muted">{summary.detail}</p>
+              <h2 className="text-2xl font-black leading-tight tracking-[-0.02em] text-go-strong">{summary.title}</h2>
+              <p className="text-[0.9375rem] font-semibold leading-snug text-ink-muted">{summary.detail}</p>
             </div>
           </header>
           <div className="flex flex-col gap-5 p-5 sm:p-6">
@@ -157,11 +157,11 @@ export default async function PlanoPage({ searchParams }: { searchParams: Promis
               <UsageRow label="Vídeos" value={usage.videosCount} max={plan.max_videos_per_account} />
             </div>
             <dl className="grid gap-x-4 gap-y-1 text-sm sm:grid-cols-2">
-              <div className="flex justify-between gap-3 border-t-2 border-line pt-3 sm:block">
+              <div className="flex justify-between gap-3 border-t border-line pt-3 sm:block">
                 <dt className="font-extrabold text-ink">Itens por vitrine</dt>
                 <dd className="numeric font-bold text-ink-muted">até {plan.max_items_per_vitrine}</dd>
               </div>
-              <div className="flex justify-between gap-3 border-t-2 border-line pt-3 sm:block">
+              <div className="flex justify-between gap-3 border-t border-line pt-3 sm:block">
                 <dt className="font-extrabold text-ink">Franquia do mês</dt>
                 <dd className="numeric font-bold text-ink-muted">
                   {formatGigabytes(usage.bytesDelivered)} de {plan.monthly_video_gb} GB
@@ -173,7 +173,7 @@ export default async function PlanoPage({ searchParams }: { searchParams: Promis
         </section>
 
         {freePlan && proPlan ? (
-          <section aria-labelledby="comparacao" className="rounded-card border-2 border-line bg-surface p-5 sm:p-6">
+          <section aria-labelledby="comparacao" className="rounded-card border border-line bg-surface p-5 sm:p-6">
             <h2 id="comparacao" className="text-xl font-black leading-tight tracking-[-0.02em] text-ink">
               Gratuito × Pro
             </h2>
@@ -202,7 +202,7 @@ export default async function PlanoPage({ searchParams }: { searchParams: Promis
               </thead>
               <tbody>
                 {comparisonRows(freePlan, proPlan).map((row) => (
-                  <tr key={row.label} className="border-t-2 border-line">
+                  <tr key={row.label} className="border-t border-line">
                     <th scope="row" className="py-3 pr-2 text-left font-extrabold leading-snug text-ink">
                       {row.label}
                     </th>

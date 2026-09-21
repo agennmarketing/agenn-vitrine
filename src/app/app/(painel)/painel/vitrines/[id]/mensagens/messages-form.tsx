@@ -78,7 +78,7 @@ export function MessagesForm({ vitrineId, initial }: { vitrineId: string; initia
           title="Formulário da sacola"
           description="O que o cliente preenche antes de enviar. Desligado não aparece; opcional pode ficar em branco."
         >
-          <ul className="flex flex-col divide-y-2 divide-line rounded-control border-2 border-line">
+          <ul className="flex flex-col divide-y divide-line rounded-control border-2 border-line">
             {MODE_FIELDS.map(([name, label, Icon]) => (
               <li key={name} className="flex items-center justify-between gap-3 px-3.5 py-3">
                 <label htmlFor={name} className="flex min-w-0 items-center gap-3 font-extrabold leading-snug text-ink">

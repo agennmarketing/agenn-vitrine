@@ -8,7 +8,7 @@ export function CopyLinkButton({ url, className = '', size }: { url: string; cla
   const [copied, setCopied] = useState(false)
   return (
     <Button
-      variant="secondary"
+      variant={copied ? 'secondary' : 'primary'}
       size={size}
       className={`${className} ${copied ? 'border-success bg-success-soft text-success' : ''}`}
       onClick={async () => {

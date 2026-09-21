@@ -67,7 +67,7 @@ function OrderLookup() {
   const simulation = order ? simulateOrder(order.lines, new Map(order.items.map((item) => [item.id, item]))) : null
 
   return (
-    <section className="flex min-w-0 flex-col gap-5 rounded-card border-2 border-line bg-surface p-5 sm:p-6">
+    <section className="flex min-w-0 flex-col gap-5 rounded-card border border-line bg-surface p-5 sm:p-6">
       <BlockHeader
         icon={<Search className="size-6" strokeWidth={2.5} />}
         title="Por código do pedido"
@@ -140,7 +140,7 @@ function ManualMode() {
   const simulation = simulateOrder(lines, items)
 
   return (
-    <section className="flex min-w-0 flex-col gap-5 rounded-card border-2 border-line bg-surface p-5 sm:p-6">
+    <section className="flex min-w-0 flex-col gap-5 rounded-card border border-line bg-surface p-5 sm:p-6">
       <BlockHeader
         icon={<Calculator className="size-6" strokeWidth={2.5} />}
         title="Modo manual"
@@ -361,7 +361,7 @@ function ReceiptLine({ line }: { line: SimulatedLine }) {
   return (
     <li className="flex flex-col gap-2 py-3 first:pt-0 last:pb-0">
       <div className="flex items-start gap-3">
-        <span className="numeric flex h-7 min-w-9 shrink-0 items-center justify-center rounded-lg bg-deep px-1.5 text-sm font-black text-deep-ink">
+        <span className="numeric flex h-7 min-w-9 shrink-0 items-center justify-center rounded-lg border-2 border-go-strong bg-surface px-1.5 text-sm font-black text-go-strong">
           {line.qty}x
         </span>
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">

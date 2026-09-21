@@ -1,8 +1,8 @@
-import { LayoutGrid, MessageCircle, Palette, Settings, ShoppingBag, Wrench } from 'lucide-react'
+import { LayoutGrid, MessageCircle, Palette, Settings, Share2, ShoppingBag, Wrench } from 'lucide-react'
 import type { VitrineType } from './vitrine-types'
 
 /*
- * Seções do editor de cada tipo de vitrine (as abas do editor e o menu do cartão no painel).
+ * Seções do editor de cada tipo de vitrine (as abas do editor).
  * Serviços: a lista se chama "Serviços" e não há sacola. Produtos (e as antigas de comida) têm as duas.
  */
 export function editorSections(type: VitrineType) {
@@ -13,5 +13,6 @@ export function editorSections(type: VitrineType) {
     { slug: 'whatsapp', label: 'WhatsApp', Icon: MessageCircle },
     ...(servicos ? [] : [{ slug: 'mensagens', label: 'Sacola e mensagens', Icon: ShoppingBag }]),
     { slug: 'configuracoes', label: 'Configurações', Icon: Settings },
+    { slug: 'compartilhar', label: 'Compartilhar', Icon: Share2 },
   ]
 }

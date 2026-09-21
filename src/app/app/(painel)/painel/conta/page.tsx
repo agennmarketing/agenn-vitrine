@@ -80,7 +80,7 @@ export default async function AccountPage() {
           <form action={signOutAction} className="lg:hidden">
             <button
               type="submit"
-              className="flex h-10 items-center gap-1.5 rounded-control px-3 text-sm font-extrabold text-deep-muted transition-colors hover:bg-deep-raised hover:text-white"
+              className="flex h-10 items-center gap-1.5 rounded-control px-3 text-sm font-extrabold text-ink-muted transition-colors hover:bg-subtle hover:text-ink"
             >
               <LogOut aria-hidden="true" className="size-[1.125rem]" strokeWidth={2.5} />
               Sair
@@ -91,7 +91,7 @@ export default async function AccountPage() {
       <PanelBody>
         <div className="flex max-w-2xl flex-col gap-6">
           {/* Cartão de identidade: a inicial do usuário em tamanho grande, com nome e e-mail. */}
-          <div className="flex items-center gap-4 rounded-card border-2 border-line bg-surface px-5 py-4">
+          <div className="flex items-center gap-4 rounded-card border border-line bg-surface px-5 py-4">
             <span
               aria-hidden="true"
               className="flex size-14 shrink-0 items-center justify-center rounded-full bg-go text-2xl font-black text-go-ink shadow-[0_3px_0_var(--color-go-lip)]"
@@ -106,7 +106,7 @@ export default async function AccountPage() {
 
           <Block icon={<UserRound className="size-6" strokeWidth={2.5} />} title="Perfil" description="Seu nome e o e-mail de acesso.">
             <NameForm name={name} />
-            <div className="border-t-2 border-line pt-5">
+            <div className="border-t border-line pt-5">
               <Field label="E-mail" htmlFor="account-email" hint="O e-mail é o identificador da conta e não pode ser alterado.">
                 <Input id="account-email" type="email" value={email} readOnly />
               </Field>
@@ -131,7 +131,7 @@ export default async function AccountPage() {
               </div>
             ) : null}
 
-            <div className={`flex flex-col gap-4 ${passwordLogin ? 'border-t-2 border-line pt-5' : ''}`}>
+            <div className={`flex flex-col gap-4 ${passwordLogin ? 'border-t border-line pt-5' : ''}`}>
               <div className="flex items-center gap-2">
                 <LogOut aria-hidden="true" className="size-5 text-ink-muted" strokeWidth={2.5} />
                 <h3 className="text-[1.0625rem] font-extrabold text-ink">Sessões</h3>

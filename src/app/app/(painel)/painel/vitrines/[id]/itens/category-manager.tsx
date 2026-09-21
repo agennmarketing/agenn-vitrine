@@ -90,12 +90,12 @@ export function CategoryManager({ vitrineId, categories: serverCategories }: { v
                   id={category.id}
                   placeholderClassName="rounded-full"
                   className={`inline-flex h-11 shrink-0 items-center rounded-full border-2 transition-colors duration-150 ease-out-quint ${
-                    active ? 'border-deep bg-deep text-deep-ink' : 'border-line-strong bg-surface text-ink hover:bg-canvas'
+                    active ? 'border-go-strong bg-surface text-go-strong' : 'border-line-strong bg-surface text-ink hover:bg-canvas'
                   }`}
                 >
                   <DragHandle
                     label={`Reordenar categoria ${category.name}`}
-                    tone={active ? 'inverse' : 'default'}
+                    tone="default"
                     className="h-10 w-8 rounded-l-full pl-1"
                   />
                   <button
@@ -110,7 +110,7 @@ export function CategoryManager({ vitrineId, categories: serverCategories }: { v
                     className="inline-flex h-10 items-center gap-1.5 rounded-r-full pl-1 pr-3.5 text-sm font-extrabold"
                   >
                     <span className="max-w-[12rem] truncate">{category.name}</span>
-                    <Pencil aria-hidden="true" className={`size-3.5 ${active ? 'text-deep-muted' : 'text-ink-muted'}`} strokeWidth={2.75} />
+                    <Pencil aria-hidden="true" className={`size-3.5 ${active ? 'text-go-strong' : 'text-ink-muted'}`} strokeWidth={2.75} />
                   </button>
                 </SortableItem>
               )
@@ -136,12 +136,12 @@ export function CategoryManager({ vitrineId, categories: serverCategories }: { v
         </SortableList>
       </div>
 
-      <div aria-live="polite">
+      <div aria-live="polite" className="empty:absolute">
         <FormMessage error={message.error} success={message.success} />
       </div>
 
       {panelOpen ? (
-        <div id="categoria-edicao" className="flex animate-rise flex-col gap-4 rounded-card border-2 border-line bg-surface p-4 sm:p-5">
+        <div id="categoria-edicao" className="flex animate-rise flex-col gap-4 rounded-card border border-line bg-surface p-4 sm:p-5">
           {editing ? (
             <>
               <div className="flex items-center justify-between gap-3">

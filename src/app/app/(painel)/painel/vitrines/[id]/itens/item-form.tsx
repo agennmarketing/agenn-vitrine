@@ -139,7 +139,7 @@ function CloseButton() {
 // Cabeçalho do popup: fechar, a barra de progresso e os passos (tocar num passo leva direto a ele).
 function DialogHeader({ step, labels, onStep }: { step: number; labels: string[]; onStep: (step: number) => void }) {
   return (
-    <header className="flex flex-col gap-4 border-b-2 border-line bg-surface px-4 pb-4 pt-3 sm:px-6 sm:pt-5">
+    <header className="flex flex-col gap-4 border-b border-line bg-surface px-4 pb-4 pt-3 sm:px-6 sm:pt-5">
       <div className="flex items-center gap-3">
         <CloseButton />
         <ProgressBar value={step + 1} max={STEP_COUNT} label="Progresso do item" />
@@ -153,7 +153,7 @@ function DialogHeader({ step, labels, onStep }: { step: number; labels: string[]
             const current = index === step
             const done = index < step
             const tone = current
-              ? 'border-deep bg-deep text-deep-ink shadow-[0_3px_0_#000]'
+              ? 'border-go-strong bg-surface text-go-strong'
               : done
                 ? 'border-go/40 bg-go-soft text-go-strong hover:border-go'
                 : 'border-line bg-surface text-ink-muted hover:border-line-strong hover:text-ink'
@@ -584,7 +584,7 @@ export function ItemForm(props: {
                 )}
               </FormSection>
 
-              <fieldset className="flex min-w-0 flex-col gap-3 border-t-2 border-line pt-6">
+              <fieldset className="flex min-w-0 flex-col gap-3 border-t border-line pt-6">
                 <legend className="float-left mb-1 w-full text-lg font-black leading-snug tracking-[-0.02em] text-ink">Variações</legend>
                 <p className="-mt-1 text-sm font-semibold leading-snug text-ink-muted">
                   {produto
@@ -617,7 +617,7 @@ export function ItemForm(props: {
                             <DragHandle label={`Reordenar variação ${n}`} className="-mr-1 h-11 w-8 rounded-control" />
                             <span
                               aria-hidden="true"
-                              className="flex size-8 shrink-0 items-center justify-center rounded-full bg-deep text-sm font-black text-deep-ink numeric"
+                              className="flex size-8 shrink-0 items-center justify-center rounded-full border-2 border-go-strong bg-surface text-sm font-black text-go-strong numeric"
                             >
                               {n}
                             </span>
@@ -684,7 +684,7 @@ export function ItemForm(props: {
 
             {/* Passo 4: ajustes do WhatsApp (tudo opcional). */}
             <div hidden={step !== 3} className="flex flex-col gap-7">
-              <details ref={advancedRef} className="group rounded-card border-2 border-line bg-surface">
+              <details ref={advancedRef} className="group rounded-card border border-line bg-surface">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-card p-5 [&::-webkit-details-marker]:hidden">
                   <span className="flex flex-col gap-0.5">
                     <span className="text-lg font-black leading-snug tracking-[-0.02em] text-ink">Avançado</span>
@@ -696,7 +696,7 @@ export function ItemForm(props: {
                     strokeWidth={3}
                   />
                 </summary>
-                <div className="flex flex-col gap-5 border-t-2 border-line p-5">
+                <div className="flex flex-col gap-5 border-t border-line p-5">
                   <Field label="WhatsApp do item" htmlFor="whatsappId" error={errors.whatsappId}>
                     <Select
                       id="whatsappId"
@@ -747,7 +747,7 @@ export function ItemForm(props: {
       </div>
 
       {/* Rodapé fixo do popup: voltar, salvar (a qualquer momento) e continuar. */}
-      <footer className="flex items-center gap-2 border-t-2 border-line bg-surface px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 sm:gap-3 sm:px-6 sm:pb-4 sm:pt-4">
+      <footer className="flex items-center gap-2 border-t border-line bg-surface px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 sm:gap-3 sm:px-6 sm:pb-4 sm:pt-4">
         {step > 0 ? (
           <Button variant="ghost" aria-label="Voltar" onClick={() => goTo(step - 1)} className="max-sm:w-12 max-sm:px-0">
             <ArrowLeft aria-hidden="true" className="size-5" strokeWidth={3} />

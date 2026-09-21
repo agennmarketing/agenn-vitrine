@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const ITEMS = [
-  { href: '/painel', label: 'Vitrines', Icon: Store },
+  { href: '/painel', label: 'Vitrine', Icon: Store },
   { href: '/painel/simulador', label: 'Simulador', Icon: ReceiptText },
   { href: '/painel/plano', label: 'Plano', Icon: Crown },
   { href: '/painel/conta', label: 'Conta', Icon: UserRound },
@@ -16,11 +16,11 @@ function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`)
 }
 
-// Barra lateral (computador): itens grandes, o ativo ganha placa lilás-clara com borda, como no Duolingo.
+// Barra lateral (computador): o ativo ganha placa lilás-clara e texto roxo.
 export function SideNav() {
   const pathname = usePathname()
   return (
-    <nav aria-label="Principal" className="flex flex-col gap-1.5">
+    <nav aria-label="Principal" className="flex flex-col gap-0.5">
       {ITEMS.map(({ href, label, Icon }) => {
         const active = isActive(pathname, href)
         return (
@@ -28,11 +28,11 @@ export function SideNav() {
             key={href}
             href={href}
             aria-current={active ? 'page' : undefined}
-            className={`flex h-12 items-center gap-3.5 rounded-control border-2 px-3.5 text-[0.9375rem] font-extrabold transition-colors duration-150 ${
-              active ? 'border-go/70 bg-go-soft text-go-strong' : 'border-transparent text-ink-muted hover:bg-subtle hover:text-ink'
+            className={`flex h-11 items-center gap-3 rounded-control px-3 text-[0.9375rem] font-extrabold transition-colors duration-150 ${
+              active ? 'bg-go-soft text-go-strong' : 'text-ink-muted hover:bg-subtle hover:text-ink'
             }`}
           >
-            <Icon aria-hidden="true" className="size-6 shrink-0" strokeWidth={active ? 2.75 : 2.25} />
+            <Icon aria-hidden="true" className="size-5 shrink-0" strokeWidth={active ? 2.5 : 2.25} />
             {label}
           </Link>
         )
@@ -47,7 +47,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Principal"
-      className="fixed inset-x-0 bottom-0 z-40 border-t-2 border-line bg-surface pb-[env(safe-area-inset-bottom)] group-has-[[data-focus-mode]]/shell:hidden lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)] group-has-[[data-focus-mode]]/shell:hidden lg:hidden"
     >
       <ul className="mx-auto grid max-w-md grid-cols-4">
         {ITEMS.map(({ href, label, Icon }) => {

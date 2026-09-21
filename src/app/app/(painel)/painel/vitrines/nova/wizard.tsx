@@ -91,7 +91,7 @@ export function VitrineWizard({ rootDomain }: { rootDomain: string }) {
       <div className="flex items-center gap-3">
         <Link
           href="/painel"
-          aria-label="Cancelar e voltar para Minhas vitrines"
+          aria-label="Cancelar e voltar ao painel"
           className="-ml-2 flex size-10 shrink-0 items-center justify-center rounded-full text-ink-muted hover:bg-subtle hover:text-ink"
         >
           <X aria-hidden="true" className="size-6" strokeWidth={3} />

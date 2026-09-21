@@ -122,7 +122,7 @@ export function ItemActionsMenu({
           role="menu"
           aria-label={`Ações de ${itemName}`}
           onKeyDown={onMenuKey}
-          className={`absolute right-0 z-40 flex w-48 animate-rise flex-col rounded-card border-2 border-line bg-surface p-1.5 shadow-float ${
+          className={`absolute right-0 z-40 flex w-48 animate-rise flex-col rounded-card border border-line bg-surface p-1.5 shadow-float ${
             upward ? 'bottom-full mb-1.5' : 'top-full mt-1.5'
           }`}
         >
