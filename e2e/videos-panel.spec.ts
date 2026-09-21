@@ -40,7 +40,7 @@ test('envia vídeo do item, processa pelo webhook e respeita o limite do gratuit
 
   // O uso de vídeos da conta aparece no Plano.
   await page.goto('/painel/plano')
-  await expect(page.getByText(/^1( de \d+)?$/)).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Plano Gratuito' }).getByText(/^1( de \d+)?$/)).toBeVisible()
 
   await setPlan(user.id, 'pro')
   await page.goto(`/painel/vitrines/${vitrine.id}/itens/${second.id}`)
