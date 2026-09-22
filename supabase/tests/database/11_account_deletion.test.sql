@@ -4,8 +4,8 @@ select plan(4);
 
 -- Uma conta com um pouco de tudo: apagar o usuário precisa levar todo o resto junto.
 insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000006c1', 'sai@conta.com');
-insert into public.subscriptions (user_id, plan_id, status, stripe_customer_id)
-  values ('00000000-0000-0000-0000-0000000006c1', 'pro', 'active', 'cus_teste_conta');
+update public.subscriptions set status = 'active', stripe_customer_id = 'cus_teste_conta'
+where user_id = '00000000-0000-0000-0000-0000000006c1';
 
 insert into public.vitrines (id, owner_id, type, subdomain, name, default_button_text) values
   ('00000000-0000-0000-0000-00000000f601', '00000000-0000-0000-0000-0000000006c1', 'comida', 'conta-que-sai', 'Sai', 'Pedir');

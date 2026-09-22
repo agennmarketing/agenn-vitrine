@@ -1,17 +1,15 @@
 import { expect, test } from '@playwright/test'
-import { createAdminClient, createConfirmedUser, readFakeEmails, seedItem, seedVideo, seedVitrine, setPlan } from './helpers'
+import { createAdminClient, createConfirmedUser, readFakeEmails, seedItem, seedVideo, seedVitrine } from './helpers'
 
 const vitrineUrl = (subdomain: string) => `http://${subdomain}.localhost:3000/`
 
-test('vídeo só aparece ao abrir o item; gratuito mostra só o primeiro', async ({ page }) => {
+test('vídeo só aparece ao abrir o item, cada um no seu', async ({ page }) => {
   const user = await createConfirmedUser('video-publico')
-  await setPlan(user.id, 'pro')
   const vitrine = await seedVitrine(user.id)
   const first = await seedItem(vitrine, user.id, { name: 'Primeiro', priceCents: 1000 })
   const second = await seedItem(vitrine, user.id, { name: 'Segundo', priceCents: 1000 })
   const firstVideo = await seedVideo(vitrine, user.id, first.id)
   await seedVideo(vitrine, user.id, second.id)
-  await setPlan(user.id, 'free')
 
   const playlists: string[] = []
   page.on('request', (req) => {
@@ -37,12 +35,11 @@ test('vídeo só aparece ao abrir o item; gratuito mostra só o primeiro', async
   await expect(page.locator('video, mux-player')).toHaveCount(0)
 
   await page.getByRole('button', { name: 'Segundo' }).click()
-  await expect(page.getByRole('dialog', { name: 'Segundo' }).locator('video')).toHaveCount(0)
+  await expect(page.getByRole('dialog', { name: 'Segundo' }).locator('video')).toHaveCount(1)
 })
 
 test('banner em vídeo mostra só a capa na listagem, sem carregar vídeo', async ({ page }) => {
   const user = await createConfirmedUser('video-banner-capa')
-  await setPlan(user.id, 'pro')
   const vitrine = await seedVitrine(user.id)
   const item = await seedItem(vitrine, user.id, { name: 'Com vídeo', priceCents: 1000 })
   await seedVideo(vitrine, user.id, item.id)

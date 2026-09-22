@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { createConfirmedUser, seedVitrine, setPlan, signIn, uniqueSubdomain } from './helpers'
+import { createConfirmedUser, seedVitrine, signIn, uniqueSubdomain } from './helpers'
 
 test('abas do editor por tipo de vitrine', async ({ page }) => {
   const user = await createConfirmedUser('abas')
@@ -57,21 +57,16 @@ test('configurações, mensagens e WhatsApp', async ({ page }) => {
   await expect(page.getByText('Contato removido.')).toBeVisible()
 })
 
-test('aparência: marca bloqueada no gratuito e liberada no Pro', async ({ page }) => {
+test('aparência: tema e marca liberados no teste grátis', async ({ page }) => {
   const user = await createConfirmedUser('aparencia')
   const vitrine = await seedVitrine(user.id)
   await signIn(page, user.email, user.password)
 
   await page.goto(`/painel/vitrines/${vitrine.id}/aparencia`)
-  await expect(page.getByText('Recurso do plano Pro')).toBeVisible()
-  await expect(page.getByLabel('Cor da marca')).toBeDisabled()
+  await expect(page.getByLabel('Cor da marca')).toBeEnabled()
   await page.getByLabel('Escuro').check()
   await page.getByRole('button', { name: 'Salvar aparência' }).click()
   await expect(page.getByText('Aparência salva.')).toBeVisible()
-
-  await setPlan(user.id, 'pro')
-  await page.reload()
-  await expect(page.getByLabel('Cor da marca')).toBeEnabled()
 })
 
 test('excluir vitrine pede o endereço', async ({ page }) => {

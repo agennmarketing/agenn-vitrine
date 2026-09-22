@@ -1,28 +1,7 @@
 import { expect, test } from '@playwright/test'
-import { createConfirmedUser, itemStep, makeTestImage, seedItem, seedVitrine, setPlan, signIn, uploadImage } from './helpers'
+import { createConfirmedUser, seedItem, seedVitrine, signIn } from './helpers'
 
-test('gratuito: 11º item vira convite para o Pro; Pro cadastra', async ({ page }) => {
-  const user = await createConfirmedUser('limite-itens')
-  const vitrine = await seedVitrine(user.id)
-  for (let i = 1; i <= 10; i++) await seedItem(vitrine, user.id, { name: `Item ${i}`, priceCents: 1000 })
-  await signIn(page, user.email, user.password)
-
-  await page.goto(`/painel/vitrines/${vitrine.id}/itens/novo`)
-  await uploadImage(page, 'Capa', await makeTestImage(page))
-  await itemStep(page, 'Detalhes')
-  await page.getByLabel('Nome', { exact: true }).fill('Décimo primeiro')
-  await page.getByLabel('Categoria', { exact: true }).selectOption({ label: 'Destaques' })
-  await itemStep(page, 'Preço')
-  await page.getByLabel('Preço', { exact: true }).fill('10')
-  await page.getByRole('button', { name: 'Salvar item' }).click()
-  await expect(page.getByText('Seu plano permite até 10 itens por vitrine. Assine o Pro para cadastrar mais.')).toBeVisible()
-
-  await setPlan(user.id, 'pro')
-  await page.getByRole('button', { name: 'Salvar item' }).click()
-  await expect(page.getByText('Item salvo.')).toBeVisible()
-})
-
-test('nova vitrine bloqueada com uma já criada; marca com cadeado; vitrine pública com marca d’água', async ({ page }) => {
+test('uma vitrine por conta; no teste a marca é liberada e a vitrine pública sai sem marca d’água', async ({ page }) => {
   const user = await createConfirmedUser('limite-vitrine')
   const vitrine = await seedVitrine(user.id)
   await seedItem(vitrine, user.id, { name: 'Único', priceCents: 1000 })
@@ -32,8 +11,9 @@ test('nova vitrine bloqueada com uma já criada; marca com cadeado; vitrine púb
   await expect(page.getByText('Cada conta tem uma vitrine. Edite a sua quando quiser.')).toBeVisible()
 
   await page.goto(`/painel/vitrines/${vitrine.id}/aparencia`)
-  await expect(page.getByText('Recurso do plano Pro')).toBeVisible()
+  await expect(page.getByLabel('Cor da marca')).toBeEnabled()
 
   await page.goto(`http://${vitrine.subdomain}.localhost:3000/`)
-  await expect(page.getByText('Feito com Vitrimove')).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: vitrine.name })).toBeVisible()
+  await expect(page.getByText('Feito com Agenn')).toHaveCount(0)
 })

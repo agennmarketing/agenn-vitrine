@@ -174,16 +174,12 @@ export async function updateAppearanceAction(vitrineId: string, _prev: FormState
   if (!parsed.success) return { fieldErrors: fieldErrorsFromZod(parsed.error), values: fields }
 
   const { supabase, vitrine } = await loadOwnedVitrine(vitrineId)
-  const { data: plan } = await supabase.rpc('my_entitlements')
-  // Sem o Pro, os campos de marca ficam desabilitados e não são enviados.
-  // Não apagar o que já existe: ao voltar para o Pro, tudo reaparece (spec 4.7).
   const update = {
     theme: parsed.data.theme,
     show_prices: parsed.data.showPrices,
     show_media: parsed.data.showMedia,
-    ...(plan?.allow_branding
-      ? { brand_color: parsed.data.brandColor, banner_enabled: parsed.data.bannerEnabled }
-      : {}),
+    brand_color: parsed.data.brandColor,
+    banner_enabled: parsed.data.bannerEnabled,
   }
   const { error } = await supabase.from('vitrines').update(update).eq('id', vitrineId)
   if (error) return { error: mapDbError(error), values: fields }

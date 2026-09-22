@@ -7,6 +7,7 @@ import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { validateVideoFile } from '@/lib/video/rules'
 import { getVideoService } from '@/lib/video/video-service'
 import { isPlanLimitError, mapDbError } from '@/lib/vitrines/db-errors'
+import { NO_ACCESS_MESSAGE } from '@/lib/billing/status'
 
 const bodySchema = z
   .object({
@@ -47,7 +48,7 @@ export async function POST(request: Request) {
 
   const { data: plan } = await supabase.rpc('my_entitlements')
   if (!plan) return fail(500, PREPARE_FAILED)
-  if (input.role === 'banner' && !plan.allow_branding) return fail(403, 'Banner em vídeo é recurso do plano Pro.')
+  if (plan.id !== 'essencial') return fail(403, NO_ACCESS_MESSAGE)
 
   const check = validateVideoFile(
     input,

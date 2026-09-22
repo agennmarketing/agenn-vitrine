@@ -798,6 +798,9 @@ export type Database = {
           status: string
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
+          subscription_status: string
+          trial_ends_at: string | null
+          trial_started_at: string | null
           updated_at: string
           user_id: string
         }
@@ -812,6 +815,9 @@ export type Database = {
           status?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
+          subscription_status?: string
+          trial_ends_at?: string | null
+          trial_started_at?: string | null
           updated_at?: string
           user_id: string
         }
@@ -826,6 +832,9 @@ export type Database = {
           status?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
+          subscription_status?: string
+          trial_ends_at?: string | null
+          trial_started_at?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -1027,14 +1036,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      accounts_to_warn_video_cleanup: {
-        Args: { p_warn_days?: number }
-        Returns: {
-          pro_ended_at: string
-          user_id: string
-          videos_to_delete: number
-        }[]
-      }
       add_video_usage: {
         Args: { p_bytes: number; p_media_id: string }
         Returns: {
@@ -1054,10 +1055,6 @@ export type Database = {
           p_vitrine_id: string
         }
         Returns: string
-      }
-      choose_active_vitrine: {
-        Args: { p_vitrine_id: string }
-        Returns: string[]
       }
       claim_session: { Args: never; Returns: undefined }
       cleanup_expired_rows: {
@@ -1090,16 +1087,7 @@ export type Database = {
         Returns: undefined
       }
       effective_plan_id: { Args: { p_user_id: string }; Returns: string }
-      excess_video_media: {
-        Args: { p_user_ids: string[] }
-        Returns: {
-          id: string
-          mux_asset_id: string
-          owner_id: string
-          storage_paths: Json
-          subdomain: string
-        }[]
-      }
+      expire_trials: { Args: { p_user_id?: string }; Returns: string[] }
       hit_rate_limit: {
         Args: { p_key: string; p_limit: number; p_window_seconds: number }
         Returns: boolean
@@ -1167,20 +1155,6 @@ export type Database = {
       sync_vitrine_status: {
         Args: { p_keep_id?: string; p_user_id: string }
         Returns: string[]
-      }
-      users_pro_ended_between: {
-        Args: { p_from_days: number; p_to_days?: number }
-        Returns: string[]
-      }
-      videos_to_delete_after_pro: {
-        Args: { p_days?: number }
-        Returns: {
-          id: string
-          mux_asset_id: string
-          owner_id: string
-          storage_paths: Json
-          subdomain: string
-        }[]
       }
     }
     Enums: {

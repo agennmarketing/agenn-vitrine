@@ -22,10 +22,11 @@ export const TERMS: LegalSection[] = [
   {
     title: '3. Planos, preços e pagamento',
     paragraphs: [
-      'Existe um plano Gratuito e um plano Pro. Os limites de cada um estão descritos no painel e podem mudar; mudanças que reduzam limites de planos já contratados são avisadas com antecedência.',
-      'O Pro custa R$ 149,90 por mês ou R$ 1.499,00 por ano, com renovação automática ao fim de cada período, até que você cancele. O pagamento é feito com cartão de crédito, processado pela Stripe; não temos acesso ao número do seu cartão.',
+      'Existe um único plano, o Plano Essencial. Os limites dele estão descritos no painel e podem mudar; mudanças que reduzam limites de um plano já contratado são avisadas com antecedência.',
+      'Toda conta nova começa com um teste grátis de 7 dias, com todas as funções do Plano Essencial. Não pedimos cartão para começar o teste, e ele não vira cobrança sozinho.',
+      'O Plano Essencial custa R$ 79,90 por mês, com renovação automática ao fim de cada mês, até que você cancele. O pagamento é feito com cartão de crédito, processado pela Stripe; não temos acesso ao número do seu cartão.',
       'Reajustes de preço são avisados por e-mail com pelo menos 30 dias de antecedência e valem a partir da renovação seguinte.',
-      'Se a cobrança falhar, tentamos novamente por até 7 dias. Nesse período o Pro continua valendo. Sem sucesso, a assinatura é cancelada e a conta volta ao Gratuito.',
+      'Se a cobrança falhar, tentamos novamente por até 7 dias. Nesse período a assinatura continua valendo. Sem sucesso, a assinatura é cancelada e o acesso fica pausado, como descrito a seguir.',
     ],
   },
   {
@@ -39,11 +40,10 @@ export const TERMS: LegalSection[] = [
     ],
   },
   {
-    title: '5. O que acontece ao voltar para o Gratuito',
+    title: '5. O que acontece quando o teste ou a assinatura acaba',
     paragraphs: [
-      'Nada é apagado na hora. As vitrines que passam do limite do Gratuito ficam congeladas (fora do ar) e você escolhe qual continua ativa; as demais voltam assim que você assinar o Pro de novo.',
-      'Na vitrine ativa, o Gratuito mostra os 10 primeiros itens e 1 vídeo, sem logo, cor da marca e banner, e com a marca d’água “Feito com Vitrimove”. Os itens e as configurações continuam guardados.',
-      'Os vídeos que passam do limite do Gratuito são apagados definitivamente 90 dias depois do fim do Pro. Avisamos por e-mail 7 dias antes.',
+      'Se o teste grátis terminar sem assinatura, ou se a assinatura for cancelada, o acesso fica pausado: o painel mostra só a tela de assinatura, a vitrine sai do ar e deixa de receber agendamentos.',
+      'Nada é apagado. Sua vitrine, seus serviços, fotos, vídeos e sua agenda continuam guardados, e tudo volta a funcionar assim que você assinar o Plano Essencial. Para apagar seus dados, use Conta → Excluir conta.',
     ],
   },
   {

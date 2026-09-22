@@ -9,7 +9,9 @@ export async function getMySubscription(): Promise<SubscriptionView | null> {
   const { supabase, userId } = await getPanelSession()
   const { data, error } = await supabase
     .from('subscriptions')
-    .select('stripe_customer_id, status, interval, current_period_end, cancel_at_period_end, grace_until, pro_ended_at')
+    .select(
+      'stripe_customer_id, status, interval, current_period_end, cancel_at_period_end, grace_until, pro_ended_at, trial_started_at, trial_ends_at, subscription_status',
+    )
     .eq('user_id', userId)
     .maybeSingle()
   if (error) throw error

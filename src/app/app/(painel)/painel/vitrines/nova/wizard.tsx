@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowLeft, ArrowRight, Brush, Crown, Eye, Hand, Moon, Scissors, Sparkles, Store, Sun, X } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Brush, Eye, Hand, Moon, Scissors, Sparkles, Store, Sun, X } from 'lucide-react'
 import Link from 'next/link'
 import { useActionState, useEffect, useRef, useState } from 'react'
 import { BusinessHoursEditor } from '@/components/ui/business-hours-editor'
@@ -23,7 +23,7 @@ import {
   type ServiceSegment,
 } from '@/lib/vitrines/service-segments'
 
-// Por enquanto o Vitrimove é só para serviços com agendamento: toda vitrine nasce 'servicos'
+// Por enquanto o Agenn é só para serviços com agendamento: toda vitrine nasce 'servicos'
 // e o segmento escolhido no primeiro passo só personaliza textos e exemplos.
 const STEPS = [
   { label: 'Tipo de negócio', question: 'Qual é o seu tipo de negócio?', help: 'Assim a vitrine já vem com exemplos do seu ramo.' },
@@ -281,10 +281,10 @@ export function VitrineWizard({ rootDomain }: { rootDomain: string }) {
               />
             ))}
           </div>
-          <p className="flex items-start gap-2.5 rounded-control bg-sun-soft px-4 py-3 text-sm font-bold text-sun-ink">
-            <Crown aria-hidden="true" className="mt-px size-[1.125rem] shrink-0" strokeWidth={2.5} />
+          <p className="flex items-start gap-2.5 rounded-control bg-go-soft px-4 py-3 text-sm font-bold text-go-strong">
+            <Brush aria-hidden="true" className="mt-px size-[1.125rem] shrink-0" strokeWidth={2.5} />
             <span>
-              <span className="font-black">Logo, cor da marca e banner</span> · Pro. Disponível no plano Pro.
+              <span className="font-black">Logo, cor da marca e banner</span> você escolhe depois, em Aparência.
             </span>
           </p>
         </fieldset>

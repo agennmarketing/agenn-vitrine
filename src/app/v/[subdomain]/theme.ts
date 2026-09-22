@@ -66,7 +66,7 @@ export function vitrineTheme(brandColor: string | null, theme: 'light' | 'dark')
   const dark = theme === 'dark'
   const base = dark ? DARK : LIGHT
   const custom = normalize(brandColor)
-  // Sem cor escolhida vale o roxo da Vitrimove, que aparece bem nos dois temas.
+  // Sem cor escolhida vale o roxo do Agenn, que aparece bem nos dois temas.
   const brand = custom ?? DEFAULT_BRAND
   const brandInk = readableTextColor(brand)
   const tint = custom ?? DEFAULT_BRAND

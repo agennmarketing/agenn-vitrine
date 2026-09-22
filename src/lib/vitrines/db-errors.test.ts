@@ -2,26 +2,25 @@ import { describe, expect, it } from 'vitest'
 import { isPlanLimitError, mapDbError } from './db-errors'
 
 describe('mapDbError', () => {
-  it('limites viram convite para o Pro', () => {
+  it('limites do plano', () => {
     expect(mapDbError({ code: 'P0001', message: 'plan_limit:vitrines', hint: '1' })).toBe(
       'Cada conta pode ter uma vitrine. Edite a que você já tem.',
     )
-    expect(mapDbError({ code: 'P0001', message: 'plan_limit:items', hint: '10' })).toBe(
-      'Seu plano permite até 10 itens por vitrine. Assine o Pro para cadastrar mais.',
+    expect(mapDbError({ code: 'P0001', message: 'plan_limit:items', hint: '300' })).toBe(
+      'Seu plano permite até 300 itens por vitrine.',
     )
     expect(isPlanLimitError({ message: 'plan_limit:items' })).toBe(true)
     expect(isPlanLimitError({ message: 'item_code_taken' })).toBe(false)
   })
 
-  it('limites de vídeo viram convite para o Pro', () => {
-    expect(mapDbError({ message: 'plan_limit:videos_vitrine', hint: '1' })).toBe(
-      'Seu plano permite até 1 vídeo por vitrine. Assine o Pro para enviar mais.',
-    )
-    expect(mapDbError({ message: 'plan_limit:videos_account', hint: '1' })).toBe(
-      'Seu plano permite até 1 vídeo na conta. Assine o Pro para enviar mais.',
-    )
-    expect(mapDbError({ message: 'plan_limit:videos_vitrine', hint: '50' })).toBe(
-      'Seu plano permite até 50 vídeos por vitrine. Assine o Pro para enviar mais.',
+  it('limites de vídeo', () => {
+    expect(mapDbError({ message: 'plan_limit:videos_vitrine', hint: '1' })).toBe('Seu plano permite até 1 vídeo por vitrine.')
+    expect(mapDbError({ message: 'plan_limit:videos_account', hint: '50' })).toBe('Seu plano permite até 50 vídeos na conta.')
+  })
+
+  it('limite zero é a conta sem acesso', () => {
+    expect(mapDbError({ message: 'plan_limit:items', hint: '0' })).toBe(
+      'Seu acesso está pausado. Assine o Plano Essencial para continuar usando o Agenn.',
     )
   })
 

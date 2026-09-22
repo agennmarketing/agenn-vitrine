@@ -48,7 +48,7 @@ export const PRIVACY: LegalSection[] = [
     paragraphs: [
       'Dados da conta e conteúdo publicado: enquanto a conta existir.',
       'Resumos de pedido do simulador: 90 dias, depois são apagados automaticamente.',
-      'Vídeos que passam do limite do plano Gratuito: apagados 90 dias depois do fim do Pro, com aviso por e-mail 7 dias antes.',
+      'Conta com o teste grátis encerrado ou a assinatura cancelada: os dados continuam guardados até você excluir a conta.',
       'Registros fiscais e de cobrança: pelo prazo exigido pela legislação, mesmo após a exclusão da conta.',
     ],
   },

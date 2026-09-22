@@ -70,7 +70,7 @@ export function buildPublicCatalog(rows: CatalogRows, mediaBaseUrl: string, vide
     .sort((a, b) => categoryOrder.get(a.category_id!)! - categoryOrder.get(b.category_id!)! || a.position - b.position)
     .slice(0, rows.plan.max_items_per_vitrine)
 
-  // Spec 4.7 e 3: no gratuito só o primeiro vídeo aparece; com a franquia estourada, nenhum.
+  // Só os primeiros vídeos até o limite do plano aparecem; com a franquia estourada, nenhum.
   let videosLeft = rows.overQuota ? 0 : rows.plan.max_videos_per_vitrine
   const videoByItem = new Map<string, CatalogRows['media'][number]>()
   for (const item of visible) {

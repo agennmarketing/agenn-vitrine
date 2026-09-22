@@ -10,6 +10,7 @@ import { imageSources } from '@/lib/media/urls'
 import { validateImageFile } from '@/lib/media/validate-image'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { revalidateVitrine } from '@/lib/vitrines/cache'
+import { NO_ACCESS_MESSAGE } from '@/lib/billing/status'
 
 const fieldsSchema = z
   .object({
@@ -60,10 +61,8 @@ export async function POST(request: Request) {
       .maybeSingle()
     if (!item) return fail(404, 'Item não encontrado.')
   }
-  if (role === 'logo' || role === 'banner') {
-    const { data: plan } = await supabase.rpc('my_entitlements')
-    if (!plan?.allow_branding) return fail(403, 'Logo e banner são recursos do plano Pro.')
-  }
+  const { data: plan } = await supabase.rpc('my_entitlements')
+  if (plan?.id !== 'essencial') return fail(403, NO_ACCESS_MESSAGE)
 
   const spec = IMAGE_SPECS[role]
   const files: { width: number; bytes: Uint8Array; ext: string; contentType: string }[] = []

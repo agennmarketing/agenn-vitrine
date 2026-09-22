@@ -19,7 +19,7 @@ export async function notifyVideoQuotaExceeded(admin: SupabaseClient<Database>, 
     admin.from('vitrines').select('name').eq('owner_id', ownerId).order('position').order('created_at'),
     admin.rpc('effective_plan_id', { p_user_id: ownerId }),
   ])
-  const { data: plan } = await admin.from('plans').select('monthly_video_gb').eq('id', planId ?? 'free').single()
+  const { data: plan } = await admin.from('plans').select('monthly_video_gb').eq('id', planId ?? 'essencial').single()
 
   const now = new Date()
   const message = buildQuotaEmail({

@@ -47,7 +47,7 @@ export async function syncVideoStatus(admin: SupabaseClient<Database>, media: Sy
     if (info.assetId) update.mux_asset_id = info.assetId
   } else {
     const { data: planId } = await admin.rpc('effective_plan_id', { p_user_id: media.owner_id })
-    const { data: plan } = await admin.from('plans').select('max_video_seconds').eq('id', planId ?? 'free').single()
+    const { data: plan } = await admin.from('plans').select('max_video_seconds').eq('id', planId ?? 'essencial').single()
     if (plan && info.durationSeconds > plan.max_video_seconds + 1) {
       await videos.delete(info.assetId)
       update = { status: 'failed' }

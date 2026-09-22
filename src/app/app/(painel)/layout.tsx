@@ -4,10 +4,22 @@ import { redirect } from 'next/navigation'
 import type { ReactNode } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { signOutAction } from '@/features/auth/actions'
+import { getPlanPrices } from '@/features/billing/queries'
+import { monthlyPriceLabel } from '@/lib/billing/prices'
+import { accessFor, trialNotice, type Access } from '@/lib/billing/status'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { AccessGate } from './access-gate'
+import { AccessWall } from './access-wall'
 import { BottomNav, SideNav } from './painel-nav'
-import { ProUpsell } from './pro-upsell'
+import { TrialBanner } from './trial-banner'
 import { LogoMark, Wordmark } from '@/components/brand/logo'
+
+const BADGE: Record<Access['status'], { label: string; tone: 'sun' | 'neutral' | 'danger' }> = {
+  active: { label: 'Plano Essencial', tone: 'sun' },
+  trialing: { label: 'Teste grátis', tone: 'neutral' },
+  expired: { label: 'Teste encerrado', tone: 'danger' },
+  canceled: { label: 'Assinatura cancelada', tone: 'danger' },
+}
 
 export default async function PainelLayout({ children }: { children: ReactNode }) {
   // O proxy já confirmou a sessão (session_state); aqui basta o JWT validado localmente.
@@ -18,13 +30,18 @@ export default async function PainelLayout({ children }: { children: ReactNode }
   const userId = claims.sub
   const email = typeof claims.email === 'string' ? claims.email : ''
 
-  const [{ data: profile }, { data: plan }] = await Promise.all([
+  const [{ data: profile }, { data: subscription }] = await Promise.all([
     supabase.from('profiles').select('name').eq('id', userId).single(),
-    supabase.rpc('my_entitlements'),
+    supabase
+      .from('subscriptions')
+      .select('status, grace_until, trial_ends_at, subscription_status')
+      .eq('user_id', userId)
+      .maybeSingle(),
   ])
   const displayName = profile?.name || email
-  const planName = plan?.name ?? 'Gratuito'
-  const isPro = planName !== 'Gratuito'
+  const access = accessFor(subscription, new Date())
+  const notice = trialNotice(access)
+  const priceLabel = access.hasAccess ? '' : monthlyPriceLabel(await getPlanPrices())
 
   return (
     // Modo foco (assistente de nova vitrine marca data-focus-mode): some a navegação, fica só a trilha.
@@ -38,7 +55,6 @@ export default async function PainelLayout({ children }: { children: ReactNode }
         <SideNav />
 
         <div className="mt-auto flex flex-col gap-3">
-          {isPro ? null : <ProUpsell />}
           <div className="flex items-center gap-2.5 border-t border-line px-1 pt-3">
             <span
               aria-hidden="true"
@@ -56,8 +72,8 @@ export default async function PainelLayout({ children }: { children: ReactNode }
               </Link>
               {/* Link separado: um <a> dentro de outro seria HTML inválido. */}
               <Link href="/painel/plano" className="-my-1 inline-flex min-h-7 items-center rounded-md py-1">
-                <Badge tone={isPro ? 'sun' : 'neutral'} className="mt-0.5 h-5 px-2 text-[0.6875rem]">
-                  Plano {planName}
+                <Badge tone={BADGE[access.status].tone} className="mt-0.5 h-5 px-2 text-[0.6875rem]">
+                  {BADGE[access.status].label}
                 </Badge>
               </Link>
             </div>
@@ -75,7 +91,12 @@ export default async function PainelLayout({ children }: { children: ReactNode }
         </div>
       </aside>
 
-      <main className="flex min-w-0 flex-col pb-40 group-has-[[data-focus-mode]]/shell:pb-10 lg:pb-16">{children}</main>
+      <main className="flex min-w-0 flex-col pb-40 group-has-[[data-focus-mode]]/shell:pb-10 lg:pb-16">
+        {notice ? <TrialBanner message={notice} /> : null}
+        <AccessGate blocked={!access.hasAccess} wall={<AccessWall status={access.status} priceLabel={priceLabel} />}>
+          {children}
+        </AccessGate>
+      </main>
 
       <BottomNav />
     </div>

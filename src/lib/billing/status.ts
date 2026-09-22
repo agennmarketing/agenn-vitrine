@@ -3,21 +3,31 @@ import type { BillingInterval, BillingStatus, BillingSubscription } from './type
 
 // Spec 9: o Stripe tenta cobrar por 7 dias antes de cancelar.
 export const GRACE_DAYS = 7
+export const TRIAL_DAYS = 7
+export const PLAN_NAME = 'Plano Essencial'
+/** Referência para textos; o valor cobrado vem do preço do Stripe. */
+export const PLAN_PRICE_CENTS = 7990
 const DAY_MS = 86_400_000
 
+export const NO_ACCESS_MESSAGE = 'Seu acesso está pausado. Assine o Plano Essencial para continuar usando o Agenn.'
+
+/** Situação da conta guardada em `subscriptions.subscription_status`. */
+export type AccountStatus = 'trialing' | 'active' | 'expired' | 'canceled'
+
 export type SubscriptionRow = {
-  plan_id: 'pro'
+  plan_id: 'essencial'
   status: string
   interval: BillingInterval | null
   current_period_end: string | null
   cancel_at_period_end: boolean
   grace_until: string | null
   pro_ended_at: string | null
+  subscription_status?: AccountStatus
 }
 
 export type PreviousRow = { status: string; grace_until: string | null; pro_ended_at: string | null } | null
 
-const PRO: readonly BillingStatus[] = ['active', 'trialing']
+const PAID: readonly BillingStatus[] = ['active', 'trialing']
 const ENDED: readonly BillingStatus[] = ['canceled', 'unpaid', 'incomplete_expired']
 
 export function subscriptionRowFrom(
@@ -26,15 +36,15 @@ export function subscriptionRowFrom(
   now: Date,
 ): SubscriptionRow {
   const base = {
-    plan_id: 'pro' as const,
+    plan_id: 'essencial' as const,
     status: subscription.status,
     interval: subscription.interval,
     current_period_end: subscription.currentPeriodEnd,
     cancel_at_period_end: subscription.cancelAtPeriodEnd,
   }
 
-  if (PRO.includes(subscription.status)) {
-    return { ...base, grace_until: null, pro_ended_at: null }
+  if (PAID.includes(subscription.status)) {
+    return { ...base, grace_until: null, pro_ended_at: null, subscription_status: 'active' }
   }
   if (subscription.status === 'past_due') {
     // A carência é da primeira falha: só cria se ainda não existir.
@@ -43,19 +53,81 @@ export function subscriptionRowFrom(
       ...base,
       grace_until: kept ?? new Date(now.getTime() + GRACE_DAYS * DAY_MS).toISOString(),
       pro_ended_at: null,
+      subscription_status: 'active',
     }
   }
   if (ENDED.includes(subscription.status)) {
-    return { ...base, grace_until: null, pro_ended_at: previous?.pro_ended_at ?? now.toISOString() }
+    return {
+      ...base,
+      grace_until: null,
+      pro_ended_at: previous?.pro_ended_at ?? now.toISOString(),
+      subscription_status: 'canceled',
+    }
   }
-  // incomplete e paused: ainda não virou Pro, nada a encerrar.
+  // incomplete e paused: ainda não pagou; a situação da conta (teste ou expirado) não muda.
   return { ...base, grace_until: null, pro_ended_at: previous?.pro_ended_at ?? null }
 }
 
-export function isProNow(row: { status: string; grace_until: string | null } | null, now: Date): boolean {
+/** Assinatura paga valendo agora (inclui a carência de cobrança). */
+export function isPaidNow(row: { status: string; grace_until: string | null } | null, now: Date): boolean {
   if (!row) return false
   if (row.status === 'active' || row.status === 'trialing') return true
   return row.status === 'past_due' && row.grace_until !== null && new Date(row.grace_until) > now
+}
+
+export type AccessRow = {
+  status: string
+  grace_until: string | null
+  trial_ends_at: string | null
+  subscription_status: string
+}
+
+export type Access = {
+  status: AccountStatus
+  /** Tudo liberado (teste valendo ou assinatura em dia). */
+  hasAccess: boolean
+  trialEndsAt: string | null
+  /** Dias de calendário (horário de Brasília) até o fim do teste; 0 = termina hoje. */
+  trialDaysLeft: number | null
+}
+
+const DAY_KEY = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' })
+
+function calendarDaysBetween(from: Date, to: Date): number {
+  const start = Date.parse(DAY_KEY.format(from))
+  const end = Date.parse(DAY_KEY.format(to))
+  return Math.round((end - start) / DAY_MS)
+}
+
+// Espelho de `effective_plan_id` no banco: quem decide de verdade é o banco.
+export function accessFor(row: AccessRow | null, now: Date): Access {
+  if (!row) return { status: 'expired', hasAccess: false, trialEndsAt: null, trialDaysLeft: null }
+
+  if (isPaidNow(row, now)) {
+    return { status: 'active', hasAccess: true, trialEndsAt: row.trial_ends_at, trialDaysLeft: null }
+  }
+  if (row.trial_ends_at && new Date(row.trial_ends_at) > now) {
+    return {
+      status: 'trialing',
+      hasAccess: true,
+      trialEndsAt: row.trial_ends_at,
+      trialDaysLeft: Math.max(0, calendarDaysBetween(now, new Date(row.trial_ends_at))),
+    }
+  }
+  return {
+    status: row.subscription_status === 'canceled' ? 'canceled' : 'expired',
+    hasAccess: false,
+    trialEndsAt: row.trial_ends_at,
+    trialDaysLeft: null,
+  }
+}
+
+/** Aviso do painel nos 3 últimos dias do teste (com 3, 2, 1 e 0 dias). */
+export function trialNotice(access: Access): string | null {
+  const days = access.trialDaysLeft
+  if (access.status !== 'trialing' || days === null || days > 3) return null
+  const when = days === 0 ? 'hoje' : days === 1 ? 'amanhã' : `em ${days} dias`
+  return `Seu teste grátis termina ${when}. Assine para continuar usando o Agenn.`
 }
 
 export type SubscriptionView = {
@@ -66,41 +138,47 @@ export type SubscriptionView = {
   cancel_at_period_end: boolean
   grace_until: string | null
   pro_ended_at: string | null
+  trial_started_at: string | null
+  trial_ends_at: string | null
+  subscription_status: string
 }
 
 export type SubscriptionSummary = {
-  pro: boolean
+  access: Access
   title: string
   detail: string
   showSubscribe: boolean
   showPortal: boolean
 }
 
-const FREE_PITCH =
-  'Assine o Pro para ter 300 itens, 50 vídeos, logo, cor da marca e banner — e tirar a marca d’água.'
-
 export function describeSubscription(row: SubscriptionView | null, now: Date): SubscriptionSummary {
-  const pro = isProNow(row, now)
+  const access = accessFor(row, now)
+  const paid = isPaidNow(row, now)
   // O portal só aparece para quem já assinou: começar o checkout e desistir não conta.
-  const showPortal = Boolean(row?.stripe_customer_id) && (pro || Boolean(row?.pro_ended_at))
+  const showPortal = Boolean(row?.stripe_customer_id) && (paid || Boolean(row?.pro_ended_at))
 
-  if (!row || !pro) {
-    const detail = row?.pro_ended_at
-      ? `Seu Pro terminou em ${formatDateBR(row.pro_ended_at)}. Os vídeos que passam do limite do gratuito são apagados 90 dias depois.`
-      : FREE_PITCH
-    return { pro: false, title: 'Plano Gratuito', detail, showSubscribe: true, showPortal }
+  if (!paid) {
+    let detail: string
+    if (access.status === 'trialing') {
+      const notice = trialNotice(access)
+      detail = notice ?? `Seu teste grátis vai até ${formatDateBR(access.trialEndsAt)}. Assine para continuar usando o Agenn.`
+    } else if (access.status === 'canceled') {
+      detail = 'Sua assinatura foi cancelada. Seus dados continuam guardados: assine de novo para voltar a usar o Agenn.'
+    } else {
+      detail = 'Seu teste grátis terminou. Seus dados continuam guardados: assine para voltar a usar o Agenn.'
+    }
+    const title = access.status === 'trialing' ? 'Teste grátis' : PLAN_NAME
+    return { access, title, detail, showSubscribe: true, showPortal }
   }
 
   let detail: string
-  if (row.status === 'past_due') {
-    detail = `Não conseguimos cobrar seu cartão. Atualize o pagamento até ${formatDateBR(row.grace_until)} para não perder o Pro.`
-  } else if (row.cancel_at_period_end) {
-    detail = `Cancelamento agendado: o Pro vale até ${formatDateBR(row.current_period_end)}.`
-  } else if (row.status === 'trialing') {
-    detail = `Período de teste até ${formatDateBR(row.current_period_end)}.`
+  if (row!.status === 'past_due') {
+    detail = `Não conseguimos cobrar seu cartão. Atualize o pagamento até ${formatDateBR(row!.grace_until)} para continuar usando o Agenn.`
+  } else if (row!.cancel_at_period_end) {
+    detail = `Cancelamento agendado: a assinatura vale até ${formatDateBR(row!.current_period_end)}.`
   } else {
-    detail = row.current_period_end ? `Renova em ${formatDateBR(row.current_period_end)}.` : 'Assinatura ativa.'
+    detail = row!.current_period_end ? `Renova em ${formatDateBR(row!.current_period_end)}.` : 'Assinatura ativa.'
   }
 
-  return { pro: true, title: 'Plano Pro', detail, showSubscribe: false, showPortal: true }
+  return { access, title: PLAN_NAME, detail, showSubscribe: false, showPortal: true }
 }

@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 test('domínio raiz mostra a página inicial', async ({ page }) => {
   await page.goto('http://localhost:3000/')
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('Vitrimove')
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Agenn')
 })
 
 test('subdomínio sem vitrine responde 404', async ({ page }) => {

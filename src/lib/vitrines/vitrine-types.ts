@@ -1,5 +1,5 @@
 // A tabela `vitrines` ainda aceita 'comida' e 'produtos' (vitrines antigas continuam funcionando),
-// mas por enquanto o Vitrimove é só para serviços com agendamento: o assistente cria apenas 'servicos'.
+// mas por enquanto o Agenn é só para serviços com agendamento: o assistente cria apenas 'servicos'.
 export const VITRINE_TYPES = ['produtos', 'servicos', 'comida'] as const
 export type VitrineType = (typeof VITRINE_TYPES)[number]
 

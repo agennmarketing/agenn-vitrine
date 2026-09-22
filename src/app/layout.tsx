@@ -2,10 +2,10 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: { default: 'Vitrimove', template: '%s · Vitrimove' },
+  title: { default: 'Agenn', template: '%s · Agenn' },
   description: 'Vitrine de serviços com vídeo, com os pedidos de horário chegando no WhatsApp.',
-  applicationName: 'Vitrimove',
-  openGraph: { locale: 'pt_BR', siteName: 'Vitrimove' },
+  applicationName: 'Agenn',
+  openGraph: { locale: 'pt_BR', siteName: 'Agenn' },
 }
 
 export const viewport: Viewport = { themeColor: '#ffffff', colorScheme: 'light' }

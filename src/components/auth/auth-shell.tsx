@@ -57,7 +57,7 @@ export function AuthShell({
       <main className="flex min-w-0 flex-1 justify-center px-5 py-10 sm:items-center sm:px-6">
         <div className="w-full max-w-sm">
           <div className="mb-10 flex items-center gap-2.5 lg:hidden">
-            <LogoMark size={44} alt="Vitrimove" priority />
+            <LogoMark size={44} alt="Agenn" priority />
             <span aria-hidden="true">
               <Wordmark className="text-xl" />
             </span>

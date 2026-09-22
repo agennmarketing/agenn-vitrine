@@ -101,17 +101,16 @@ const billingSchema = z
     STRIPE_SECRET_KEY: z.string().default(''),
     STRIPE_WEBHOOK_SECRET: z.string().default(''),
     STRIPE_PRICE_MONTH: z.string().default(''),
-    STRIPE_PRICE_YEAR: z.string().default(''),
     VERCEL_ENV: z.string().optional(),
   })
   .superRefine((value, ctx) => {
     if (
       value.BILLING_DRIVER === 'stripe' &&
-      (!value.STRIPE_SECRET_KEY || !value.STRIPE_PRICE_MONTH || !value.STRIPE_PRICE_YEAR)
+      (!value.STRIPE_SECRET_KEY || !value.STRIPE_PRICE_MONTH)
     ) {
       ctx.addIssue({
         code: 'custom',
-        message: 'STRIPE_SECRET_KEY, STRIPE_PRICE_MONTH e STRIPE_PRICE_YEAR são obrigatórias com o driver stripe.',
+        message: 'STRIPE_SECRET_KEY e STRIPE_PRICE_MONTH são obrigatórias com o driver stripe.',
       })
     }
     // Os dois drivers conferem a assinatura do webhook com o SDK do Stripe.
@@ -128,7 +127,6 @@ export type BillingEnv = {
   secretKey: string
   webhookSecret: string
   priceMonth: string
-  priceYear: string
 }
 
 export function parseBillingEnv(source: Source): BillingEnv {
@@ -138,6 +136,5 @@ export function parseBillingEnv(source: Source): BillingEnv {
     secretKey: value.STRIPE_SECRET_KEY,
     webhookSecret: value.STRIPE_WEBHOOK_SECRET,
     priceMonth: value.STRIPE_PRICE_MONTH,
-    priceYear: value.STRIPE_PRICE_YEAR,
   }
 }
