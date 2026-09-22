@@ -1,20 +1,13 @@
 'use client'
 
-import { ArrowLeft, ChevronLeft, ChevronRight, CircleAlert, Clock } from 'lucide-react'
-import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
+import { CalendarDays, ChevronLeft, ChevronRight, CircleAlert, Clock, Info } from 'lucide-react'
+import { useEffect, useId, useRef, useState } from 'react'
 import type { PublicItem, PublicVitrine } from '@/features/public/build-catalog'
 import type { CartLine, NewCartLine } from '@/lib/cart/cart'
 import { lineUnitCents } from '@/lib/cart/reconcile'
-import { todayInSaoPaulo } from '@/lib/cart/checkout'
 import { formatBRL } from '@/lib/money/money'
 import { formatPriceLabel, priceLabel } from '@/lib/pricing/price'
-import {
-  EMPTY_SERVICE_REQUEST,
-  validateServiceRequest,
-  type ServiceRequestErrors,
-  type ServiceRequestInput,
-  type ServiceRequestValue,
-} from '@/lib/services/request'
+import { BookingFlow } from './booking-flow'
 import { sendDirect } from './send-direct'
 import { ItemVideo } from './item-video'
 import {
@@ -30,34 +23,6 @@ import {
   WhatsAppIcon,
 } from './vitrine-ui'
 
-// Campo da etapa de solicitação do serviço (rótulo, campo e o erro logo abaixo).
-function RequestField({
-  label,
-  htmlFor,
-  error,
-  children,
-}: {
-  label: string
-  htmlFor: string
-  error: string | undefined
-  children: ReactNode
-}) {
-  return (
-    <div className="flex flex-col gap-2">
-      <label htmlFor={htmlFor} className="text-[0.9375rem] font-bold">
-        {label}
-      </label>
-      {children}
-      {error ? (
-        <p role="alert" className="flex items-center gap-1.5 text-sm font-semibold text-danger">
-          <CircleAlert aria-hidden="true" className="size-4 shrink-0" strokeWidth={2.5} />
-          {error}
-        </p>
-      ) : null}
-    </div>
-  )
-}
-
 export type ItemSheetProps = {
   vitrine: PublicVitrine
   item: PublicItem
@@ -66,8 +31,7 @@ export type ItemSheetProps = {
 }
 
 export default function ItemSheet({ vitrine, item, onClose, cart }: ItemSheetProps) {
-  // Serviços: depois do CTA vem uma etapa curta (nome, data, horário e observação)
-  // antes de abrir o WhatsApp. Não há sacola nem agenda.
+  // Serviços: o CTA abre o agendamento (data, horário e dados do cliente) no próprio popup.
   const isService = !cart && vitrine.type === 'servicos'
   const [variationId, setVariationId] = useState<string | null>(cart?.initial?.variationId ?? null)
   const [qty, setQty] = useState(cart?.initial?.qty ?? 1)
@@ -77,14 +41,11 @@ export default function ItemSheet({ vitrine, item, onClose, cart }: ItemSheetPro
   const [activeIndex, setActiveIndex] = useState(0)
   // O vídeo começa sozinho só na primeira vez; depois, só pelo Play.
   const [videoStarted, setVideoStarted] = useState(false)
-  const [asking, setAsking] = useState(false)
-  const [request, setRequest] = useState<ServiceRequestInput>(EMPTY_SERVICE_REQUEST)
-  const [requestErrors, setRequestErrors] = useState<ServiceRequestErrors>({})
+  const [booking, setBooking] = useState(false)
   const closeRef = useRef<HTMLButtonElement>(null)
   const choicesRef = useRef<HTMLFieldSetElement>(null)
   const galleryRef = useRef<HTMLDivElement>(null)
   const noteId = useId()
-  const fieldId = (field: keyof ServiceRequestInput) => `${noteId}-${field}`
 
   useEffect(() => {
     closeRef.current?.focus()
@@ -123,35 +84,20 @@ export default function ItemSheet({ vitrine, item, onClose, cart }: ItemSheetPro
   }
 
   async function onPrimary() {
-    if (!asking && !validate()) return
+    if (!validate()) return
     if (cart) {
       cart.onSubmit({ itemId: item.id, variationId, qty, note: note.trim() })
       return
     }
-    // Serviços: o CTA leva à etapa de solicitação; o envio acontece no passo seguinte.
-    if (isService && !asking) {
-      setAsking(true)
-      return
-    }
-
-    let value: ServiceRequestValue | null = null
     if (isService) {
-      const result = validateServiceRequest(request, todayInSaoPaulo())
-      if (!result.ok) {
-        setRequestErrors(result.errors)
-        return
-      }
-      setRequestErrors({})
-      value = result.value
+      setBooking(true)
+      return
     }
 
     setSending(true)
     await sendDirect(vitrine, item, {
       variation: variation ? { id: variation.id, name: variation.name } : null,
-      note: value ? (value.notes ?? '') : note,
-      request: value
-        ? { priceText: vitrine.showPrices ? headerPrice : null, name: value.name, date: value.date, time: value.time }
-        : null,
+      note,
     })
     // Se o navegador bloquear a abertura do WhatsApp, o botão volta a funcionar.
     setTimeout(() => setSending(false), 3000)
@@ -167,8 +113,6 @@ export default function ItemSheet({ vitrine, item, onClose, cart }: ItemSheetPro
   if (cart) {
     const verb = cart.initial ? 'Salvar alterações' : 'Adicionar à sacola'
     buttonLabel = vitrine.showPrices && unitCents !== null ? `${verb} · ${formatBRL(unitCents * qty)}` : verb
-  } else if (asking) {
-    buttonLabel = 'Enviar pelo WhatsApp'
   } else {
     buttonLabel = item.buttonText ?? vitrine.defaultButtonText
   }
@@ -176,13 +120,17 @@ export default function ItemSheet({ vitrine, item, onClose, cart }: ItemSheetPro
   if (item.soldOut) {
     buttonLabel = isService ? 'Indisponível' : 'Esgotado'
     disabled = true
-  } else if (!cart && !phone) {
+  } else if (!cart && !isService && !phone) {
     buttonLabel = 'WhatsApp não configurado'
     disabled = true
   } else if (sending) {
     buttonLabel = 'Abrindo o WhatsApp…'
   }
-  const showWhatsAppIcon = !cart && !item.soldOut && Boolean(phone)
+  const showWhatsAppIcon = !cart && !isService && !item.soldOut && Boolean(phone)
+  const showCalendarIcon = isService && !item.soldOut
+  const bodyClassName = `flex flex-col px-5 pb-6 md:col-start-2 md:min-h-0 md:overflow-y-auto md:px-7 md:pt-7 ${hasMedia ? 'pt-5' : 'pt-8'}`
+  const footerClassName =
+    'sticky bottom-0 z-10 mt-auto flex items-center gap-3 border-t border-line bg-surface px-4 pb-[calc(0.875rem+env(safe-area-inset-bottom))] pt-3.5 md:static md:col-start-2 md:px-7 md:pb-5 md:pt-4'
 
   return (
     <div
@@ -212,7 +160,8 @@ export default function ItemSheet({ vitrine, item, onClose, cart }: ItemSheetPro
         </div>
 
         {hasMedia ? (
-          <div className="relative shrink-0 bg-black md:row-span-2 md:h-full md:min-h-0">
+          // No celular, o agendamento ocupa o popup inteiro; no computador as fotos continuam ao lado.
+          <div className={`relative shrink-0 bg-black md:row-span-2 md:h-full md:min-h-0 ${booking ? 'max-md:hidden' : ''}`}>
             <div
               ref={galleryRef}
               className="flex h-full snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
@@ -284,7 +233,19 @@ export default function ItemSheet({ vitrine, item, onClose, cart }: ItemSheetPro
           </div>
         ) : null}
 
-        <div className={`flex flex-col px-5 pb-6 md:col-start-2 md:min-h-0 md:overflow-y-auto md:px-7 md:pt-7 ${hasMedia ? 'pt-5' : 'pt-8'}`}>
+        {booking ? (
+          <BookingFlow
+            vitrine={vitrine}
+            item={item}
+            phone={phone}
+            priceText={vitrine.showPrices ? headerPrice : null}
+            bodyClassName={bodyClassName}
+            footerClassName={footerClassName}
+            onBack={() => setBooking(false)}
+          />
+        ) : (
+        <>
+        <div className={bodyClassName}>
           <h2 className="pr-12 text-2xl font-extrabold leading-tight tracking-[-0.02em] md:text-[1.75rem]">{item.name}</h2>
           {showPrice ? (
             <p className="numeric mt-2 flex flex-wrap items-baseline gap-x-2 text-2xl font-extrabold tracking-[-0.01em]">
@@ -299,62 +260,6 @@ export default function ItemSheet({ vitrine, item, onClose, cart }: ItemSheetPro
             </p>
           ) : null}
 
-          {asking ? (
-            <div className="mt-6 flex flex-col gap-5">
-              {variation ? <p className="-mt-2 text-[0.9375rem] font-semibold text-ink-muted">Opção: {variation.name}</p> : null}
-              <p className="text-[0.9375rem] leading-relaxed text-ink-muted">
-                Preencha e a gente abre o WhatsApp com a mensagem pronta. O horário é combinado na conversa.
-              </p>
-              <RequestField label="Nome" htmlFor={fieldId('name')} error={requestErrors.name}>
-                <input
-                  id={fieldId('name')}
-                  className={fieldClass}
-                  value={request.name}
-                  maxLength={60}
-                  autoComplete="name"
-                  aria-invalid={requestErrors.name ? true : undefined}
-                  onChange={(event) => setRequest((current) => ({ ...current, name: event.target.value }))}
-                />
-              </RequestField>
-              <div className="grid grid-cols-2 gap-3">
-                <RequestField label="Data desejada" htmlFor={fieldId('date')} error={requestErrors.date}>
-                  <input
-                    id={fieldId('date')}
-                    type="date"
-                    className={fieldClass}
-                    value={request.date}
-                    min={todayInSaoPaulo()}
-                    aria-invalid={requestErrors.date ? true : undefined}
-                    onChange={(event) => setRequest((current) => ({ ...current, date: event.target.value }))}
-                  />
-                </RequestField>
-                <RequestField label="Horário desejado" htmlFor={fieldId('time')} error={requestErrors.time}>
-                  <input
-                    id={fieldId('time')}
-                    type="time"
-                    className={fieldClass}
-                    value={request.time}
-                    aria-invalid={requestErrors.time ? true : undefined}
-                    onChange={(event) => setRequest((current) => ({ ...current, time: event.target.value }))}
-                  />
-                </RequestField>
-              </div>
-              <RequestField label="Observação" htmlFor={fieldId('notes')} error={requestErrors.notes}>
-                <textarea
-                  id={fieldId('notes')}
-                  rows={3}
-                  maxLength={300}
-                  placeholder="Algum detalhe? Escreva aqui."
-                  value={request.notes}
-                  aria-invalid={requestErrors.notes ? true : undefined}
-                  onChange={(event) => setRequest((current) => ({ ...current, notes: event.target.value }))}
-                  className={`${fieldClass} h-auto resize-none py-3 leading-snug`}
-                />
-              </RequestField>
-              <p className="text-sm text-ink-muted">Data e horário são opcionais.</p>
-            </div>
-          ) : (
-          <>
           {item.soldOut ? (
             <p className="mt-3 w-fit rounded-full bg-ink px-3 py-1 text-sm font-bold text-canvas">
               {isService ? 'Serviço indisponível no momento' : 'Item esgotado no momento'}
@@ -362,6 +267,12 @@ export default function ItemSheet({ vitrine, item, onClose, cart }: ItemSheetPro
           ) : null}
           {item.description ? <p className="mt-3 whitespace-pre-line leading-relaxed text-ink-muted">{item.description}</p> : null}
           <TagList tags={item.tags} className="mt-3" />
+          {isService && item.notice ? (
+            <p className="mt-4 flex items-start gap-2 rounded-2xl bg-brand-soft px-4 py-3 text-[0.9375rem] font-medium leading-snug">
+              <Info aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-(--color-accent)" strokeWidth={2.5} />
+              {item.notice}
+            </p>
+          ) : null}
 
           {item.variations.length > 0 ? (
             <fieldset ref={choicesRef} className="mt-7 min-w-0">
@@ -434,11 +345,9 @@ export default function ItemSheet({ vitrine, item, onClose, cart }: ItemSheetPro
               <span className="numeric self-end text-xs text-ink-muted">{note.length}/140</span>
             </div>
           )}
-          </>
-          )}
         </div>
 
-        <div className="sticky bottom-0 z-10 mt-auto flex items-center gap-3 border-t border-line bg-surface px-4 pb-[calc(0.875rem+env(safe-area-inset-bottom))] pt-3.5 md:static md:col-start-2 md:px-7 md:pb-5 md:pt-4">
+        <div className={footerClassName}>
           {cart ? (
             <div className="flex shrink-0 items-center gap-1 rounded-full bg-subtle p-1" aria-label="Quantidade" role="group">
               <StepButton
@@ -459,16 +368,6 @@ export default function ItemSheet({ vitrine, item, onClose, cart }: ItemSheetPro
               />
             </div>
           ) : null}
-          {asking ? (
-            <button
-              type="button"
-              aria-label="Voltar"
-              onClick={() => setAsking(false)}
-              className="flex size-12 shrink-0 items-center justify-center rounded-full border-2 border-line-strong bg-surface text-ink transition-transform duration-150 active:scale-95"
-            >
-              <ArrowLeft aria-hidden="true" className="size-5" strokeWidth={2.5} />
-            </button>
-          ) : null}
           <button
             type="button"
             disabled={disabled}
@@ -476,9 +375,12 @@ export default function ItemSheet({ vitrine, item, onClose, cart }: ItemSheetPro
             className={`${brandButtonClass} numeric min-w-0 flex-1 px-4 text-[0.9375rem] leading-tight sm:text-base`}
           >
             {showWhatsAppIcon ? <WhatsAppIcon className="size-5 shrink-0" /> : null}
+            {showCalendarIcon ? <CalendarDays aria-hidden="true" className="size-5 shrink-0" strokeWidth={2.5} /> : null}
             {buttonLabel}
           </button>
         </div>
+        </>
+        )}
       </div>
     </div>
   )

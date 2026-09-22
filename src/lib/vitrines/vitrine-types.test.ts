@@ -5,7 +5,7 @@ it('padrões por tipo de vitrine', () => {
   expect(VITRINE_TYPES).toEqual(['produtos', 'servicos', 'comida'])
   // O assistente só cria serviços; 'produtos' e 'comida' seguem válidos no banco.
   expect(WIZARD_VITRINE_TYPES).toEqual(['servicos'])
-  expect(DEFAULT_BUTTON_TEXT).toEqual({ produtos: 'Adicionar à sacola', servicos: 'Quero esse serviço', comida: 'Pedir' })
+  expect(DEFAULT_BUTTON_TEXT).toEqual({ produtos: 'Adicionar à sacola', servicos: 'Agendar horário', comida: 'Pedir' })
   expect(SAMPLE_CATEGORIES.produtos).toEqual(['Destaques', 'Novidades'])
   expect(SAMPLE_CATEGORIES.servicos).toEqual(['Serviços', 'Pacotes'])
 })

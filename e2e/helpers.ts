@@ -113,7 +113,7 @@ export async function seedVitrine(
   const cartEnabled = options.cartEnabled ?? type !== 'servicos'
   const { data: vitrine } = await admin
     .from('vitrines')
-    .insert({ owner_id: ownerId, type, subdomain, name, default_button_text: { produtos: 'Adicionar à sacola', servicos: 'Quero esse serviço', comida: 'Pedir' }[type], cart_enabled: cartEnabled })
+    .insert({ owner_id: ownerId, type, subdomain, name, default_button_text: { produtos: 'Adicionar à sacola', servicos: 'Agendar horário', comida: 'Pedir' }[type], cart_enabled: cartEnabled })
     .select('id')
     .single()
     .throwOnError()
@@ -140,6 +140,8 @@ export async function seedItem(
     name: string
     priceCents?: number | null
     priceType?: 'fixed' | 'from' | 'on_request'
+    durationMinutes?: number
+    notice?: string
     variations?: { name: string; priceCents: number }[]
   },
 ) {
@@ -153,6 +155,8 @@ export async function seedItem(
       name: fields.name,
       price_type: fields.priceType ?? 'fixed',
       price_cents: fields.priceType === 'on_request' ? null : (fields.priceCents ?? 1000),
+      duration_minutes: fields.durationMinutes ?? null,
+      notice: fields.notice ?? null,
     })
     .select('id, code')
     .single()
@@ -413,4 +417,32 @@ export async function fakeSubscription(fields: {
     }),
   )
   return id
+}
+
+// Agenda aberta todos os dias, das 08:00 às 20:00, sem antecedência mínima.
+export async function openAgenda(vitrineId: string, patch: Record<string, unknown> = {}) {
+  await createAdminClient()
+    .from('vitrines')
+    .update({
+      business_hours: [0, 1, 2, 3, 4, 5, 6].map((day) => ({ day, open: '08:00', close: '20:00' })),
+      booking_min_notice_minutes: 0,
+      ...patch,
+    })
+    .eq('id', vitrineId)
+    .throwOnError()
+}
+
+// Data de amanhã em São Paulo (AAAA-MM-DD).
+export function tomorrowInSaoPaulo() {
+  return new Date(Date.now() - 3 * 3_600_000 + 86_400_000).toISOString().slice(0, 10)
+}
+
+export async function appointmentsOf(vitrineId: string) {
+  const { data } = await createAdminClient()
+    .from('appointments')
+    .select('code, status, customer_name, customer_phone, notes, service_name, starts_at, blocked_until')
+    .eq('vitrine_id', vitrineId)
+    .order('starts_at')
+    .throwOnError()
+  return data ?? []
 }

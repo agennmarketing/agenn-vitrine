@@ -29,11 +29,11 @@ export default function MarketingHome() {
         </div>
         <div className="flex max-w-2xl flex-col gap-4">
           <p className="text-[2.5rem] font-black leading-[1.05] tracking-[-0.03em] text-ink sm:text-[3.5rem]">
-            Sua vitrine com vídeo, com os agendamentos chegando no <span className="text-go-strong">WhatsApp</span>.
+            Sua vitrine com vídeo e <span className="text-go-strong">agenda online</span>.
           </p>
           <p className="max-w-xl text-lg font-semibold leading-relaxed text-ink-muted">
             Para manicures, salões, lash e sobrancelhas, barbearias e estética. Monte pelo celular, divulgue o link e
-            receba a solicitação de horário pronta, com código.
+            o cliente escolhe um horário livre e agenda sozinho, sem dupla reserva.
           </p>
         </div>
         <Link

@@ -134,6 +134,119 @@ export type Database = {
           },
         ]
       }
+      appointments: {
+        Row: {
+          blocked_until: string
+          cancelled_at: string | null
+          code: string
+          created_at: string
+          customer_name: string
+          customer_phone: string
+          duration_minutes: number
+          ends_at: string
+          id: string
+          item_id: string | null
+          notes: string | null
+          owner_id: string
+          price_text: string | null
+          service_name: string
+          starts_at: string
+          status: string
+          vitrine_id: string
+        }
+        Insert: {
+          blocked_until: string
+          cancelled_at?: string | null
+          code: string
+          created_at?: string
+          customer_name: string
+          customer_phone: string
+          duration_minutes: number
+          ends_at: string
+          id?: string
+          item_id?: string | null
+          notes?: string | null
+          owner_id: string
+          price_text?: string | null
+          service_name: string
+          starts_at: string
+          status?: string
+          vitrine_id: string
+        }
+        Update: {
+          blocked_until?: string
+          cancelled_at?: string | null
+          code?: string
+          created_at?: string
+          customer_name?: string
+          customer_phone?: string
+          duration_minutes?: number
+          ends_at?: string
+          id?: string
+          item_id?: string | null
+          notes?: string | null
+          owner_id?: string
+          price_text?: string | null
+          service_name?: string
+          starts_at?: string
+          status?: string
+          vitrine_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_vitrine_id_fkey"
+            columns: ["vitrine_id"]
+            isOneToOne: false
+            referencedRelation: "vitrines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      booking_blocks: {
+        Row: {
+          created_at: string
+          ends_at: string
+          id: string
+          owner_id: string
+          reason: string | null
+          starts_at: string
+          vitrine_id: string
+        }
+        Insert: {
+          created_at?: string
+          ends_at: string
+          id?: string
+          owner_id?: string
+          reason?: string | null
+          starts_at: string
+          vitrine_id: string
+        }
+        Update: {
+          created_at?: string
+          ends_at?: string
+          id?: string
+          owner_id?: string
+          reason?: string | null
+          starts_at?: string
+          vitrine_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_blocks_vitrine_id_fkey"
+            columns: ["vitrine_id"]
+            isOneToOne: false
+            referencedRelation: "vitrines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           created_at: string
@@ -364,6 +477,7 @@ export type Database = {
           duration_minutes: number | null
           id: string
           name: string
+          notice: string | null
           owner_id: string
           position: number
           price_cents: number | null
@@ -386,6 +500,7 @@ export type Database = {
           duration_minutes?: number | null
           id?: string
           name: string
+          notice?: string | null
           owner_id?: string
           position?: number
           price_cents?: number | null
@@ -408,6 +523,7 @@ export type Database = {
           duration_minutes?: number | null
           id?: string
           name?: string
+          notice?: string | null
           owner_id?: string
           position?: number
           price_cents?: number | null
@@ -752,6 +868,9 @@ export type Database = {
           address: string | null
           banner_enabled: boolean
           banner_media_id: string | null
+          booking_buffer_minutes: number
+          booking_max_days_ahead: number
+          booking_min_notice_minutes: number
           brand_color: string | null
           business_hours: Json | null
           cart_button_text: string
@@ -779,6 +898,9 @@ export type Database = {
           address?: string | null
           banner_enabled?: boolean
           banner_media_id?: string | null
+          booking_buffer_minutes?: number
+          booking_max_days_ahead?: number
+          booking_min_notice_minutes?: number
           brand_color?: string | null
           business_hours?: Json | null
           cart_button_text?: string
@@ -806,6 +928,9 @@ export type Database = {
           address?: string | null
           banner_enabled?: boolean
           banner_media_id?: string | null
+          booking_buffer_minutes?: number
+          booking_max_days_ahead?: number
+          booking_min_notice_minutes?: number
           brand_color?: string | null
           business_hours?: Json | null
           cart_button_text?: string
@@ -913,6 +1038,19 @@ export type Database = {
           crossed_quota: boolean
           usage_owner_id: string
         }[]
+      }
+      book_appointment: {
+        Args: {
+          p_code: string
+          p_customer_name: string
+          p_customer_phone: string
+          p_item_id: string
+          p_notes: string
+          p_price_text: string
+          p_starts_at: string
+          p_vitrine_id: string
+        }
+        Returns: string
       }
       choose_active_vitrine: {
         Args: { p_vitrine_id: string }

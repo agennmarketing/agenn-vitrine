@@ -13,7 +13,7 @@ export const VITRINE_TYPE_LABEL: Record<VitrineType, string> = {
 
 export const DEFAULT_BUTTON_TEXT: Record<VitrineType, string> = {
   produtos: 'Adicionar à sacola',
-  servicos: 'Quero esse serviço',
+  servicos: 'Agendar horário',
   comida: 'Pedir',
 }
 

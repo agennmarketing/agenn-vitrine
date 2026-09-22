@@ -80,7 +80,7 @@ const STEP_COUNT = 4
 // Campo com erro → passo onde ele mora (o popup volta para lá depois de salvar com erro).
 const STEP_FIELDS: string[][] = [
   ['coverMediaId', 'galleryMediaIds', 'videoMediaId'],
-  ['name', 'description', 'categoryId', 'code', 'durationMinutes', 'tags'],
+  ['name', 'description', 'categoryId', 'code', 'durationMinutes', 'notice', 'tags'],
   ['priceType', 'price', 'promoPrice', 'soldOut', 'variations'],
   [...ADVANCED_FIELDS],
 ]
@@ -458,7 +458,13 @@ export function ItemForm(props: {
                   </div>
                 </div>
                 {servico ? (
-                  <Field label="Duração (minutos)" htmlFor="durationMinutes" error={errors.durationMinutes} hint="Opcional.">
+                  <>
+                  <Field
+                    label="Duração (minutos)"
+                    htmlFor="durationMinutes"
+                    error={errors.durationMinutes}
+                    hint="Quanto tempo o horário fica reservado na agenda."
+                  >
                     <Input
                       id="durationMinutes"
                       name="durationMinutes"
@@ -469,8 +475,28 @@ export function ItemForm(props: {
                       className="numeric sm:max-w-44"
                     />
                   </Field>
+                  <Field
+                    label="Aviso ao cliente"
+                    htmlFor="notice"
+                    error={errors.notice}
+                    hint="Opcional. Aparece no serviço e na confirmação do agendamento."
+                  >
+                    <Textarea
+                      id="notice"
+                      name="notice"
+                      rows={2}
+                      maxLength={300}
+                      placeholder="Ex.: Chegue 10 minutos antes."
+                      defaultValue={values?.notice ?? item?.notice ?? ''}
+                      invalid={!!errors.notice}
+                    />
+                  </Field>
+                  </>
                 ) : (
-                  <input type="hidden" name="durationMinutes" value="" />
+                  <>
+                    <input type="hidden" name="durationMinutes" value="" />
+                    <input type="hidden" name="notice" value="" />
+                  </>
                 )}
                 {produto ? (
                   <input type="hidden" name="tags" value="" />
@@ -559,7 +585,7 @@ export function ItemForm(props: {
                     </div>
                     <p className="text-sm font-semibold leading-snug text-ink-muted">
                       {servico
-                        ? 'Inativo: o serviço continua na vitrine, mas não pode ser solicitado.'
+                        ? 'Inativo: o serviço continua na vitrine, mas não pode ser agendado.'
                         : 'Inativo: o produto continua na vitrine, mas não pode ser adicionado à sacola.'}
                     </p>
                   </fieldset>
