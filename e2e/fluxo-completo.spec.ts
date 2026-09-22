@@ -3,19 +3,16 @@ import {
   createConfirmedUser,
   itemStep,
   makeTestImage,
-  mediaOfItem,
   seedItem,
   seedVitrine,
-  sendMuxWebhook,
   setPlan,
   signIn,
   uniqueSubdomain,
   uploadImage,
-  videoFixture,
   vitrineStatuses,
 } from './helpers'
 
-test('criar vitrine → cadastrar item com vídeo → vitrine pública → WhatsApp → simulador', async ({ page, request: api }) => {
+test('criar vitrine → cadastrar item → vitrine pública → WhatsApp → simulador', async ({ page }) => {
   const user = await createConfirmedUser('fluxo')
   await signIn(page, user.email, user.password)
 
@@ -34,19 +31,9 @@ test('criar vitrine → cadastrar item com vídeo → vitrine pública → Whats
   await page.getByRole('button', { name: 'Salvar item' }).click()
   await expect(page.getByText('Primeiro item no ar!')).toBeVisible()
 
-  // Vídeo no item (conta gratuita: 1 vídeo permitido)
-  await page.getByRole('link', { name: 'Editar' }).click()
-  await page.getByLabel('Vídeo', { exact: true }).setInputFiles(videoFixture('vertical-3s'))
-  await expect(page.getByText(/Processando o vídeo…|Vídeo pronto/)).toBeVisible({ timeout: 20_000 })
-  const itemId = page.url().split('/').pop()!
-  const media = await mediaOfItem(itemId)
-  await sendMuxWebhook(api, media!.mux_upload_id!)
-  await expect(page.getByText('Vídeo pronto')).toBeVisible({ timeout: 15_000 })
-
   await page.goto(`http://${subdomain}.localhost:3000/`)
   await expect(page.getByRole('heading', { level: 1, name: 'Loja do Zé' })).toBeVisible()
   await page.getByRole('button', { name: 'Camiseta' }).click()
-  await expect(page.getByRole('dialog', { name: 'Camiseta' }).locator(`mux-player[data-media-id="${media!.id}"]`)).toHaveCount(1)
   await page.route('https://wa.me/**', (route) => route.fulfill({ status: 200, body: 'ok' }))
   const request = page.waitForRequest(/^https:\/\/wa\.me\//)
   await page.getByRole('dialog', { name: 'Camiseta' }).getByRole('button', { name: 'Adicionar à sacola · R$ 25,90' }).click()
@@ -134,7 +121,7 @@ test('teste vencido tira a vitrine do ar; assinar devolve tudo na hora; cancelar
   await page.goto(`/painel/vitrines/${vitrine.id}/itens`)
   await page.getByRole('button', { name: /Assinar por R\$.?79,90 por mês/ }).click()
   await page.waitForURL(/\/painel\/plano\?assinatura=ok$/)
-  await expect(page.getByRole('heading', { name: 'Plano Essencial' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Plano Essencial — Ativo' })).toBeVisible()
 
   // A revalidação por tag acontece no webhook: a vitrine volta com os dados de antes.
   expect(await vitrineStatuses(user.id)).toEqual([`${vitrine.subdomain}:active`])
@@ -149,7 +136,7 @@ test('teste vencido tira a vitrine do ar; assinar devolve tudo na hora; cancelar
   await page.waitForURL(/\/api\/dev-billing\/portal/)
   await page.getByRole('link', { name: 'Cancelar agora' }).click()
   await page.waitForURL(/\/painel\/plano$/)
-  await expect(page.getByText(/Sua assinatura foi cancelada/)).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Sua assinatura terminou' })).toBeVisible()
 
   expect(await vitrineStatuses(user.id)).toEqual([`${vitrine.subdomain}:frozen`])
   await page.goto(`/painel/agenda`)

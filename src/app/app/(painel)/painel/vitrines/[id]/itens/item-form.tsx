@@ -14,7 +14,6 @@ import {
 } from 'lucide-react'
 import { useActionState, useEffect, useRef, useState, type ComponentProps, type ReactNode } from 'react'
 import { ImageSlot } from '@/components/media/image-slot'
-import { VideoSlot } from '@/components/media/video-slot'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { FormMessage } from '@/components/ui/form-message'
@@ -54,7 +53,7 @@ function steps(produto: boolean, servico: boolean) {
     {
       label: 'Fotos',
       question: produto ? 'Mostre o seu produto' : servico ? 'Mostre o seu serviço' : 'Mostre o seu item',
-      help: 'A capa é a foto que aparece na vitrine. As outras duas fotos e o vídeo são opcionais.',
+      help: 'A capa é a foto que aparece na vitrine. As outras duas fotos são opcionais.',
     },
     {
       label: 'Detalhes',
@@ -215,7 +214,6 @@ export function ItemForm(props: {
   categories: { id: string; name: string }[]
   contacts: { id: string; label: string }[]
   nextCode: string
-  videoLimits: { maxSeconds: number; maxUploadMb: number }
   item?: ItemForEdit
 }) {
   const { vitrineId, item } = props
@@ -227,7 +225,8 @@ export function ItemForm(props: {
   const serviceExample = isServiceSegment(props.serviceSegment) ? SEGMENT_COPY[props.serviceSegment].serviceExample : 'Corte de cabelo'
   const [step, setStep] = useState(0)
   const [coverId, setCoverId] = useState<string>(item?.cover?.id ?? '')
-  const [videoId, setVideoId] = useState<string>(item?.video?.id ?? '')
+  // Vídeo saiu do cadastro; um vídeo que o item já tenha continua ligado a ele.
+  const videoId = item?.video?.id ?? ''
   const [galleryIds, setGalleryIds] = useState<(string | null)[]>([item?.gallery[0]?.id ?? null, item?.gallery[1]?.id ?? null])
   const [priceType, setPriceType] = useState<string>(produto ? 'fixed' : (item?.price_type ?? 'fixed'))
   const [variations, setVariations] = useState<VariationRow[]>(
@@ -320,7 +319,7 @@ export function ItemForm(props: {
             <p className="font-semibold text-ink-muted">{current.help}</p>
           </div>
 
-          {/* Passo 1: fotos e vídeo (os envios acontecem na hora, fora do formulário). */}
+          {/* Passo 1: fotos (os envios acontecem na hora, fora do formulário). */}
           <div hidden={step !== 0} className="flex flex-col gap-5">
             <div className="grid grid-cols-3 gap-3">
               <div className="col-span-2 row-span-2 flex [&>div]:w-full">
@@ -355,20 +354,6 @@ export function ItemForm(props: {
                 <span>{errors.coverMediaId}</span>
               </p>
             ) : null}
-            <div className="flex flex-col gap-2">
-              <VideoSlot
-                label="Vídeo"
-                role="video"
-                vitrineId={vitrineId}
-                itemId={item?.id}
-                initial={item?.video ?? null}
-                limits={props.videoLimits}
-                onChange={(media) => setVideoId(media?.id ?? '')}
-              />
-              <p className="text-sm font-semibold text-ink-muted">
-                Até {props.videoLimits.maxSeconds} s, vertical (9:16) ou horizontal (16:9).
-              </p>
-            </div>
           </div>
 
           <form id="item-form" action={formAction} noValidate className="flex flex-col gap-7">

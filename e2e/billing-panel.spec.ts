@@ -11,23 +11,24 @@ test('conta nova está no teste grátis e assina o Plano Essencial', async ({ pa
   await signIn(page, user.email, user.password)
 
   await page.goto('/painel/plano')
-  await expect(page.getByRole('heading', { name: 'Teste grátis' })).toBeVisible()
-  await expect(page.getByText(/Seu teste grátis vai até \d{2}\/\d{2}\/\d{4}/)).toBeVisible()
+  await expect(page.getByRole('heading', { name: /^Teste grátis — \d dias restantes$/ })).toBeVisible()
+  await expect(page.getByText(/Vai até \d{2}\/\d{2}\/\d{4}/)).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Essencial', exact: true })).toBeVisible()
   // Um plano só: nada de Gratuito nem Pro na tela.
   await expect(page.getByText(/Gratuito|Plano Pro/)).toHaveCount(0)
 
-  await page.getByRole('button', { name: ASSINAR }).click()
+  await page.getByRole('button', { name: 'Assinar Essencial' }).click()
   await page.waitForURL(/\/painel\/plano\?assinatura=ok$/)
   await expect(page.getByText('Assinatura confirmada. Bom proveito!')).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Plano Essencial' })).toBeVisible()
-  await expect(page.getByText('Renova em')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Plano Essencial — Ativo' })).toBeVisible()
+  await expect(page.getByText(/Próxima cobrança em/)).toBeVisible()
 
   await page.getByRole('button', { name: 'Gerenciar assinatura' }).click()
   await page.waitForURL(/\/api\/dev-billing\/portal/)
   await page.getByRole('link', { name: 'Cancelar agora' }).click()
   await page.waitForURL(/\/painel\/plano$/)
   // Cancelou ainda dentro dos 7 dias: o teste continua valendo até o fim.
-  await expect(page.getByRole('heading', { name: 'Teste grátis' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /^Teste grátis — / })).toBeVisible()
 })
 
 test('avisa nos últimos dias do teste', async ({ page }) => {
@@ -56,6 +57,10 @@ test('teste vencido: o painel vira a tela de assinatura, mas Conta continua aber
     await expect(page.getByRole('heading', { name: 'Seu teste grátis terminou' })).toBeVisible()
     await expect(page.getByRole('button', { name: ASSINAR })).toBeVisible()
   }
+
+  await page.goto('/painel/plano')
+  await expect(page.getByRole('heading', { name: 'Seu teste terminou' })).toBeVisible()
+  await expect(page.getByRole('button', { name: /Assinar por R\$.?79,90\/mês/ })).toBeVisible()
 
   await page.goto('/painel/conta')
   await expect(page.getByRole('heading', { name: 'Seu teste grátis terminou' })).toHaveCount(0)

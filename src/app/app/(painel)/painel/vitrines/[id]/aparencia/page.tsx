@@ -1,5 +1,5 @@
 import { SectionIntro } from '@/components/ui/config-section'
-import { getMyVitrine, getPanelSession, getVideoLimits } from '@/features/vitrines/queries'
+import { getMyVitrine, getPanelSession } from '@/features/vitrines/queries'
 import { env } from '@/lib/env'
 import { imageSources } from '@/lib/media/urls'
 import { AppearanceForm } from './appearance-form'
@@ -8,11 +8,7 @@ export const metadata = { title: 'Aparência' }
 
 export default async function AparenciaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const [vitrine, { supabase }, videoLimits] = await Promise.all([
-    getMyVitrine(id),
-    getPanelSession(),
-    getVideoLimits(),
-  ])
+  const [vitrine, { supabase }] = await Promise.all([getMyVitrine(id), getPanelSession()])
   const { data: media } = await supabase
     .from('media')
     .select('id, role, kind, status, storage_paths, thumbnail_url')
@@ -24,10 +20,6 @@ export default async function AparenciaPage({ params }: { params: Promise<{ id: 
     return row && sources ? { id: row.id, url: sources.small } : null
   }
 
-  const bannerVideoRow = (media ?? []).find((m) => m.role === 'banner' && m.kind === 'video')
-  const bannerVideo = bannerVideoRow
-    ? { id: bannerVideoRow.id, status: bannerVideoRow.status as 'processing' | 'ready' | 'failed', thumbnailUrl: bannerVideoRow.thumbnail_url }
-    : null
 
   return (
     <div className="flex max-w-2xl flex-col gap-6">
@@ -36,8 +28,6 @@ export default async function AparenciaPage({ params }: { params: Promise<{ id: 
         vitrineId={id}
         logo={slot('logo')}
         banner={slot('banner')}
-        bannerVideo={bannerVideo}
-        videoLimits={videoLimits}
         buttonText={vitrine.default_button_text}
         initial={{
           theme: vitrine.theme === 'dark' ? 'dark' : 'light',
