@@ -25,7 +25,18 @@ function blockLabel(block: BlockRow) {
   return `${dayMonth(block.startDate)} ${block.startTime} a ${dayMonth(block.endDate)} ${block.endTime}`
 }
 
-export function Blocks({ vitrineId, blocks }: { vitrineId: string; blocks: BlockRow[] }) {
+export function Blocks({
+  vitrineId,
+  blocks,
+  yourPlace,
+  blockExample,
+}: {
+  vitrineId: string
+  blocks: BlockRow[]
+  /** Palavras do segmento: "seu studio", "Folga". */
+  yourPlace: string
+  blockExample: string
+}) {
   const router = useRouter()
   const [allDay, setAllDay] = useState(true)
   const [pending, startTransition] = useTransition()
@@ -51,7 +62,7 @@ export function Blocks({ vitrineId, blocks }: { vitrineId: string; blocks: Block
   }
 
   return (
-    <ConfigBlock title="Bloqueios" description="Folga, feriado ou almoço: esses horários somem da vitrine.">
+    <ConfigBlock title="Bloquear horários" description={`Folga, feriado ou almoço: os horários em que ${yourPlace} não atende somem da vitrine.`}>
       <form key={formKey} action={formAction} noValidate className="flex flex-col gap-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Data" htmlFor="block-date" error={errors.date}>
@@ -69,7 +80,7 @@ export function Blocks({ vitrineId, blocks }: { vitrineId: string; blocks: Block
               id="block-reason"
               name="reason"
               maxLength={80}
-              placeholder="Ex.: Feriado"
+              placeholder={`Ex.: ${blockExample}`}
               defaultValue={values?.reason ?? ''}
               invalid={!!errors.reason}
             />

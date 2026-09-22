@@ -20,7 +20,7 @@ export default async function WhatsAppPage({ params }: { params: Promise<{ id: s
     <div className="flex max-w-2xl flex-col gap-6">
       <SectionIntro
         title="WhatsApp"
-        description="Os números que recebem os pedidos. O botão da vitrine abre a conversa com o principal."
+        description="Os números que recebem as mensagens da vitrine. O botão da vitrine abre a conversa com o principal."
       />
       <Contacts
         vitrineId={id}

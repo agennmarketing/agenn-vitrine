@@ -1,12 +1,12 @@
 'use client'
 
-import { Crown, ReceiptText, Store, UserRound } from 'lucide-react'
+import { CalendarDays, Crown, Store, UserRound } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const ITEMS = [
   { href: '/painel', label: 'Vitrine', Icon: Store },
-  { href: '/painel/simulador', label: 'Consultar Pedido', Icon: ReceiptText },
+  { href: '/painel/agenda', label: 'Agenda', Icon: CalendarDays },
   { href: '/painel/plano', label: 'Plano', Icon: Crown },
   { href: '/painel/conta', label: 'Conta', Icon: UserRound },
 ] as const

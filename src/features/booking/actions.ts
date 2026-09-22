@@ -5,7 +5,7 @@ import { requireActionUser } from '@/lib/auth/action-user'
 import { addDays, saoPauloInstant } from '@/lib/booking/availability'
 import { fieldErrorsFromZod, readFormFields, type FormState } from '@/lib/forms/form-state'
 import { mapDbError } from '@/lib/vitrines/db-errors'
-import { bookingBlockSchema, bookingRulesSchema } from '@/lib/vitrines/schemas'
+import { appointmentRescheduleSchema, bookingBlockSchema, bookingRulesSchema } from '@/lib/vitrines/schemas'
 
 // Tudo pelo cliente do usuário: RLS e grants garantem que só o dono mexe na agenda.
 async function ownedServiceVitrine(vitrineId: string) {
@@ -74,4 +74,40 @@ export async function cancelAppointmentAction(vitrineId: string, appointmentId: 
     .eq('status', 'confirmed')
   if (error) return { error: mapDbError(error) }
   return { success: 'Agendamento cancelado. O horário voltou a ficar livre.' }
+}
+
+// Só conclui o que já começou: concluir libera o horário na vitrine.
+export async function completeAppointmentAction(vitrineId: string, appointmentId: string): Promise<FormState> {
+  const { supabase } = await ownedServiceVitrine(vitrineId)
+  const { data, error } = await supabase
+    .from('appointments')
+    .update({ status: 'completed', completed_at: new Date().toISOString() })
+    .eq('id', appointmentId)
+    .eq('vitrine_id', vitrineId)
+    .eq('status', 'confirmed')
+    .lte('starts_at', new Date().toISOString())
+    .select('id')
+  if (error) return { error: mapDbError(error) }
+  if (data.length === 0) return { error: 'Só dá para concluir um atendimento depois do horário marcado.' }
+  return { success: 'Atendimento concluído.' }
+}
+
+// Remarcar confere bloqueios e outros agendamentos no banco (reschedule_appointment).
+export async function rescheduleAppointmentAction(
+  vitrineId: string,
+  appointmentId: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const fields = readFormFields(formData, ['date', 'time'])
+  const parsed = appointmentRescheduleSchema.safeParse(fields)
+  if (!parsed.success) return { fieldErrors: fieldErrorsFromZod(parsed.error), values: fields }
+
+  const { supabase } = await ownedServiceVitrine(vitrineId)
+  const { error } = await supabase.rpc('reschedule_appointment', {
+    p_appointment_id: appointmentId,
+    p_starts_at: saoPauloInstant(parsed.data.date, parsed.data.time).toISOString(),
+  })
+  if (error) return { error: mapDbError(error), values: fields }
+  return { success: 'Agendamento remarcado.' }
 }

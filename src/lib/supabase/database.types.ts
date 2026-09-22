@@ -139,6 +139,7 @@ export type Database = {
           blocked_until: string
           cancelled_at: string | null
           code: string
+          completed_at: string | null
           created_at: string
           customer_name: string
           customer_phone: string
@@ -158,6 +159,7 @@ export type Database = {
           blocked_until: string
           cancelled_at?: string | null
           code: string
+          completed_at?: string | null
           created_at?: string
           customer_name: string
           customer_phone: string
@@ -177,6 +179,7 @@ export type Database = {
           blocked_until?: string
           cancelled_at?: string | null
           code?: string
+          completed_at?: string | null
           created_at?: string
           customer_name?: string
           customer_phone?: string
@@ -1155,6 +1158,10 @@ export type Database = {
       }
       next_item_code: { Args: { p_owner_id: string }; Returns: string }
       peek_next_item_code: { Args: never; Returns: string }
+      reschedule_appointment: {
+        Args: { p_appointment_id: string; p_starts_at: string }
+        Returns: undefined
+      }
       session_state: { Args: never; Returns: string }
       subdomains_over_quota_last_month: { Args: never; Returns: string[] }
       sync_vitrine_status: {
