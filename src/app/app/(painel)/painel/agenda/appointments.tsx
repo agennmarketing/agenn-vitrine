@@ -162,10 +162,14 @@ export function Appointments({
                         {appointment.notes ? (
                           <span className="text-sm font-semibold text-ink-muted">Obs.: {appointment.notes}</span>
                         ) : null}
-                        <span className="text-xs font-bold text-ink-muted">
-                          #{appointment.code}
-                          {appointment.priceText ? ` · ${appointment.priceText}` : ''}
-                        </span>
+                        <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                          {appointment.priceText ? (
+                            <span className="inline-flex items-center rounded-md bg-subtle px-2 py-0.5 text-xs font-black text-ink">
+                              {appointment.priceText}
+                            </span>
+                          ) : null}
+                          <span className="text-xs font-bold text-ink-muted">#{appointment.code}</span>
+                        </div>
                       </span>
                       {!editable || mode === 'reschedule' ? null : mode === 'cancel' ? (
                         <span className="flex shrink-0 gap-2">

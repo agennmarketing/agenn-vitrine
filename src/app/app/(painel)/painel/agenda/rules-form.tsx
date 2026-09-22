@@ -33,13 +33,19 @@ export function RulesForm({ vitrineId, initial }: { vitrineId: string; initial: 
 
   return (
     <form action={formAction} noValidate className="flex flex-col gap-5">
-      <ConfigBlock title="Dias e horários de atendimento" description="Os horários livres saem daqui, de 30 em 30 minutos.">
+      <ConfigBlock
+        title="Dias e horários de atendimento"
+        description="Defina os dias da semana em que você atende e o horário inicial e final por dia. Os horários livres saem daqui, de 30 em 30 minutos."
+      >
         <input type="hidden" name="businessHours" value={JSON.stringify(hours)} />
         <BusinessHoursEditor hours={hours} onChange={setHours} />
         <FormMessage error={errors.businessHours} />
       </ConfigBlock>
 
-      <ConfigBlock title="Regras dos agendamentos">
+      <ConfigBlock
+        title="Disponibilidade e regras online"
+        description="Controle o intervalo entre atendimentos e quais horários ficam disponíveis para agendamento online."
+      >
         <div className="grid gap-5 sm:grid-cols-3">
           <Field
             label="Intervalo entre atendimentos"
