@@ -1,5 +1,16 @@
 import { expect, test, type Page } from '@playwright/test'
-import { createAdminClient, createConfirmedUser, itemStep, seedItem, seedVitrine, signIn, uniqueSubdomain } from './helpers'
+import {
+  appointmentsOf,
+  createAdminClient,
+  createConfirmedUser,
+  itemStep,
+  openAgenda,
+  seedItem,
+  seedVitrine,
+  signIn,
+  tomorrowInSaoPaulo,
+  uniqueSubdomain,
+} from './helpers'
 
 const vitrineUrl = (subdomain: string) => `http://${subdomain}.localhost:3000/`
 
@@ -85,59 +96,125 @@ test('catálogo, tela do item com variação e mensagem com código de pedido', 
 
 test('link com ?item= abre a tela e falha na API ainda envia sem código', async ({ page }) => {
   const user = await createConfirmedUser('deeplink')
-  const vitrine = await seedVitrine(user.id, { type: 'servicos', name: 'Studio' })
-  const item = await seedItem(vitrine, user.id, { name: 'Manicure', priceCents: 4000 })
+  const vitrine = await seedVitrine(user.id, { name: 'Loja', cartEnabled: false })
+  const item = await seedItem(vitrine, user.id, { name: 'Caneca', priceCents: 4000 })
 
   await page.route('**/api/orders', (route) => route.abort())
   await page.goto(`${vitrineUrl(vitrine.subdomain)}?item=${item.code}`)
-  const dialog = page.getByRole('dialog', { name: 'Manicure' })
+  const dialog = page.getByRole('dialog', { name: 'Caneca' })
   await expect(dialog).toBeVisible()
 
-  // Serviços: o CTA abre a etapa de solicitação; só o nome é obrigatório.
-  await dialog.getByRole('button', { name: 'Quero esse serviço' }).click()
-  await dialog.getByRole('button', { name: 'Enviar pelo WhatsApp' }).click()
-  await expect(dialog.getByText('Informe seu nome.')).toBeVisible()
-
-  await dialog.getByLabel('Nome', { exact: true }).fill('Maria')
   const whatsapp = captureWhatsApp(page)
-  await dialog.getByRole('button', { name: 'Enviar pelo WhatsApp' }).click()
+  await dialog.getByRole('button', { name: 'Adicionar à sacola' }).click()
   const text = messageText(new URL((await whatsapp).url()))
-  expect(text).toBe(
-    `Olá! Vim da vitrine *Studio* e gostaria de agendar: *Manicure* (cód. ${item.code}).\n\nValor: R$ 40,00\nNome: Maria`,
-  )
+  expect(text).toBe(`Olá! Vim da vitrine *Loja* e tenho interesse em: *Caneca* (cód. ${item.code}).`)
 })
 
-test('serviço: a etapa leva nome, data, horário e observação para o WhatsApp', async ({ page }) => {
-  const user = await createConfirmedUser('servico')
+test('serviço: agenda data e horário livres, confirma e o horário some para o próximo cliente', async ({ page }) => {
+  const user = await createConfirmedUser('agendar')
   const vitrine = await seedVitrine(user.id, { type: 'servicos', name: 'Studio', phone: '+5511912345678' })
-  const item = await seedItem(vitrine, user.id, { name: 'Corte de cabelo', priceType: 'from', priceCents: 5000 })
+  await openAgenda(vitrine.id, { booking_buffer_minutes: 15 })
+  const item = await seedItem(vitrine, user.id, {
+    name: 'Corte de cabelo',
+    priceType: 'from',
+    priceCents: 5000,
+    durationMinutes: 45,
+    notice: 'Chegue 10 minutos antes.',
+  })
+  const tomorrow = tomorrowInSaoPaulo()
 
   await page.goto(vitrineUrl(vitrine.subdomain))
-  await expect(page.getByText('A partir de R$ 50,00')).toBeVisible()
   await page.getByRole('button', { name: 'Corte de cabelo' }).click()
   const dialog = page.getByRole('dialog', { name: 'Corte de cabelo' })
-  // Não há sacola em serviços: o botão é o CTA da solicitação.
+  // Não há sacola em serviços: o botão principal agenda.
   await expect(page.getByRole('button', { name: 'Abrir sacola' })).toHaveCount(0)
-  await dialog.getByRole('button', { name: 'Quero esse serviço' }).click()
+  await expect(dialog.getByText('Chegue 10 minutos antes.')).toBeVisible()
+  await dialog.getByRole('button', { name: 'Agendar horário' }).click()
 
-  const tomorrow = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10)
-  const [, month, day] = tomorrow.split('-')
+  // Só datas com horário livre; depois da data, só os horários livres dela.
+  const dates = dialog.getByRole('group', { name: 'Escolha a data' }).getByRole('radio')
+  await expect(dates.first()).toBeVisible()
+  await dialog.locator(`input[value="${tomorrow}"]`).check()
+  const times = dialog.getByRole('group', { name: 'Escolha o horário' }).getByRole('radio')
+  await expect(times.first()).toHaveAccessibleName('08:00')
+  await expect(times.last()).toHaveAccessibleName('19:00')
+  await dialog.getByRole('radio', { name: '10:00', exact: true }).check()
+  await dialog.getByRole('button', { name: 'Continuar' }).click()
+
+  await dialog.getByRole('button', { name: 'Confirmar agendamento' }).click()
+  await expect(dialog.getByText('Informe seu nome.')).toBeVisible()
+  await expect(dialog.getByText('Informe seu WhatsApp.')).toBeVisible()
   await dialog.getByLabel('Nome', { exact: true }).fill('Maria Silva')
-  await dialog.getByLabel('Data desejada').fill(tomorrow)
-  await dialog.getByLabel('Horário desejado').fill('14:30')
+  await dialog.getByLabel('WhatsApp', { exact: true }).fill('(11) 98888-7777')
   await dialog.getByLabel('Observação').fill('bem curto')
+  await dialog.getByRole('button', { name: 'Confirmar agendamento' }).click()
 
-  const whatsapp = captureWhatsApp(page)
-  await dialog.getByRole('button', { name: 'Enviar pelo WhatsApp' }).click()
-  const url = new URL((await whatsapp).url())
+  await expect(dialog.getByText('Horário agendado!')).toBeVisible()
+  const [appointment] = await appointmentsOf(vitrine.id)
+  expect(appointment).toMatchObject({
+    status: 'confirmed',
+    customer_name: 'Maria Silva',
+    customer_phone: '+5511988887777',
+    notes: 'bem curto',
+    service_name: 'Corte de cabelo',
+  })
+  expect(new Date(appointment.starts_at).toISOString()).toBe(new Date(`${tomorrow}T10:00:00-03:00`).toISOString())
+  // 45 min de serviço + 15 de intervalo.
+  expect(new Date(appointment.blocked_until).toISOString()).toBe(new Date(`${tomorrow}T11:00:00-03:00`).toISOString())
+  await expect(dialog.getByText(`#${appointment.code}`)).toBeVisible()
+
+  const href = await dialog.getByRole('link', { name: 'Avisar no WhatsApp' }).getAttribute('href')
+  const url = new URL(href!)
   expect(url.pathname).toBe('/5511912345678')
-  const text = messageText(url)
-  expect(text).toMatch(
-    new RegExp(
-      `^Olá! Vim da vitrine \\*Studio\\* e gostaria de agendar: \\*Corte de cabelo\\* \\(cód\\. ${item.code}\\)\\.( Pedido #[23456789A-HJ-NP-Z]{4})?\\n\\n` +
-        `Valor: A partir de R\\$ 50,00\\nNome: Maria Silva\\nData desejada: ${day}/${month}\\nHorário desejado: 14:30\\n\\nObs: bem curto$`,
-    ),
-  )
+  const message = messageText(url)
+  expect(message).toContain('*Corte de cabelo*\nData: ')
+  expect(message).toContain(`às 10:00\nValor: A partir de R$ 50,00\nNome: Maria Silva\nAgendamento #${appointment.code}\n\nObs: bem curto`)
+
+  // A agenda pública não mostra quem marcou: só os horários que continuam livres.
+  const base = `${vitrineUrl(vitrine.subdomain)}api/agenda?item=${item.id}`
+  const free = (await (await page.request.get(`${base}&data=${tomorrow}`)).json()) as { times: string[] }
+  expect(Object.keys(free)).toEqual(['times'])
+  expect(free.times).not.toContain('09:30')
+  expect(free.times).not.toContain('10:00')
+  expect(free.times).not.toContain('10:30')
+  expect(free.times).toContain('09:00')
+  expect(free.times).toContain('11:00')
+
+  // Dupla reserva: o mesmo horário é recusado.
+  const again = await page.request.post(`${vitrineUrl(vitrine.subdomain)}api/agendamentos`, {
+    data: { itemId: item.id, date: tomorrow, time: '10:00', name: 'Outra', whatsapp: '11977776666', notes: '' },
+  })
+  expect(again.status()).toBe(409)
+  expect(await appointmentsOf(vitrine.id)).toHaveLength(1)
+})
+
+test('serviço: horário tomado por outro cliente volta para a escolha com a lista atualizada', async ({ page }) => {
+  const user = await createConfirmedUser('agendar-corrida')
+  const vitrine = await seedVitrine(user.id, { type: 'servicos', name: 'Studio' })
+  await openAgenda(vitrine.id)
+  const item = await seedItem(vitrine, user.id, { name: 'Manicure', priceCents: 4000, durationMinutes: 60 })
+  const tomorrow = tomorrowInSaoPaulo()
+
+  await page.goto(`${vitrineUrl(vitrine.subdomain)}?item=${item.code}`)
+  const dialog = page.getByRole('dialog', { name: 'Manicure' })
+  await dialog.getByRole('button', { name: 'Agendar horário' }).click()
+  await dialog.locator(`input[value="${tomorrow}"]`).check()
+  await dialog.getByRole('radio', { name: '14:00', exact: true }).check()
+  await dialog.getByRole('button', { name: 'Continuar' }).click()
+  await dialog.getByLabel('Nome', { exact: true }).fill('Ana')
+  await dialog.getByLabel('WhatsApp', { exact: true }).fill('11912345670')
+
+  // Outro cliente confirma o mesmo horário antes.
+  const first = await page.request.post(`${vitrineUrl(vitrine.subdomain)}api/agendamentos`, {
+    data: { itemId: item.id, date: tomorrow, time: '14:00', name: 'Bia', whatsapp: '11912345671', notes: '' },
+  })
+  expect(first.status()).toBe(201)
+
+  await dialog.getByRole('button', { name: 'Confirmar agendamento' }).click()
+  await expect(dialog.getByText('Esse horário acabou de ser reservado. Escolha outro.')).toBeVisible()
+  await expect(dialog.getByRole('radio', { name: '13:30', exact: true })).toHaveCount(0)
+  await expect(dialog.getByRole('radio', { name: '14:00', exact: true })).toHaveCount(0)
+  await expect(dialog.getByRole('radio', { name: '15:00', exact: true })).toBeVisible()
 })
 
 test('alteração no painel aparece na vitrine pública', async ({ page }) => {

@@ -26,7 +26,7 @@ async function fetchCatalog(subdomain: string): Promise<PublicVitrine | null> {
     admin.from('categories').select('id, name, position').eq('vitrine_id', vitrine.id),
     admin
       .from('items')
-      .select('id, category_id, code, name, description, price_type, price_cents, promo_price_cents, duration_minutes, tags, sold_out, position, whatsapp_id, button_text, custom_message')
+      .select('id, category_id, code, name, description, price_type, price_cents, promo_price_cents, duration_minutes, tags, sold_out, position, whatsapp_id, button_text, custom_message, notice')
       .eq('vitrine_id', vitrine.id)
       .is('deleted_at', null)
       .order('position')

@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { BUFFER_OPTIONS, MAX_DAYS_OPTIONS, MIN_NOTICE_OPTIONS } from '@/lib/booking/rules'
 import { ITEM_CODE_MESSAGES, validateItemCode } from '@/lib/codes/item-code'
 import { validateSubdomain } from '@/lib/hosts/subdomain'
 import { parseBRLToCents } from '@/lib/money/money'
@@ -195,6 +196,7 @@ export const itemSchema = z
     whatsappId: z.union([z.uuid(), z.literal('')]).transform((value) => value || null),
     buttonText: optionalText(30),
     customMessage: optionalText(500),
+    notice: optionalText(300),
     variations: jsonArray(variationInput, 20),
     coverMediaId: z.uuid('Envie a imagem de capa.'),
     galleryMediaIds: jsonArray(z.uuid(), 2),
@@ -239,6 +241,7 @@ export const itemSchema = z
       whatsappId: data.whatsappId,
       buttonText: data.buttonText,
       customMessage: data.customMessage,
+      notice: data.notice,
       // Em "sob consulta" as variações servem só para escolha; o preço guardado é ignorado no cálculo.
       variations: data.variations.map((variation) => ({
         id: variation.id,
@@ -278,4 +281,38 @@ export const checkoutSettingsSchema = z
     if (data.paymentMode !== 'off' && data.paymentOptions.length === 0) {
       ctx.addIssue({ code: 'custom', path: ['paymentOptions'], message: 'Informe pelo menos uma forma de pagamento.' })
     }
+  })
+
+// Agenda (vitrines de serviços): regras de disponibilidade e bloqueios avulsos.
+
+const option = <T extends readonly number[]>(values: T, message: string) =>
+  z.string().transform((value, ctx) => {
+    const number = Number(value)
+    if (!value || !values.includes(number)) {
+      ctx.addIssue({ code: 'custom', message })
+      return z.NEVER
+    }
+    return number
+  })
+
+export const bookingRulesSchema = z.object({
+  businessHours,
+  bufferMinutes: option(BUFFER_OPTIONS, 'Escolha o intervalo.'),
+  minNoticeMinutes: option(MIN_NOTICE_OPTIONS, 'Escolha a antecedência.'),
+  maxDaysAhead: option(MAX_DAYS_OPTIONS, 'Escolha até quando dá para agendar.'),
+})
+
+export const bookingBlockSchema = z
+  .object({
+    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Informe a data.'),
+    allDay: checkbox,
+    start: z.string(),
+    end: z.string(),
+    reason: optionalText(80),
+  })
+  .superRefine((data, ctx) => {
+    if (data.allDay) return
+    if (!time.safeParse(data.start).success) ctx.addIssue({ code: 'custom', path: ['start'], message: 'Informe o início.' })
+    else if (!time.safeParse(data.end).success) ctx.addIssue({ code: 'custom', path: ['end'], message: 'Informe o fim.' })
+    else if (data.start >= data.end) ctx.addIssue({ code: 'custom', path: ['end'], message: 'O fim deve ser depois do início.' })
   })

@@ -17,7 +17,7 @@ export type CatalogRows = {
   items: {
     id: string; category_id: string | null; code: string; name: string; description: string; price_type: PriceType
     price_cents: number | null; promo_price_cents: number | null; duration_minutes: number | null; tags: string[]
-    sold_out: boolean; position: number; whatsapp_id: string | null; button_text: string | null; custom_message: string | null
+    sold_out: boolean; position: number; whatsapp_id: string | null; button_text: string | null; custom_message: string | null; notice: string | null
   }[]
   checkout: {
     name_mode: string; fulfillment_mode: string; payment_mode: string; schedule_mode: string; notes_mode: string; payment_options: string[]
@@ -43,7 +43,7 @@ export type PublicImage = { small: string; large: string; smallWidth: number; la
 export type PublicItem = {
   id: string; code: string; name: string; description: string; priceType: PriceType; priceCents: number | null
   promoPriceCents: number | null; durationMinutes: number | null; tags: string[]; soldOut: boolean
-  whatsappPhone: string | null; buttonText: string | null; customMessage: string | null
+  whatsappPhone: string | null; buttonText: string | null; customMessage: string | null; notice: string | null
   cover: PublicImage | null; gallery: PublicImage[]; video: PublicVideo | null
   variations: { id: string; name: string; priceCents: number; promoPriceCents: number | null; soldOut: boolean }[]
 }
@@ -99,6 +99,7 @@ export function buildPublicCatalog(rows: CatalogRows, mediaBaseUrl: string, vide
       whatsappPhone: row.whatsapp_id ? (phoneById.get(row.whatsapp_id) ?? null) : null,
       buttonText: row.button_text,
       customMessage: row.custom_message,
+      notice: row.notice,
       cover,
       gallery: media
         .filter((m) => m.role === 'gallery')

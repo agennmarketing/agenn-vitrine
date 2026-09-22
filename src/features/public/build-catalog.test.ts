@@ -44,7 +44,7 @@ function item(id: string, categoryId: string | null, position: number, extra: Pa
   return {
     id, category_id: categoryId, code: id.toUpperCase().slice(0, 6), name: `Item ${id}`, description: '',
     price_type: 'fixed' as const, price_cents: 1000, promo_price_cents: null, duration_minutes: null, tags: [],
-    sold_out: false, position, whatsapp_id: null, button_text: null, custom_message: null, ...extra,
+    sold_out: false, position, whatsapp_id: null, button_text: null, custom_message: null, notice: null, ...extra,
   }
 }
 

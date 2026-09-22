@@ -1,14 +1,7 @@
+import { bookingDateLabel } from '@/lib/booking/format'
 import type { VitrineType } from '@/lib/vitrines/vitrine-types'
 
 export const MESSAGE_VARIABLES = ['{item}', '{codigo}', '{variacao}', '{vitrine}', '{pedido}'] as const
-
-// Serviços: o que o cliente preencheu na etapa "Quero esse serviço", mais o preço à vista.
-export type ServiceRequestDetails = {
-  priceText: string | null
-  name: string
-  date: string | null
-  time: string | null
-}
 
 export type DirectMessageInput = {
   vitrineType: VitrineType
@@ -19,23 +12,10 @@ export type DirectMessageInput = {
   orderCode: string | null
   customTemplate: string | null
   note?: string | null
-  request?: ServiceRequestDetails | null
 }
 
 function itemLabel(itemName: string, variationName: string | null) {
   return variationName ? `${itemName} – ${variationName}` : itemName
-}
-
-function requestLines(request: ServiceRequestDetails): string[] {
-  const lines: string[] = []
-  if (request.priceText) lines.push(`Valor: ${request.priceText}`)
-  lines.push(`Nome: ${request.name}`)
-  if (request.date) {
-    const [, month, day] = request.date.split('-')
-    lines.push(`Data desejada: ${day}/${month}`)
-  }
-  if (request.time) lines.push(`Horário desejado: ${request.time}`)
-  return lines
 }
 
 export function buildDirectMessage(input: DirectMessageInput): string {
@@ -54,8 +34,32 @@ export function buildDirectMessage(input: DirectMessageInput): string {
     text = `Olá! Vim da vitrine *${input.vitrineName}* e ${intent}: *${itemLabel(input.itemName, input.variationName)}* (cód. ${input.itemCode}).${order}`
   }
   const blocks = [text]
-  if (input.request) blocks.push(requestLines(input.request).join('\n'))
   if (input.note) blocks.push(`Obs: ${input.note}`)
+  return blocks.join('\n\n')
+}
+
+// Serviços: depois de confirmar, o cliente pode avisar o negócio com o resumo pronto.
+export type BookingMessageInput = {
+  vitrineName: string
+  serviceName: string
+  date: string
+  time: string
+  priceText: string | null
+  customerName: string
+  code: string
+  notes: string | null
+}
+
+export function buildBookingMessage(input: BookingMessageInput): string {
+  const lines = [
+    `*${input.serviceName}*`,
+    `Data: ${bookingDateLabel(input.date)} às ${input.time}`,
+    ...(input.priceText ? [`Valor: ${input.priceText}`] : []),
+    `Nome: ${input.customerName}`,
+    `Agendamento #${input.code}`,
+  ]
+  const blocks = [`Olá! Acabei de agendar pela vitrine *${input.vitrineName}*:`, lines.join('\n')]
+  if (input.notes) blocks.push(`Obs: ${input.notes}`)
   return blocks.join('\n\n')
 }
 

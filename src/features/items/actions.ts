@@ -13,7 +13,7 @@ import { itemSchema, type ItemInput } from '@/lib/vitrines/schemas'
 
 const ITEM_FIELDS = [
   'name', 'description', 'categoryId', 'code', 'priceType', 'price', 'promoPrice', 'durationMinutes', 'tags',
-  'soldOut', 'whatsappId', 'buttonText', 'customMessage', 'variations', 'coverMediaId', 'galleryMediaIds', 'videoMediaId',
+  'soldOut', 'whatsappId', 'buttonText', 'customMessage', 'notice', 'variations', 'coverMediaId', 'galleryMediaIds', 'videoMediaId',
 ] as const
 
 export async function saveItemAction(
@@ -31,6 +31,11 @@ export async function saveItemAction(
   const { supabase, user } = await requireActionUser()
   const { data: vitrine } = await supabase.from('vitrines').select('id, type, subdomain').eq('id', vitrineId).maybeSingle()
   if (!vitrine) redirect('/painel')
+  // Serviços viram agendamento: sem duração não dá para reservar o horário.
+  const servico = vitrine.type === 'servicos'
+  if (servico && input.durationMinutes === null) {
+    return { fieldErrors: { durationMinutes: 'Informe a duração do serviço.' }, ...keepValues }
+  }
 
   const admin = createSupabaseAdminClient()
   const { data: cover } = await admin
@@ -53,12 +58,13 @@ export async function saveItemAction(
     price_type: input.priceType,
     price_cents: input.priceCents,
     promo_price_cents: input.promoPriceCents,
-    duration_minutes: vitrine.type === 'servicos' ? input.durationMinutes : null,
+    duration_minutes: servico ? input.durationMinutes : null,
     tags: input.tags,
     sold_out: input.soldOut,
     whatsapp_id: input.whatsappId,
     button_text: input.buttonText,
     custom_message: input.customMessage,
+    notice: servico ? input.notice : null,
   }
 
   let savedId = itemId
@@ -262,6 +268,7 @@ export async function duplicateItemAction(vitrineId: string, itemId: string): Pr
       whatsapp_id: item.whatsapp_id,
       button_text: item.button_text,
       custom_message: item.custom_message,
+      notice: item.notice,
     })
     .select('id')
     .single()

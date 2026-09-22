@@ -8,7 +8,7 @@ test('abas do editor por tipo de vitrine', async ({ page }) => {
 
   const abas = page.getByRole('navigation', { name: 'Seções da vitrine' })
   await page.goto(`/painel/vitrines/${vitrine.id}/itens`)
-  await expect(abas.getByRole('link')).toHaveText(['Serviços', 'Aparência', 'WhatsApp', 'Configurações', 'Compartilhar'])
+  await expect(abas.getByRole('link')).toHaveText(['Serviços', 'Agenda', 'Aparência', 'WhatsApp', 'Configurações', 'Compartilhar'])
   await expect(abas.getByRole('link', { name: 'Complementos' })).toHaveCount(0)
 
   // Sem sacola em serviços: a seção não abre nem pelo endereço.

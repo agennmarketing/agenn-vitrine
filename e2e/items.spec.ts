@@ -92,7 +92,7 @@ test('formulário do produto: sem duração, etiquetas ou tipo de preço, com di
 })
 
 
-test('formulário do serviço: duração, tipo de preço e disponibilidade ativo/inativo', async ({ page }) => {
+test('formulário do serviço: duração obrigatória, aviso, tipo de preço e ativo/inativo', async ({ page }) => {
   const user = await createConfirmedUser('itens-servico')
   const vitrine = await seedVitrine(user.id, { type: 'servicos' })
   const item = await seedItem(vitrine, user.id, { name: 'Corte de cabelo', priceCents: 5000 })
@@ -100,7 +100,12 @@ test('formulário do serviço: duração, tipo de preço e disponibilidade ativo
 
   await page.goto(`/painel/vitrines/${vitrine.id}/itens/${item.id}`)
   await itemStep(page, 'Detalhes')
+  // Sem duração não dá para reservar o horário na agenda.
+  await page.getByLabel('Duração (minutos)').fill('')
+  await page.getByRole('button', { name: 'Salvar item' }).click()
+  await expect(page.getByText('Informe a duração do serviço.')).toBeVisible()
   await page.getByLabel('Duração (minutos)').fill('45')
+  await page.getByLabel('Aviso ao cliente').fill('Chegue 10 minutos antes.')
   await itemStep(page, 'Preço')
   await expect(page.getByRole('radio', { name: 'Ativo', exact: true })).toBeChecked()
   await page.getByRole('radio', { name: 'A partir de' }).check()
@@ -114,6 +119,7 @@ test('formulário do serviço: duração, tipo de preço e disponibilidade ativo
   await page.getByRole('link', { name: 'Editar' }).click()
   await itemStep(page, 'Detalhes')
   await expect(page.getByLabel('Duração (minutos)')).toHaveValue('45')
+  await expect(page.getByLabel('Aviso ao cliente')).toHaveValue('Chegue 10 minutos antes.')
   await itemStep(page, 'Preço')
   await page.getByRole('radio', { name: 'Sob consulta' }).check()
   await expect(page.getByLabel('Preço', { exact: true })).toBeHidden()

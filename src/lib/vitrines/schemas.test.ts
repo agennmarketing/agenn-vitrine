@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { checkoutSettingsSchema, createVitrineSchema, itemSchema, vitrineSettingsSchema } from './schemas'
+import { bookingBlockSchema, bookingRulesSchema, checkoutSettingsSchema, createVitrineSchema, itemSchema, vitrineSettingsSchema } from './schemas'
 
 const uuid = '00000000-0000-4000-8000-000000000001'
 
@@ -89,6 +89,7 @@ describe('itemSchema', () => {
     whatsappId: '',
     buttonText: '',
     customMessage: '',
+    notice: '',
     variations: '[]',
     coverMediaId: uuid,
     galleryMediaIds: '[]',
@@ -113,6 +114,7 @@ describe('itemSchema', () => {
       whatsappId: null,
       buttonText: null,
       customMessage: null,
+      notice: null,
       variations: [],
     })
   })
@@ -169,5 +171,25 @@ describe('checkoutSettingsSchema', () => {
       message: 'Informe pelo menos uma forma de pagamento.',
     })
     expect(checkoutSettingsSchema.parse({ ...form, paymentMode: 'off', paymentOptions: '' }).paymentOptions).toEqual([])
+  })
+})
+
+describe('agenda', () => {
+  const hours = JSON.stringify([{ day: 1, open: '09:00', close: '18:00' }])
+
+  it('regras aceitam só as opções da tela', () => {
+    expect(bookingRulesSchema.parse({ businessHours: hours, bufferMinutes: '15', minNoticeMinutes: '60', maxDaysAhead: '30' })).toEqual({
+      businessHours: [{ day: 1, open: '09:00', close: '18:00' }],
+      bufferMinutes: 15,
+      minNoticeMinutes: 60,
+      maxDaysAhead: 30,
+    })
+    expect(bookingRulesSchema.safeParse({ businessHours: hours, bufferMinutes: '7', minNoticeMinutes: '60', maxDaysAhead: '30' }).success).toBe(false)
+  })
+
+  it('bloqueio de trecho exige fim depois do início; dia inteiro ignora horários', () => {
+    const base = { date: '2030-01-07', start: '13:00', end: '12:00', reason: '' }
+    expect(bookingBlockSchema.safeParse({ ...base, allDay: '' }).error!.issues[0].message).toBe('O fim deve ser depois do início.')
+    expect(bookingBlockSchema.parse({ ...base, allDay: 'on' })).toMatchObject({ allDay: true, reason: null })
   })
 })

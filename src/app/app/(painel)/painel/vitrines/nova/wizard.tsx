@@ -3,6 +3,7 @@
 import { ArrowLeft, ArrowRight, Brush, Crown, Eye, Hand, Moon, Scissors, Sparkles, Store, Sun, X } from 'lucide-react'
 import Link from 'next/link'
 import { useActionState, useEffect, useRef, useState } from 'react'
+import { BusinessHoursEditor } from '@/components/ui/business-hours-editor'
 import { Button } from '@/components/ui/button'
 import { ChoiceCard } from '@/components/ui/choice-card'
 import { Field } from '@/components/ui/field'
@@ -10,7 +11,6 @@ import { FormMessage } from '@/components/ui/form-message'
 import { Input } from '@/components/ui/input'
 import { ProgressBar } from '@/components/ui/progress'
 import { Spinner } from '@/components/ui/submit-button'
-import { Switch } from '@/components/ui/switch'
 import { createVitrineAction } from '@/features/vitrines/actions'
 import { fetchAvailability } from '@/lib/forms/availability'
 import { initialFormState, type FormState } from '@/lib/forms/form-state'
@@ -19,7 +19,6 @@ import {
   isServiceSegment,
   SEGMENT_COPY,
   SERVICE_SEGMENTS,
-  WEEKDAYS,
   type BusinessHours,
   type ServiceSegment,
 } from '@/lib/vitrines/service-segments'
@@ -29,8 +28,8 @@ import {
 const STEPS = [
   { label: 'Tipo de negócio', question: 'Qual é o seu tipo de negócio?', help: 'Assim a vitrine já vem com exemplos do seu ramo.' },
   { label: 'Seu negócio', question: 'Como o seu negócio se chama?', help: 'O endereço é o link que você vai divulgar para os clientes.' },
-  { label: 'Contato', question: 'Para onde vão as solicitações?', help: 'Os pedidos de horário chegam neste WhatsApp.' },
-  { label: 'Horários e aparência', question: 'Quando você atende?', help: 'Seus clientes veem os dias e horários de atendimento.' },
+  { label: 'Contato', question: 'Para onde vão as solicitações?', help: 'O cliente pode avisar por este WhatsApp depois de agendar.' },
+  { label: 'Horários e aparência', question: 'Quando você atende?', help: 'Os horários livres para agendar saem daqui. Dá para mudar depois, na Agenda.' },
 ] as const
 
 const SEGMENT_ICON: Record<ServiceSegment, typeof Scissors> = {
@@ -244,46 +243,7 @@ export function VitrineWizard({ rootDomain }: { rootDomain: string }) {
         <fieldset hidden={step !== 3} className="flex flex-col gap-3.5">
           <legend className="sr-only">Horários de atendimento</legend>
           <input type="hidden" name="businessHours" value={JSON.stringify(hours)} />
-          <ul className="flex flex-col divide-y-2 divide-line rounded-card border-2 border-line-strong bg-surface">
-            {WEEKDAYS.map((dayName, day) => {
-              const entry = hours.find((item) => item.day === day)
-              const toggle = () =>
-                setHours((list) =>
-                  entry
-                    ? list.filter((item) => item.day !== day)
-                    : [...list, { day, open: '09:00', close: '18:00' }].sort((a, b) => a.day - b.day),
-                )
-              const setTime = (key: 'open' | 'close', value: string) =>
-                setHours((list) => list.map((item) => (item.day === day ? { ...item, [key]: value } : item)))
-              return (
-                <li key={dayName} className="flex min-h-14 flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2.5">
-                  <Switch checked={!!entry} onClick={toggle} aria-label={`Atende ${dayName.toLowerCase()}`} />
-                  <span className="w-20 font-extrabold text-ink">{dayName}</span>
-                  {entry ? (
-                    <span className="ml-auto flex items-center gap-2">
-                      <Input
-                        type="time"
-                        aria-label={`${dayName}: abre às`}
-                        value={entry.open}
-                        onChange={(event) => setTime('open', event.target.value)}
-                        className="h-10 w-[6.5rem] px-2"
-                      />
-                      <span className="text-sm font-bold text-ink-muted">às</span>
-                      <Input
-                        type="time"
-                        aria-label={`${dayName}: fecha às`}
-                        value={entry.close}
-                        onChange={(event) => setTime('close', event.target.value)}
-                        className="h-10 w-[6.5rem] px-2"
-                      />
-                    </span>
-                  ) : (
-                    <span className="ml-auto text-sm font-bold text-ink-muted">Fechado</span>
-                  )}
-                </li>
-              )
-            })}
-          </ul>
+          <BusinessHoursEditor hours={hours} onChange={setHours} />
           <FormMessage error={errors.businessHours} />
         </fieldset>
 

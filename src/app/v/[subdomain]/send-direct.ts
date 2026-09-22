@@ -1,6 +1,6 @@
 import type { PublicItem, PublicVitrine } from '@/features/public/build-catalog'
 import { isValidOrderCode } from '@/lib/codes/order-code'
-import { buildDirectMessage, buildWhatsAppUrl, type ServiceRequestDetails } from '@/lib/whatsapp/messages'
+import { buildDirectMessage, buildWhatsAppUrl } from '@/lib/whatsapp/messages'
 
 export type OrderLineRequest = {
   itemId: string
@@ -28,7 +28,7 @@ export async function requestOrderCode(lines: OrderLineRequest[]): Promise<strin
 export async function sendDirect(
   vitrine: PublicVitrine,
   item: PublicItem,
-  choice: { variation: { id: string; name: string } | null; note: string; request?: ServiceRequestDetails | null },
+  choice: { variation: { id: string; name: string } | null; note: string },
 ): Promise<void> {
   const phone = item.whatsappPhone ?? vitrine.primaryPhone
   if (!phone) return
@@ -45,7 +45,6 @@ export async function sendDirect(
     orderCode,
     customTemplate: item.customMessage,
     note: note || null,
-    request: choice.request ?? null,
   })
   window.location.assign(buildWhatsAppUrl(phone, text))
 }
