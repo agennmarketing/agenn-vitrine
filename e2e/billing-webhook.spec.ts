@@ -29,9 +29,9 @@ test('webhook recusa assinatura inválida e ignora evento fora da lista', async 
 test('checkout completo ativa o Essencial e devolve a vitrine ao ar', async ({ request }) => {
   const user = await createConfirmedUser('webhook-pro')
   const customerId = `cus_fake_${crypto.randomUUID()}`
-  await setSubscription(user.id, { status: 'none', customerId, trialEndsAt: ONTEM, subscriptionStatus: 'expired' })
-
+  // A vitrine é criada ainda no teste; sem acesso o banco não deixa criar.
   const vitrine = await seedVitrine(user.id, { subdomain: uniqueSubdomain('wh-a') })
+  await setSubscription(user.id, { status: 'none', customerId, trialEndsAt: ONTEM, subscriptionStatus: 'expired' })
   // Teste vencido: a vitrine saiu do ar. Assinar precisa devolvê-la na hora.
   await setVitrineStatus(vitrine.id, 'frozen')
 
