@@ -62,7 +62,10 @@ export function Blocks({
   }
 
   return (
-    <ConfigBlock title="Bloquear horários" description={`Folga, feriado ou almoço: os horários em que ${yourPlace} não atende somem da vitrine.`}>
+    <ConfigBlock
+      title="Bloquear datas e horários específicos"
+      description={`Bloqueie intervalos (como almoço), folgas e feriados em que ${yourPlace} não atende para não ficarem disponíveis para agendamento online.`}
+    >
       <form key={formKey} action={formAction} noValidate className="flex flex-col gap-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Data" htmlFor="block-date" error={errors.date}>
@@ -80,7 +83,7 @@ export function Blocks({
               id="block-reason"
               name="reason"
               maxLength={80}
-              placeholder={`Ex.: ${blockExample}`}
+              placeholder={`Ex.: Almoço, folga ou ${blockExample.toLowerCase()}`}
               defaultValue={values?.reason ?? ''}
               invalid={!!errors.reason}
             />

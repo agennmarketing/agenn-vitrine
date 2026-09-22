@@ -88,6 +88,7 @@ test('Agenda: abas por situação, remarcar, concluir, cancelar e bloquear horá
   await expect(page.getByText('João Souza')).toBeVisible()
 
   // Bloqueio de dia inteiro: amanhã some das datas da vitrine.
+  await page.getByRole('link', { name: 'Configurar agenda' }).click()
   await page.getByLabel('Data', { exact: true }).fill(tomorrow)
   await page.getByLabel('Motivo (opcional)').fill('Feriado')
   await page.getByRole('button', { name: 'Adicionar bloqueio' }).click()

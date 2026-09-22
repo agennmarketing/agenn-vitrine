@@ -8,52 +8,62 @@ web
 
 ## Users
 
-- **Lojista (dono da vitrine):** pequeno negócio brasileiro — hamburgueria, pizzaria, manicure, clínica, loja de decoração. Não é técnico. Monta e mantém a vitrine quase sempre pelo celular, entre um atendimento e outro; às vezes pelo computador. Precisa sentir que está avançando e terminar rápido.
-- **Cliente final:** abre a vitrine pelo link do Instagram/WhatsApp ou pelo QR Code, quase sempre no celular e em 4G. Quer ver foto/vídeo, escolher, montar a sacola e mandar o pedido no WhatsApp sem cadastro.
+- **Dono do negócio:** pequeno negócio brasileiro de serviços com hora marcada: nail designer, cabeleireiro, lash, sobrancelha, barbearia, estética. Quase sempre atende uma pessoa por vez. Não é técnico. Monta e mantém a vitrine e a agenda pelo celular, entre um atendimento e outro; às vezes pelo computador. Precisa sentir que está avançando e terminar rápido.
+- **Cliente final:** abre a vitrine pelo link do Instagram/WhatsApp ou pelo QR Code, quase sempre no celular e em 4G. Quer ver o serviço, o preço e um horário livre, e agendar sem cadastro e sem trocar mensagens.
 
 ## Product Purpose
 
-Vitrimove é um SaaS para criar vitrines digitais (catálogos e cardápios) com fotos e vídeos. Não é sistema de pedidos: o cliente monta o que quer e é levado ao WhatsApp do lojista com a mensagem pronta e um código. Sucesso = lojista publica a vitrine sem ajuda e o cliente chega ao WhatsApp com o pedido certo.
+Agenn é um SaaS de vitrine com agenda online para negócios de serviços. O dono cadastra os serviços (fotos, preço, duração) e as regras de horário; o cliente abre o link, escolhe o serviço e um horário livre, e o agendamento sai confirmado na hora. Sucesso = o dono publica a vitrine sem ajuda e o cliente agenda sozinho, sem conflito de horário.
 
 ## Positioning
 
-Vídeo nos itens (9:16 e 16:9) sem pesar a vitrine, e o pedido chegando pronto no WhatsApp com código — sem pagamento, sem app, sem cadastro do cliente.
+Vitrine bonita e agenda de verdade no mesmo link: o cliente vê o serviço e já marca o horário, confirmado na hora, sem app, sem cadastro e sem dupla reserva. Um plano só, simples de entender.
 
 ## Operating Context
 
 - Três áreas: Acesso (`app.agenn.com.br`: cadastro, login, senha), Painel (`app.agenn.com.br/painel`) e Vitrine pública (`{subdominio}.agenn.com.br`).
-- Três tipos de vitrine, escolhidos na criação e imutáveis: `produtos` ("Solicitar orçamento"), `servicos` ("Agendar"), `comida` ("Pedir").
-- Painel: vitrines, itens com variações, imagens (4:5) e vídeo, categorias, complementos, WhatsApp(s), mensagens, aparência (logo, cor, banner, tema claro/escuro), configurações, simulador de pedidos, plano (Stripe) e conta (exclusão, QR Code).
+- Uma vitrine por conta, sempre do tipo `servicos`. O assistente de criação tem 4 passos: segmento → nome e endereço da vitrine → WhatsApp, Instagram e endereço (opcionais) → horários de atendimento e aparência.
+- O segmento (nail, cabelo, lash, sobrancelha, barbearia, estética, outro) só personaliza textos e exemplos; o sistema é o mesmo para todos.
+- Painel, barra lateral: **Vitrine, Agenda, Plano, Conta**.
+  - Vitrine: serviços (capa + 2 fotos, nome, descrição, categoria, preço fixo / a partir de / sob consulta, duração, aviso ao cliente, ativo/inativo), aparência (logo, banner, cor da marca, tema claro/escuro), WhatsApp, configurações e compartilhar (link e QR Code).
+  - Agenda: abas Hoje, Próximos, Concluídos e Cancelados; concluir, remarcar e cancelar; regras de horário por dia, intervalo entre atendimentos, antecedência mínima, janela de dias e bloqueios avulsos.
+  - Plano: situação da assinatura (teste grátis, ativo, vencido) e assinatura pelo Stripe.
+  - Conta: dados de acesso e exclusão da conta.
+- Vitrine pública: lista de serviços; "Agendar horário" abre a escolha de dia e horário livre (grade de 30 min, um atendimento por vez); confirmação na tela com botão opcional para avisar o negócio no WhatsApp.
+- Fora da interface, mas ainda no código e no banco: vitrines de Produtos/Comida com sacola, complementos e pedido pelo WhatsApp com código, simulador de pedidos e vídeos. Não reintroduzir na UI sem pedido.
 
 ## Capabilities and Constraints
 
-- Stack: Next.js 16 (App Router), Tailwind 4, Supabase, Bunny Storage (imagens), Mux Video (vídeos), Stripe, Vercel. Repositório em drive FAT32; sem Docker.
-- Planos Gratuito/Pro: logo, cor da marca e banner só no Pro; tema claro/escuro para todos; marca d'água no Gratuito.
-- **Toda funcionalidade existente deve continuar funcionando.** A fase de design melhora o visual e a usabilidade; não remove recursos (decisão do usuário, 2026-09-18).
-- Não existem hoje: avaliações, "seguir", selo de verificado, métricas de vendas/visualizações. As referências mostram isso, mas nada disso pode aparecer como se fosse real.
+- Stack: Next.js 16 (App Router), Tailwind 4, Supabase (nuvem), Bunny Storage (imagens), Mux Video (vídeos antigos; o painel não envia mais vídeo), Stripe, Vercel. Repositório em drive FAT32; sem Docker.
+- Plano único: **Essencial, R$ 79,90/mês**, com 7 dias de teste grátis sem cartão para toda conta nova. Sem Gratuito nem Pro.
+- Teste vencido ou assinatura encerrada: o painel mostra só a tela de assinar (Plano e Conta continuam abertos), a vitrine pública sai do ar e novos agendamentos são recusados. Nada é apagado; ao assinar, tudo volta na hora.
+- Aviso no painel nos 3 últimos dias do teste.
+- O banco é quem decide o acesso (`effective_plan_id`) e garante que não haja dois agendamentos no mesmo horário.
+- Não existem hoje: pagamento do serviço pelo cliente, lembretes automáticos, integração com Google Agenda, várias agendas/profissionais, avaliações, métricas de visualização. Nada disso pode aparecer como se fosse real.
+- Instagram, endereço e horários de funcionamento informados no assistente ainda não aparecem na vitrine pública nem são editáveis depois.
 - Desempenho: LCP < 2,5 s no 4G e Lighthouse mobile ≥ 90 na vitrine.
 - Testes e2e (Playwright, desktop + mobile) dependem de rótulos e textos das telas; mudanças de texto exigem atualizar os testes.
 
 ## Brand Commitments
 
-- Nome: **Vitrimove** (antes Agenn Vitrine; troca decidida pelo usuário em 2026-09-18). Logo: lojinha sorridente com linhas de velocidade, roxa (`assets/brand/vitrimove-logo.png`, fonte em `banco de imagens/LOGO VITRIMOVE.svg`; símbolo transparente em `public/brand/vitrimove-marca-512.png`). O domínio continua `agenn.com.br` até a migração.
-- Painel claro. Cor da marca: roxo **#673DE6** (ações principais, texto branco); índigo-escuro para placas de destaque; verde só para confirmação; dourado só para Pro (decisão do usuário, 2026-09-18, substituindo o verde).
+- Nome: **Agenn** ("o Agenn", masculino). Domínio `agenn.com.br`. Os nomes antigos "Agenn Vitrine" e "Vitrimove" não aparecem mais na interface; o arquivo do símbolo continua `public/brand/vitrimove-marca-512.png`.
+- Painel claro. Cor da marca: roxo **#673DE6** (ações principais, texto branco); verde só para confirmação; dourado para o plano e a assinatura. Nunito no painel, Figtree na vitrine.
 - O visual do painel e das vitrines mergeado em 2026-09-18 (PRs #44 e #45) foi aprovado pelo usuário; mudanças futuras refinam, não recomeçam.
 - O painel deve lembrar o Duolingo: simples de usar, passos claros, forte na entrega e no retorno ao usuário.
-- Vitrine pública: um layout por segmento (Comida, Serviços, Produtos), com a cor e o tema do lojista por cima. Referências em `banco de imagens/`.
+- Vitrine pública: com a cor e o tema do negócio por cima; a marca do Agenn fica discreta.
 - Idioma: português do Brasil, tom direto e caloroso.
 
 ## Evidence on Hand
 
-- Referências visuais: `banco de imagens/Referencia de interface interne.png` (painel) e `banco de imagens/Referencia de vitrines.png` (Comida, Serviços, Produtos).
+- Referências visuais: `banco de imagens/Referencia de interface interne.png` (painel) e `banco de imagens/Referencia de vitrines.png`.
 - Sem depoimentos, clientes ou números de uso reais — não inventar.
 
 ## Product Principles
 
-1. O lojista sempre sabe qual é o próximo passo e quanto falta.
-2. O pedido do cliente é o caminho mais curto possível até o WhatsApp.
+1. O dono sempre sabe qual é o próximo passo e quanto falta.
+2. Do link ao horário confirmado pelo caminho mais curto possível.
 3. Celular primeiro, sem esquecer o computador.
-4. A vitrine é do lojista: a marca dele aparece, a nossa fica discreta.
+4. A vitrine é do negócio: a marca dele aparece, a nossa fica discreta.
 5. Rápido no 4G vale mais que efeito.
 
 ## Accessibility & Inclusion
