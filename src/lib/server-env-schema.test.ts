@@ -84,7 +84,6 @@ describe('parseBillingEnv', () => {
     STRIPE_SECRET_KEY: 'sk_test_123',
     STRIPE_WEBHOOK_SECRET: 'whsec_123456789',
     STRIPE_PRICE_MONTH: 'price_mes',
-    STRIPE_PRICE_YEAR: 'price_ano',
   }
 
   it('lê a configuração do Stripe', () => {
@@ -93,12 +92,11 @@ describe('parseBillingEnv', () => {
       secretKey: 'sk_test_123',
       webhookSecret: 'whsec_123456789',
       priceMonth: 'price_mes',
-      priceYear: 'price_ano',
     })
   })
 
   it('exige chave e preços com o driver stripe', () => {
-    expect(() => parseBillingEnv({ ...stripeEnv, STRIPE_PRICE_YEAR: '' })).toThrow()
+    expect(() => parseBillingEnv({ ...stripeEnv, STRIPE_PRICE_MONTH: '' })).toThrow()
     expect(() => parseBillingEnv({ ...stripeEnv, STRIPE_SECRET_KEY: '' })).toThrow()
   })
 

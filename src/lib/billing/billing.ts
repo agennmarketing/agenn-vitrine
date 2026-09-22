@@ -2,7 +2,7 @@ import 'server-only'
 import { getBillingEnv } from '@/lib/server-env'
 import { createFakeBilling } from './fake-billing'
 import { createStripeBilling } from './stripe-billing'
-import type { BillingEvent, BillingInterval, BillingPrice, BillingSubscription } from './types'
+import type { BillingEvent, BillingPrice, BillingSubscription } from './types'
 
 export interface Billing {
   /** Devolve o id do Customer, criando um com `metadata.user_id` na primeira vez (spec 9). */
@@ -20,7 +20,8 @@ export interface Billing {
   cancelSubscription(subscriptionId: string): Promise<void>
   listPrices(): Promise<BillingPrice[]>
   parseEvent(raw: string, signature: string | null): Promise<BillingEvent | null>
-  priceIdFor(interval: BillingInterval): string
+  /** Preço mensal do Plano Essencial. */
+  priceId(): string
 }
 
 export function getBilling(): Billing {

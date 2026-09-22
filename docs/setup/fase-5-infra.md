@@ -1,18 +1,20 @@
 # Fase 5 — Infraestrutura (Stripe)
 
-O produto "Pro" e os dois preços em BRL (mensal e anual) já existem na conta. Falta ligar o
+Desde 2026-09-22 existe um plano só: **Plano Essencial, R$ 79,90 por mês** (o teste grátis de
+7 dias é nosso, sem cartão, e não usa o Stripe). Os antigos Gratuito e Pro saíram. Falta ligar o
 resto. Faça tudo primeiro em **modo de teste** (nos painéis novos, *sandbox*) e repita em
 **modo ao vivo** antes do lançamento — chaves, ids de preço e segredo do webhook são
 diferentes nos dois modos, e um id de preço de teste não existe em produção.
 
-**Estado atual:** modo de teste configurado e as quatro variáveis salvas na Vercel
-(2026-09-17). O modo ao vivo entra na virada, seguindo a seção 7.
+**Estado atual:** modo de teste configurado na Vercel em 2026-09-17 com os preços do antigo Pro.
+Para o Essencial, crie o preço novo (seção 1), troque `STRIPE_PRICE_MONTH` e apague
+`STRIPE_PRICE_YEAR`. O modo ao vivo entra na virada, seguindo a seção 7.
 
 ## 1. Ids dos preços
 
-Painel do Stripe → Catálogo de produtos → Pro → copie os dois ids que começam com `price_`:
-um do plano mensal (R$ 149,90) e um do anual (R$ 1.499,00). Confirme que os dois estão em BRL
-e são recorrentes. Se o produto só existir em um dos modos, crie o equivalente no outro.
+Painel do Stripe → Catálogo de produtos → crie (ou renomeie) o produto **Plano Essencial** com
+um preço recorrente **mensal de R$ 79,90 em BRL** e copie o id que começa com `price_`. Se o
+produto só existir em um dos modos, crie o equivalente no outro. Arquive os preços antigos do Pro.
 
 ## 2. Webhook
 
@@ -50,7 +52,6 @@ Painel → Configurações → Faturamento → Assinaturas e e-mails → pagamen
 Painel → Configurações → Faturamento → Portal do cliente:
 
 - Ligar: cancelar assinatura **no fim do período pago**, atualizar forma de pagamento, ver faturas
-- Ligar a troca entre os preços mensal e anual do produto Pro
 - Desligar: alterar quantidade
 - URL de retorno padrão: `https://app.agenn.com.br/painel/plano`
 
@@ -64,8 +65,7 @@ Painel → Configurações → Faturamento → Portal do cliente:
 |---|---|---|---|
 | `STRIPE_SECRET_KEY` | `sk_test_...` / `sk_live_...` | Secret | Production e Preview |
 | `STRIPE_WEBHOOK_SECRET` | `whsec_...` do destino criado na seção 2 | Secret | Production e Preview |
-| `STRIPE_PRICE_MONTH` | `price_...` do mensal | Config | Production e Preview |
-| `STRIPE_PRICE_YEAR` | `price_...` do anual | Config | Production e Preview |
+| `STRIPE_PRICE_MONTH` | `price_...` do mensal do Essencial (R$ 79,90) | Config | Production e Preview |
 
 `BILLING_DRIVER` não precisa ser criada: sem ela o padrão já é `stripe`. O valor `fake` é
 recusado pelo próprio código quando `VERCEL_ENV=production`. Depois de salvar, faça um
@@ -97,7 +97,7 @@ responde `{"duplicated":true}`.
 4. Cancelar no Stripe as assinaturas de teste que existirem e limpar as linhas
    correspondentes em `subscriptions` — um `stripe_subscription_id` de teste não é encontrado
    no modo ao vivo, e a conferência diária ignoraria essa linha para sempre.
-5. Editar as quatro variáveis de **Production** na Vercel com os valores ao vivo e fazer
+5. Editar as três variáveis de **Production** na Vercel com os valores ao vivo e fazer
    Redeploy. Deixar **Preview** com os valores de teste.
 6. Rodar `docs/setup/fase-5-conferencia.md` com uma assinatura real e cancelá-la depois.
 

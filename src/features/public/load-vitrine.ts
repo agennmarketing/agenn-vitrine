@@ -51,7 +51,9 @@ async function fetchCatalog(subdomain: string): Promise<PublicVitrine | null> {
 
   return buildPublicCatalog(
     {
-      vitrine,
+      // Sem teste nem assinatura valendo, a vitrine sai do ar já na próxima geração,
+      // mesmo antes de a tarefa diária congelá-la.
+      vitrine: planId === 'essencial' ? vitrine : { ...vitrine, status: 'frozen' },
       plan: plan.data!,
       overQuota: overQuota ?? false,
       contacts: contacts.data ?? [],

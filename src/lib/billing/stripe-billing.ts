@@ -34,7 +34,7 @@ export function createStripeBilling(config: BillingEnv): Billing {
   const stripe = createStripeClient(config.secretKey)
 
   return {
-    priceIdFor: (interval) => (interval === 'year' ? config.priceYear : config.priceMonth),
+    priceId: () => config.priceMonth,
 
     async ensureCustomer({ userId, email, name, customerId }) {
       if (customerId) return customerId
@@ -103,7 +103,7 @@ export function createStripeBilling(config: BillingEnv): Billing {
     // Cache no processo: reajuste no Stripe aparece em até 1 h, sem uma chamada por visita.
     async listPrices() {
       if (priceCache && Date.now() - priceCache.at < PRICE_TTL_MS) return priceCache.prices
-      const prices = await Promise.all([config.priceMonth, config.priceYear].map((id) => stripe.prices.retrieve(id)))
+      const prices = await Promise.all([config.priceMonth].map((id) => stripe.prices.retrieve(id)))
       const list = prices.flatMap((price) => {
         const interval = intervalOf(price.recurring?.interval ?? null)
         return interval !== null && price.unit_amount !== null

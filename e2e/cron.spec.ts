@@ -4,12 +4,12 @@ import {
   createAdminClient,
   createConfirmedUser,
   fakeSubscription,
-  readFakeEmails,
   readSubscription,
   seedItem,
   seedVideo,
   seedVitrine,
   setSubscription,
+  vitrineStatuses,
 } from './helpers'
 
 const secret = process.env.CRON_SECRET ?? 'ci-cron-secret-somente-para-testes'
@@ -59,52 +59,28 @@ test('tarefa diária exige o segredo e apaga envios órfãos antigos', async ({ 
   expect((remaining ?? []).map((row) => row.id)).toEqual([recent.id])
 })
 
-test('90 dias depois do fim do Pro, os vídeos excedentes são apagados', async ({ request }) => {
-  const user = await createConfirmedUser('cron-90-dias')
-  await setSubscription(user.id, { status: 'active' })
+test('teste vencido sem assinatura: a tarefa diária tira a vitrine do ar sem apagar nada', async ({ request }) => {
+  const user = await createConfirmedUser('cron-teste')
   const vitrine = await seedVitrine(user.id)
-  const primeiro = await seedItem(vitrine, user.id, { name: 'Com vídeo 1' })
-  const segundo = await seedItem(vitrine, user.id, { name: 'Com vídeo 2' })
-  const mantido = await seedVideo(vitrine, user.id, primeiro.id)
-  const apagado = await seedVideo(vitrine, user.id, segundo.id)
+  const item = await seedItem(vitrine, user.id, { name: 'Com vídeo' })
+  const video = await seedVideo(vitrine, user.id, item.id)
   await setSubscription(user.id, {
-    status: 'canceled',
-    proEndedAt: new Date(Date.now() - 100 * DAY_MS).toISOString(),
+    status: 'none',
+    trialEndsAt: new Date(Date.now() - DAY_MS).toISOString(),
+    subscriptionStatus: 'trialing',
   })
 
   const response = await request.get(`${APP_URL}/api/cron/diaria`, {
     headers: { authorization: `Bearer ${secret}` },
   })
   expect(response.status()).toBe(200)
-  expect((await response.json()).videosDeleted).toBeGreaterThanOrEqual(1)
+  expect((await response.json()).blockedVitrines).toBeGreaterThanOrEqual(1)
 
+  expect((await readSubscription(user.id))?.subscription_status).toBe('expired')
+  expect(await vitrineStatuses(user.id)).toEqual([`${vitrine.subdomain}:frozen`])
   const admin = createAdminClient()
-  const { data: restantes } = await admin.from('media').select('id').in('id', [mantido.id, apagado.id])
-  expect((restantes ?? []).map((row) => row.id)).toEqual([mantido.id])
-})
-
-test('no dia 83 o dono recebe o aviso por e-mail', async ({ request }) => {
-  const user = await createConfirmedUser('cron-aviso')
-  await setSubscription(user.id, { status: 'active' })
-  const vitrine = await seedVitrine(user.id)
-  const primeiro = await seedItem(vitrine, user.id, { name: 'Vídeo A' })
-  const segundo = await seedItem(vitrine, user.id, { name: 'Vídeo B' })
-  await seedVideo(vitrine, user.id, primeiro.id)
-  await seedVideo(vitrine, user.id, segundo.id)
-  await setSubscription(user.id, {
-    status: 'canceled',
-    proEndedAt: new Date(Date.now() - 83 * DAY_MS - 2 * 60 * 60 * 1000).toISOString(),
-  })
-
-  const response = await request.get(`${APP_URL}/api/cron/diaria`, {
-    headers: { authorization: `Bearer ${secret}` },
-  })
-  expect(response.status()).toBe(200)
-
-  const emails = await readFakeEmails(user.email)
-  const aviso = emails.find((email) => email.subject === 'Seus vídeos serão apagados em 7 dias')
-  // O gratuito mostra 1 vídeo (spec 4.7): dos dois, só um é apagado.
-  expect(aviso?.text).toContain('1 vídeo será apagado')
+  const { data: restantes } = await admin.from('media').select('id').eq('id', video.id)
+  expect((restantes ?? []).map((row) => row.id)).toEqual([video.id])
 })
 
 test('a conferência diária corrige uma assinatura cancelada sem webhook', async ({ request }) => {

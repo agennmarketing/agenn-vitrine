@@ -1,12 +1,10 @@
 'use client'
 
-import { Crown, Lock, Moon, Sun } from 'lucide-react'
-import Link from 'next/link'
+import { Moon, Sun } from 'lucide-react'
 import { useActionState, useState } from 'react'
 import { ImageSlot } from '@/components/media/image-slot'
 import { VideoSlot } from '@/components/media/video-slot'
-import { Badge } from '@/components/ui/badge'
-import { Button, buttonClasses } from '@/components/ui/button'
+import { Button } from '@/components/ui/button'
 import { ChoiceCard } from '@/components/ui/choice-card'
 import { ConfigBlock, ConfigToggle, SaveBar } from '@/components/ui/config-section'
 import { FormMessage } from '@/components/ui/form-message'
@@ -33,18 +31,8 @@ const THEMES = [
 
 const HEX = /^#[0-9a-f]{6}$/i
 
-function ProBadge() {
-  return (
-    <Badge tone="sun">
-      <Crown aria-hidden="true" className="size-3.5" strokeWidth={2.5} />
-      Pro
-    </Badge>
-  )
-}
-
 export function AppearanceForm({
   vitrineId,
-  allowBranding,
   logo,
   banner,
   bannerVideo,
@@ -53,7 +41,6 @@ export function AppearanceForm({
   initial,
 }: {
   vitrineId: string
-  allowBranding: boolean
   logo: Slot
   banner: Slot
   bannerVideo: { id: string; status: 'processing' | 'ready' | 'failed'; thumbnailUrl: string | null } | null
@@ -127,22 +114,8 @@ export function AppearanceForm({
           </div>
         </ConfigBlock>
 
-        <ConfigBlock title="Marca" description="A cor dos botões e o banner no topo da vitrine." aside={<ProBadge />}>
-          {allowBranding ? null : (
-            <div className="flex flex-col gap-3 border-b-2 border-dashed border-line pb-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-start gap-3">
-                <Lock aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-sun-ink" strokeWidth={2.5} />
-                <div className="flex flex-col gap-0.5">
-                  <p className="font-black text-sun-ink">Recurso do plano Pro</p>
-                  <p className="text-sm font-semibold text-sun-ink/85">Assine o Pro para usar logo, cor da marca e banner.</p>
-                </div>
-              </div>
-              <Link href="/painel/plano" className={buttonClasses('sun', 'shrink-0', 'sm')}>
-                Ver o plano Pro
-              </Link>
-            </div>
-          )}
-          <fieldset disabled={!allowBranding} className="flex min-w-0 flex-col gap-5 disabled:opacity-60">
+        <ConfigBlock title="Marca" description="A cor dos botões e o banner no topo da vitrine.">
+          <fieldset className="flex min-w-0 flex-col gap-5">
             <legend className="sr-only">Marca</legend>
             <div className="flex flex-col gap-3">
               <label htmlFor="brandColor" className="text-[0.9375rem] font-extrabold text-ink">
@@ -196,11 +169,10 @@ export function AppearanceForm({
       <ConfigBlock
         title="Logo e banner"
         description="Enviados na hora, sem precisar salvar."
-        aside={<ProBadge />}
       >
         <div className="grid gap-5 sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)]">
-          <ImageSlot label="Logo" role="logo" vitrineId={vitrineId} initial={logo} removable disabled={!allowBranding} />
-          <ImageSlot label="Banner" role="banner" vitrineId={vitrineId} initial={banner} removable disabled={!allowBranding} onChange={turnBannerOn} />
+          <ImageSlot label="Logo" role="logo" vitrineId={vitrineId} initial={logo} removable />
+          <ImageSlot label="Banner" role="banner" vitrineId={vitrineId} initial={banner} removable onChange={turnBannerOn} />
         </div>
         <VideoSlot
           label="Banner em vídeo"
@@ -209,7 +181,6 @@ export function AppearanceForm({
           initial={bannerVideo}
           onChange={turnBannerOn}
           limits={videoLimits}
-          disabled={!allowBranding}
         />
         <p className="text-sm font-semibold text-ink-muted">
           O banner mostra a imagem ou o vídeo enviado por último. Vídeo só horizontal.

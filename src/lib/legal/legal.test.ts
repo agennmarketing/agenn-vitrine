@@ -30,10 +30,11 @@ describe('termos de uso', () => {
     expect(texto).toContain('7 dias')
   })
 
-  it('explica o que acontece ao voltar para o gratuito', () => {
+  it('explica o teste grátis e o que acontece quando ele acaba', () => {
     const texto = TERMS.flatMap((section) => section.paragraphs).join(' ')
-    expect(texto).toContain('90 dias')
-    expect(texto).toContain('marca d’água')
+    expect(texto).toContain('teste grátis de 7 dias')
+    expect(texto).toContain('R$ 79,90 por mês')
+    expect(texto).toContain('Nada é apagado')
   })
 })
 

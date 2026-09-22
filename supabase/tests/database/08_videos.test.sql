@@ -5,8 +5,8 @@ select plan(18);
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000003c1', 'livre@videos.com'),
   ('00000000-0000-0000-0000-0000000003c2', 'pro@videos.com');
-insert into public.subscriptions (user_id, plan_id, status) values
-  ('00000000-0000-0000-0000-0000000003c2', 'pro', 'active');
+update public.subscriptions set status = 'active'
+where user_id = '00000000-0000-0000-0000-0000000003c2';
 
 -- Hoje cada conta tem uma vitrine só; a conta com duas vitrines é de antes dessa regra,
 -- então o cenário é montado com a trava desligada.
@@ -25,12 +25,16 @@ insert into public.items (id, owner_id, vitrine_id, category_id, name, price_cen
   ('00000000-0000-0000-0000-00000000e303', '00000000-0000-0000-0000-0000000003c2', '00000000-0000-0000-0000-00000000f302', '00000000-0000-0000-0000-00000000c302', 'C', 100),
   ('00000000-0000-0000-0000-00000000e304', '00000000-0000-0000-0000-0000000003c2', '00000000-0000-0000-0000-00000000f302', '00000000-0000-0000-0000-00000000c302', 'D', 100);
 
--- Gratuito: 1 vídeo
+-- Limite baixo de propósito, só para exercitar a trava: a conta 3c1 fica sem acesso
+-- e o plano 'bloqueado' ganha 1 vídeo nesta transação (em produção ele é zero).
+update public.plans set max_videos_per_vitrine = 1, max_videos_per_account = 1 where id = 'bloqueado';
+update public.subscriptions set trial_ends_at = now() - interval '1 minute'
+where user_id = '00000000-0000-0000-0000-0000000003c1';
 insert into public.media (id, owner_id, vitrine_id, item_id, role, kind, status, mux_asset_id) values
   ('00000000-0000-0000-0000-00000000d301', '00000000-0000-0000-0000-0000000003c1', '00000000-0000-0000-0000-00000000f301', '00000000-0000-0000-0000-00000000e301', 'video', 'video', 'ready', 'guid-livre-1');
 select throws_ok(
   $$ insert into public.media (owner_id, vitrine_id, item_id, role, kind, status, mux_asset_id) values ('00000000-0000-0000-0000-0000000003c1', '00000000-0000-0000-0000-00000000f301', '00000000-0000-0000-0000-00000000e302', 'video', 'video', 'processing', 'guid-livre-2') $$,
-  'P0001', 'plan_limit:videos_vitrine', 'gratuito não passa de 1 vídeo'
+  'P0001', 'plan_limit:videos_vitrine', 'não passa do limite de vídeos'
 );
 
 update public.media set status = 'failed' where id = '00000000-0000-0000-0000-00000000d301';
@@ -47,12 +51,12 @@ select lives_ok(
   'banner em vídeo não conta no limite de vídeos de item'
 );
 
--- Pro: vários vídeos e em mais de uma vitrine
+-- Assinante: vários vídeos
 insert into public.media (owner_id, vitrine_id, item_id, role, kind, status, mux_asset_id) values
   ('00000000-0000-0000-0000-0000000003c2', '00000000-0000-0000-0000-00000000f302', '00000000-0000-0000-0000-00000000e303', 'video', 'video', 'ready', 'guid-pro-1');
 select lives_ok(
   $$ insert into public.media (owner_id, vitrine_id, item_id, role, kind, status, mux_asset_id) values ('00000000-0000-0000-0000-0000000003c2', '00000000-0000-0000-0000-00000000f302', '00000000-0000-0000-0000-00000000e304', 'video', 'video', 'ready', 'guid-pro-2') $$,
-  'Pro envia mais de um vídeo'
+  'assinante envia mais de um vídeo'
 );
 
 -- Franquia

@@ -5,10 +5,13 @@ import { getApiUser } from '@/lib/auth/require-user'
 import { deleteMediaRows } from '@/lib/media/remove-media'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { revalidateVitrine } from '@/lib/vitrines/cache'
+import { NO_ACCESS_MESSAGE } from '@/lib/billing/status'
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await getApiUser()
   if (!session) return NextResponse.json({ error: 'Sua sessão expirou. Entre novamente.' }, { status: 401 })
+  const { data: plan } = await session.supabase.rpc('my_entitlements')
+  if (plan?.id !== 'essencial') return NextResponse.json({ error: NO_ACCESS_MESSAGE }, { status: 403 })
   const { id } = await params
 
   // RLS: só encontra mídia do próprio dono.

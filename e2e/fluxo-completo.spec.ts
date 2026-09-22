@@ -7,6 +7,7 @@ import {
   seedItem,
   seedVitrine,
   sendMuxWebhook,
+  setPlan,
   signIn,
   uniqueSubdomain,
   uploadImage,
@@ -116,32 +117,41 @@ test('sacola: vitrine → item → sacola → WhatsApp → simulador', async ({ 
   await expect(page.getByText('R$ 22,00').first()).toBeVisible()
 })
 
-test('Pro: marca d’água some ao assinar e volta ao cancelar', async ({ page }) => {
-  const user = await createConfirmedUser('fluxo-pro')
-  const primeira = await seedVitrine(user.id, { name: 'Loja Pro', subdomain: uniqueSubdomain('fp-a') })
-  await seedItem(primeira, user.id, { name: 'Camiseta', priceCents: 5990 })
+test('teste vencido tira a vitrine do ar; assinar devolve tudo na hora; cancelar tira de novo', async ({ page }) => {
+  const user = await createConfirmedUser('fluxo-plano')
+  const vitrine = await seedVitrine(user.id, { name: 'Loja do Teste', subdomain: uniqueSubdomain('fp-a') })
+  await seedItem(vitrine, user.id, { name: 'Camiseta', priceCents: 5990 })
   await signIn(page, user.email, user.password)
+  await setPlan(user.id, 'expired')
 
-  await page.goto(`http://${primeira.subdomain}.localhost:3000/`)
-  await expect(page.getByText('Feito com Vitrimove')).toBeVisible()
+  // Painel: no lugar do editor, a tela de assinatura. A vitrine pública sai do ar.
+  await page.goto(`/painel/vitrines/${vitrine.id}/itens`)
+  await expect(page.getByRole('heading', { name: 'Seu teste grátis terminou' })).toBeVisible()
+  await page.goto(`http://${vitrine.subdomain}.localhost:3000/`)
+  await expect(page.getByText('Vitrine indisponível no momento')).toBeVisible()
 
-  await page.goto('/painel/plano')
-  await page.getByRole('button', { name: /Assinar por R\$.?149,90 por mês/ }).click()
+  // Assinar pela própria tela de assinatura.
+  await page.goto(`/painel/vitrines/${vitrine.id}/itens`)
+  await page.getByRole('button', { name: /Assinar por R\$.?79,90 por mês/ }).click()
   await page.waitForURL(/\/painel\/plano\?assinatura=ok$/)
-  await expect(page.getByRole('heading', { name: 'Plano Pro' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Plano Essencial' })).toBeVisible()
 
-  // A revalidação por tag acontece no webhook: a vitrine é gerada de novo sem marca d'água.
-  await page.goto(`http://${primeira.subdomain}.localhost:3000/`)
-  await expect(page.getByText('Feito com Vitrimove')).toBeHidden()
+  // A revalidação por tag acontece no webhook: a vitrine volta com os dados de antes.
+  expect(await vitrineStatuses(user.id)).toEqual([`${vitrine.subdomain}:active`])
+  await page.goto(`http://${vitrine.subdomain}.localhost:3000/`)
+  await expect(page.getByRole('heading', { level: 1, name: 'Loja do Teste' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Camiseta' })).toBeVisible()
+  await page.goto(`/painel/vitrines/${vitrine.id}/itens`)
+  await expect(page.getByRole('heading', { name: 'Seu teste grátis terminou' })).toHaveCount(0)
 
   await page.goto('/painel/plano')
   await page.getByRole('button', { name: 'Gerenciar assinatura' }).click()
   await page.waitForURL(/\/api\/dev-billing\/portal/)
   await page.getByRole('link', { name: 'Cancelar agora' }).click()
   await page.waitForURL(/\/painel\/plano$/)
+  await expect(page.getByText(/Sua assinatura foi cancelada/)).toBeVisible()
 
-  // Uma vitrine por conta: ela continua ativa no gratuito, só volta a marca d'água.
-  expect(await vitrineStatuses(user.id)).toEqual([`${primeira.subdomain}:active`])
-  await page.goto(`http://${primeira.subdomain}.localhost:3000/`)
-  await expect(page.getByText('Feito com Vitrimove')).toBeVisible()
+  expect(await vitrineStatuses(user.id)).toEqual([`${vitrine.subdomain}:frozen`])
+  await page.goto(`/painel/agenda`)
+  await expect(page.getByRole('heading', { name: 'Sua assinatura foi cancelada' })).toBeVisible()
 })

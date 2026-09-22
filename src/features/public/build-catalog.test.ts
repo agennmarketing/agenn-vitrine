@@ -57,12 +57,12 @@ describe('buildPublicCatalog', () => {
     ])
   })
 
-  it('ignora marca sem o Pro e mostra marca d’água', () => {
+  it('ignora marca quando o plano não libera e mostra marca d’água', () => {
     const catalog = buildPublicCatalog(base, 'https://cdn', 'https://vz')
     expect([catalog.logo, catalog.brandColor, catalog.banner, catalog.showWatermark]).toEqual([null, null, null, true])
   })
 
-  it('usa marca com o Pro', () => {
+  it('usa marca quando o plano libera', () => {
     const catalog = buildPublicCatalog({ ...base, plan: { max_items_per_vitrine: 300, max_videos_per_vitrine: 50, allow_branding: true, show_watermark: false } }, 'https://cdn', 'https://vz')
     expect(catalog.logo?.small).toBe('https://cdn/l-128.webp')
     expect(catalog.banner?.large).toBe('https://cdn/b-1920.webp')
@@ -81,13 +81,13 @@ describe('buildPublicCatalog', () => {
 })
 
 describe('vídeos', () => {
-  it('gratuito mostra só o primeiro vídeo na ordem da vitrine (4.7)', () => {
+  it('limite de 1 vídeo mostra só o primeiro na ordem da vitrine', () => {
     const [first, second] = buildPublicCatalog(base, 'https://cdn', 'https://vz').categories[0].items
     expect(first.video).toEqual({ mediaId: 'v-i2', playlistUrl: 'https://vz/g2.m3u8', posterUrl: 'https://cdn/a-1080.webp', aspect: '9:16' })
     expect(second.video).toBeNull()
   })
 
-  it('Pro mostra todos', () => {
+  it('sem limite baixo mostra todos', () => {
     const catalog = buildPublicCatalog(
       { ...base, plan: { max_items_per_vitrine: 300, max_videos_per_vitrine: 50, allow_branding: true, show_watermark: false } },
       'https://cdn',

@@ -10,8 +10,8 @@ import { APP_URL } from '../playwright.config'
 const MAILPIT_URL = process.env.MAILPIT_URL ?? 'http://127.0.0.1:54324'
 
 const SUBJECT_BY_TYPE: Record<'email' | 'recovery', string> = {
-  email: 'Confirme seu e-mail na Vitrimove',
-  recovery: 'Redefina sua senha da Vitrimove',
+  email: 'Confirme seu e-mail no Agenn',
+  recovery: 'Redefina sua senha do Agenn',
 }
 
 export function createAdminClient() {
@@ -80,11 +80,22 @@ export function uniqueSubdomain(prefix: string) {
   return `${prefix}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`.slice(0, 30)
 }
 
-export async function setPlan(userId: string, plan: 'free' | 'pro') {
+// Toda conta nasce no teste grátis (trigger do banco). 'active' = assinou;
+// 'expired' = o teste acabou sem assinatura (painel travado, vitrine fora do ar).
+export async function setPlan(userId: string, access: 'active' | 'expired') {
   const admin = createAdminClient()
-  await admin
+  const fields =
+    access === 'active'
+      ? { status: 'active', subscription_status: 'active' }
+      : { status: 'none', subscription_status: 'expired', trial_ends_at: new Date(Date.now() - 60_000).toISOString() }
+  await admin.from('subscriptions').update(fields).eq('user_id', userId).throwOnError()
+}
+
+export async function setTrialEndsAt(userId: string, trialEndsAt: Date) {
+  await createAdminClient()
     .from('subscriptions')
-    .upsert({ user_id: userId, plan_id: plan, status: plan === 'pro' ? 'active' : 'none' })
+    .update({ trial_ends_at: trialEndsAt.toISOString(), subscription_status: 'trialing', status: 'none' })
+    .eq('user_id', userId)
     .throwOnError()
 }
 
@@ -309,13 +320,14 @@ export async function setSubscription(
   userId: string,
   fields: {
     status?: string
-    planId?: 'free' | 'pro'
     customerId?: string | null
     subscriptionId?: string | null
     currentPeriodEnd?: string | null
     cancelAtPeriodEnd?: boolean
     graceUntil?: string | null
     proEndedAt?: string | null
+    trialEndsAt?: string
+    subscriptionStatus?: 'trialing' | 'active' | 'expired' | 'canceled'
   } = {},
 ) {
   const admin = createAdminClient()
@@ -323,8 +335,9 @@ export async function setSubscription(
     .from('subscriptions')
     .upsert({
       user_id: userId,
-      plan_id: fields.planId ?? 'pro',
       status: fields.status ?? 'active',
+      ...(fields.trialEndsAt ? { trial_ends_at: fields.trialEndsAt } : {}),
+      ...(fields.subscriptionStatus ? { subscription_status: fields.subscriptionStatus } : {}),
       stripe_customer_id: fields.customerId ?? null,
       stripe_subscription_id: fields.subscriptionId ?? null,
       current_period_end: fields.currentPeriodEnd ?? null,
@@ -363,7 +376,7 @@ export async function vitrineStatuses(ownerId: string) {
 export async function readSubscription(userId: string) {
   const { data } = await createAdminClient()
     .from('subscriptions')
-    .select('status, plan_id, interval, grace_until, pro_ended_at, cancel_at_period_end, stripe_subscription_id')
+    .select('status, plan_id, subscription_status, interval, grace_until, pro_ended_at, cancel_at_period_end, stripe_subscription_id')
     .eq('user_id', userId)
     .maybeSingle()
     .throwOnError()

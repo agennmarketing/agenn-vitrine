@@ -3,15 +3,10 @@
 import * as Sentry from '@sentry/nextjs'
 import { requireActionUser } from '@/lib/auth/action-user'
 import { getBilling } from '@/lib/billing/billing'
-import type { BillingInterval } from '@/lib/billing/types'
 import { env } from '@/lib/env'
-import type { FormState } from '@/lib/forms/form-state'
 import { buildAppUrl } from '@/lib/hosts/urls'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
-import { revalidateVitrine } from '@/lib/vitrines/cache'
-import { mapDbError } from '@/lib/vitrines/db-errors'
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const CHECKOUT_FAILED = 'Não foi possível abrir o pagamento. Tente de novo em instantes.'
 const PORTAL_FAILED = 'Não foi possível abrir o gerenciamento da assinatura. Tente de novo em instantes.'
 
@@ -20,12 +15,9 @@ const PORTAL_FAILED = 'Não foi possível abrir o gerenciamento da assinatura. T
 // domínio vira navegação do roteador do Next, que não sabe ler uma rota de API.
 export type BillingRedirectState = { error?: string; url?: string }
 
-export async function startCheckoutAction(
-  _prev: BillingRedirectState,
-  formData: FormData,
-): Promise<BillingRedirectState> {
-  const interval: BillingInterval = formData.get('interval') === 'year' ? 'year' : 'month'
-  const { supabase, user } = await requireActionUser()
+// Sem parâmetros: um só plano, cobrança mensal. Quem está sem acesso também assina.
+export async function startCheckoutAction(): Promise<BillingRedirectState> {
+  const { supabase, user } = await requireActionUser({ allowBlocked: true })
 
   let url: string
   try {
@@ -52,7 +44,7 @@ export async function startCheckoutAction(
     url = await billing.createCheckoutSession({
       userId: user.id,
       customerId,
-      priceId: billing.priceIdFor(interval),
+      priceId: billing.priceId(),
       successUrl: buildAppUrl('/painel/plano?assinatura=ok', env.NEXT_PUBLIC_ROOT_DOMAIN),
       cancelUrl: buildAppUrl('/painel/plano', env.NEXT_PUBLIC_ROOT_DOMAIN),
     })
@@ -65,7 +57,7 @@ export async function startCheckoutAction(
 
 // Sem parâmetros: o portal não tem campos, e useActionState aceita uma ação mais curta.
 export async function openPortalAction(): Promise<BillingRedirectState> {
-  const { user } = await requireActionUser()
+  const { user } = await requireActionUser({ allowBlocked: true })
 
   let url: string
   try {
@@ -87,17 +79,4 @@ export async function openPortalAction(): Promise<BillingRedirectState> {
     return { error: PORTAL_FAILED }
   }
   return { url }
-}
-
-// Spec 8.7: com mais vitrines do que o plano permite, o dono escolhe qual fica ativa.
-export async function chooseActiveVitrineAction(_prev: FormState, formData: FormData): Promise<FormState> {
-  const vitrineId = String(formData.get('vitrineId') ?? '')
-  if (!UUID.test(vitrineId)) return { error: 'Escolha uma vitrine.' }
-
-  const { supabase } = await requireActionUser()
-  const { data: subdomains, error } = await supabase.rpc('choose_active_vitrine', { p_vitrine_id: vitrineId })
-  if (error) return { error: mapDbError(error) }
-
-  revalidateVitrine(...(subdomains ?? []))
-  return { success: 'Vitrine ativa atualizada.' }
 }

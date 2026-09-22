@@ -8,9 +8,9 @@ insert into auth.users (id, email, raw_user_meta_data) values
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000d1","session_id":"22222222-2222-2222-2222-222222222222","role":"authenticated"}';
 
-select is((select (public.my_entitlements()).id), 'free', 'conta sem assinatura recebe o gratuito');
-select is((select (public.my_entitlements()).max_vitrines), 1, 'gratuito permite 1 vitrine');
-select is((select (public.my_entitlements()).show_watermark), true, 'gratuito mostra marca d''água');
+select is((select (public.my_entitlements()).id), 'essencial', 'conta nova recebe o Essencial no teste');
+select is((select (public.my_entitlements()).max_vitrines), 1, 'essencial permite 1 vitrine');
+select is((select (public.my_entitlements()).show_watermark), false, 'essencial não mostra marca d''água');
 
 reset role;
 set local role anon;

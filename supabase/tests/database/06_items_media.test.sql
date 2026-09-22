@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(21);
+select plan(22);
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000001a1', 'dono@itens.com'),
@@ -55,12 +55,12 @@ select throws_ok(
   'P0001', 'invalid_reference:category', 'categoria de outra vitrine é recusada'
 );
 
--- Limite do gratuito: já há 4 itens; completa 10.
+-- Limite do Essencial: já há 4 itens; completa 300.
 insert into public.items (vitrine_id, category_id, name)
-select '00000000-0000-0000-0000-00000000a001', '00000000-0000-0000-0000-00000000c001', 'Lote ' || g from generate_series(1, 6) g;
+select '00000000-0000-0000-0000-00000000a001', '00000000-0000-0000-0000-00000000c001', 'Lote ' || g from generate_series(1, 296) g;
 select throws_ok(
-  $$ insert into public.items (vitrine_id, category_id, name) values ('00000000-0000-0000-0000-00000000a001', '00000000-0000-0000-0000-00000000c001', 'Décimo primeiro') $$,
-  'P0001', 'plan_limit:items', 'gratuito não passa de 10 itens'
+  $$ insert into public.items (vitrine_id, category_id, name) values ('00000000-0000-0000-0000-00000000a001', '00000000-0000-0000-0000-00000000c001', 'Além do limite') $$,
+  'P0001', 'plan_limit:items', 'essencial não passa de 300 itens'
 );
 
 update public.items set deleted_at = now() where name = 'Lote 1';
@@ -71,6 +71,17 @@ select lives_ok(
 select throws_ok(
   $$ update public.items set deleted_at = null where name = 'Lote 1' $$,
   'P0001', 'item_deleted', 'item apagado não volta'
+);
+
+-- Sem teste nem assinatura valendo, nada novo é criado.
+reset role;
+update public.items set deleted_at = now() where name = 'Lote 2';
+update public.subscriptions set trial_ends_at = now() - interval '1 minute'
+where user_id = '00000000-0000-0000-0000-0000000001a1';
+set local role authenticated;
+select throws_ok(
+  $$ insert into public.items (vitrine_id, category_id, name) values ('00000000-0000-0000-0000-00000000a001', '00000000-0000-0000-0000-00000000c001', 'Sem acesso') $$,
+  'P0001', 'plan_limit:items', 'sem acesso não cria item'
 );
 
 select throws_ok(

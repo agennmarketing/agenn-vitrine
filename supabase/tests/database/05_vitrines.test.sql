@@ -6,12 +6,12 @@ insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000f1', 'ana@vitrine.com'),
   ('00000000-0000-0000-0000-0000000000f2', 'bia@vitrine.com'),
   ('00000000-0000-0000-0000-0000000000f3', 'pro@vitrine.com');
-insert into public.subscriptions (user_id, plan_id, status) values
-  ('00000000-0000-0000-0000-0000000000f3', 'pro', 'active');
+update public.subscriptions set status = 'active'
+where user_id = '00000000-0000-0000-0000-0000000000f3';
 
 set local role authenticated;
 
--- Ana (gratuito)
+-- Ana (no teste grátis)
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000f1","role":"authenticated"}', true);
 
 select lives_ok(
@@ -35,7 +35,7 @@ select is(
 );
 select throws_ok(
   $$ select public.create_vitrine('servicos', 'ana-dois', 'Ana 2', 'light', 'Quero esse serviço', 'Principal', '+5511987654321', array[]::text[]) $$,
-  'P0001', 'plan_limit:vitrines', 'gratuito não cria a segunda vitrine'
+  'P0001', 'plan_limit:vitrines', 'no teste também só uma vitrine'
 );
 select throws_ok(
   $$ update public.vitrines set type = 'servicos' where subdomain = 'loja-ana' $$,
@@ -52,7 +52,7 @@ select is(
   'o próprio subdomínio fica disponível para a vitrine dona'
 );
 
--- Pro. As recusas de subdomínio vêm antes da primeira vitrine: a trava de uma vitrine
+-- Assinante. As recusas de subdomínio vêm antes da primeira vitrine: a trava de uma vitrine
 -- por conta roda antes das checagens da tabela e esconderia esses erros.
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000f3","role":"authenticated"}', true);
 select throws_ok(
@@ -83,7 +83,7 @@ select is(
 );
 select throws_ok(
   $$ select public.create_vitrine('servicos', 'pro-dois', 'Pro 2', 'light', 'Agendar', 'Principal', '+5511912345678', null) $$,
-  'P0001', 'plan_limit:vitrines', 'pro também só tem uma vitrine'
+  'P0001', 'plan_limit:vitrines', 'assinante também só tem uma vitrine'
 );
 
 -- Bia não enxerga nem escreve na vitrine da Ana. O id é lido como postgres,

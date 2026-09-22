@@ -1,3 +1,4 @@
+import { NO_ACCESS_MESSAGE } from '@/lib/billing/status'
 import { ITEM_CODE_MESSAGES } from '@/lib/codes/item-code'
 
 type DbError = { code?: string; message?: string; hint?: string } | null | undefined
@@ -11,16 +12,18 @@ export function isPlanLimitError(error: DbError): boolean {
 export function mapDbError(error: DbError): string {
   if (!error) return GENERIC
   const limit = Number(error.hint)
+  // Limite zero é a conta sem teste nem assinatura valendo (plano 'bloqueado').
+  if (isPlanLimitError(error) && limit === 0) return NO_ACCESS_MESSAGE
   switch (error.message) {
     case 'plan_limit:vitrines':
-      // Uma vitrine por conta: não é convite para o Pro, é a regra do produto.
+      // Uma vitrine por conta: é a regra do produto.
       return 'Cada conta pode ter uma vitrine. Edite a que você já tem.'
     case 'plan_limit:items':
-      return `Seu plano permite até ${limit} itens por vitrine. Assine o Pro para cadastrar mais.`
+      return `Seu plano permite até ${limit} itens por vitrine.`
     case 'plan_limit:videos_vitrine':
-      return `Seu plano permite até ${limit} ${limit === 1 ? 'vídeo' : 'vídeos'} por vitrine. Assine o Pro para enviar mais.`
+      return `Seu plano permite até ${limit} ${limit === 1 ? 'vídeo' : 'vídeos'} por vitrine.`
     case 'plan_limit:videos_account':
-      return `Seu plano permite até ${limit} ${limit === 1 ? 'vídeo' : 'vídeos'} na conta. Assine o Pro para enviar mais.`
+      return `Seu plano permite até ${limit} ${limit === 1 ? 'vídeo' : 'vídeos'} na conta.`
     case 'item_code_taken':
       return ITEM_CODE_MESSAGES.taken
     case 'item_deleted':

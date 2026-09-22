@@ -8,12 +8,11 @@ import {
   seedItem,
   seedVitrine,
   sendMuxWebhook,
-  setPlan,
   signIn,
   videoFixture,
 } from './helpers'
 
-test('envia vídeo do item, processa pelo webhook e respeita o limite do gratuito', async ({ page, request }) => {
+test('envia vídeo do item, processa pelo webhook e mostra o uso no Plano', async ({ page, request }) => {
   const user = await createConfirmedUser('video-item')
   const vitrine = await seedVitrine(user.id)
   const first = await seedItem(vitrine, user.id, { name: 'Com vídeo', priceCents: 1000 })
@@ -34,15 +33,10 @@ test('envia vídeo do item, processa pelo webhook e respeita o limite do gratuit
   expect(await response.json()).toEqual({ status: 'ready' })
   await expect(page.getByText('Vídeo pronto')).toBeVisible({ timeout: 15_000 })
 
-  await page.goto(`/painel/vitrines/${vitrine.id}/itens/${second.id}`)
-  await page.getByLabel('Vídeo', { exact: true }).setInputFiles(videoFixture('horizontal-3s'))
-  await expect(page.getByText('Seu plano permite até 1 vídeo por vitrine. Assine o Pro para enviar mais.')).toBeVisible()
-
   // O uso de vídeos da conta aparece no Plano.
   await page.goto('/painel/plano')
-  await expect(page.getByRole('region', { name: 'Plano Gratuito' }).getByText(/^1( de \d+)?$/)).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Teste grátis' }).getByText(/^1( de \d+)?$/)).toBeVisible()
 
-  await setPlan(user.id, 'pro')
   await page.goto(`/painel/vitrines/${vitrine.id}/itens/${second.id}`)
   await page.getByLabel('Vídeo', { exact: true }).setInputFiles(videoFixture('horizontal-3s'))
   await expect(page.getByText('Processando o vídeo…')).toBeVisible({ timeout: 20_000 })
@@ -82,10 +76,6 @@ test('banner em vídeo: só Pro e só horizontal', async ({ page }) => {
   await signIn(page, user.email, user.password)
 
   await page.goto(`/painel/vitrines/${vitrine.id}/aparencia`)
-  await expect(page.getByLabel('Banner em vídeo', { exact: true })).toBeDisabled()
-
-  await setPlan(user.id, 'pro')
-  await page.reload()
   await page.getByLabel('Banner em vídeo', { exact: true }).setInputFiles(videoFixture('vertical-3s'))
   await expect(page.getByText('O banner em vídeo precisa ser horizontal.')).toBeVisible()
   await page.getByLabel('Banner em vídeo', { exact: true }).setInputFiles(videoFixture('horizontal-3s'))

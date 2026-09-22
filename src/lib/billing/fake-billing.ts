@@ -14,12 +14,8 @@ const ROOT = path.join(os.tmpdir(), 'agenn-vitrine-billing')
 const ID = /^[a-z]+_fake_[0-9a-f-]{36}$/
 
 export const FAKE_PRICE_MONTH = 'price_fake_mes'
-export const FAKE_PRICE_YEAR = 'price_fake_ano'
 
-const FAKE_PRICES: BillingPrice[] = [
-  { id: FAKE_PRICE_MONTH, interval: 'month', amountCents: 14990 },
-  { id: FAKE_PRICE_YEAR, interval: 'year', amountCents: 149900 },
-]
+const FAKE_PRICES: BillingPrice[] = [{ id: FAKE_PRICE_MONTH, interval: 'month', amountCents: 7990 }]
 
 export type FakeCheckoutSession = {
   id: string
@@ -88,19 +84,19 @@ export function createFakeBilling(config: BillingEnv): Billing {
   const stripe = createStripeClient(config.secretKey)
 
   return {
-    priceIdFor: (interval) => (interval === 'year' ? FAKE_PRICE_YEAR : FAKE_PRICE_MONTH),
+    priceId: () => FAKE_PRICE_MONTH,
 
     async ensureCustomer({ customerId }) {
       return customerId ?? `cus_fake_${crypto.randomUUID()}`
     },
 
-    async createCheckoutSession({ userId, customerId, priceId, successUrl }) {
+    async createCheckoutSession({ userId, customerId, successUrl }) {
       const id = `cs_fake_${crypto.randomUUID()}`
       const session: FakeCheckoutSession = {
         id,
         userId,
         customerId,
-        interval: priceId === FAKE_PRICE_YEAR ? 'year' : 'month',
+        interval: 'month',
         successUrl,
       }
       await write(id, session)

@@ -251,7 +251,7 @@ export function Catalog({ vitrine, siteUrl }: { vitrine: PublicVitrine; siteUrl:
             href={siteUrl}
             className="inline-flex items-center rounded-full px-3 py-2 text-xs font-medium text-ink-muted no-underline transition-colors hover:text-ink"
           >
-            Feito com Vitrimove
+            Feito com Agenn
           </a>
         </footer>
       ) : null}

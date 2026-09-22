@@ -2,7 +2,7 @@ import 'server-only'
 import * as Sentry from '@sentry/nextjs'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { getBilling } from '@/lib/billing/billing'
-import { isProNow } from '@/lib/billing/status'
+import { isPaidNow } from '@/lib/billing/status'
 import type { Database } from '@/lib/supabase/database.types'
 import { revalidateVitrine } from '@/lib/vitrines/cache'
 import { applySubscription } from './apply-subscription'
@@ -37,8 +37,13 @@ export async function reconcileSubscriptions(admin: Admin, limit = 500): Promise
         sameInstant(subscription.currentPeriodEnd, row.current_period_end)
 
       if (unchanged) {
-        // A carência vence com o tempo, sem evento novo: o congelamento também.
-        if (row.status === 'past_due' && !isProNow(row, new Date())) {
+        // A carência vence com o tempo, sem evento novo: o bloqueio também.
+        if (row.status === 'past_due' && !isPaidNow(row, new Date())) {
+          const { error: statusError } = await admin
+            .from('subscriptions')
+            .update({ subscription_status: 'canceled' })
+            .eq('user_id', row.user_id)
+          if (statusError) throw statusError
           const { data: subdomains, error: syncError } = await admin.rpc('sync_vitrine_status', {
             p_user_id: row.user_id,
           })
