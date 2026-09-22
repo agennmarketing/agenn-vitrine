@@ -158,16 +158,19 @@ export function describeSubscription(row: SubscriptionView | null, now: Date): S
   const showPortal = Boolean(row?.stripe_customer_id) && (paid || Boolean(row?.pro_ended_at))
 
   if (!paid) {
-    let detail: string
     if (access.status === 'trialing') {
-      const notice = trialNotice(access)
-      detail = notice ?? `Seu teste grátis vai até ${formatDateBR(access.trialEndsAt)}. Assine para continuar usando o Agenn.`
-    } else if (access.status === 'canceled') {
-      detail = 'Sua assinatura foi cancelada. Seus dados continuam guardados: assine de novo para voltar a usar o Agenn.'
-    } else {
-      detail = 'Seu teste grátis terminou. Seus dados continuam guardados: assine para voltar a usar o Agenn.'
+      const days = access.trialDaysLeft ?? 0
+      const left = days === 0 ? 'termina hoje' : days === 1 ? '1 dia restante' : `${days} dias restantes`
+      return {
+        access,
+        title: `Teste grátis — ${left}`,
+        detail: `Vai até ${formatDateBR(access.trialEndsAt)}. Assine para continuar usando o Agenn depois disso.`,
+        showSubscribe: true,
+        showPortal,
+      }
     }
-    const title = access.status === 'trialing' ? 'Teste grátis' : PLAN_NAME
+    const title = access.status === 'canceled' ? 'Sua assinatura terminou' : 'Seu teste terminou'
+    const detail = 'Seus dados continuam guardados: assine para voltar a usar o Agenn.'
     return { access, title, detail, showSubscribe: true, showPortal }
   }
 
@@ -177,8 +180,8 @@ export function describeSubscription(row: SubscriptionView | null, now: Date): S
   } else if (row!.cancel_at_period_end) {
     detail = `Cancelamento agendado: a assinatura vale até ${formatDateBR(row!.current_period_end)}.`
   } else {
-    detail = row!.current_period_end ? `Renova em ${formatDateBR(row!.current_period_end)}.` : 'Assinatura ativa.'
+    detail = row!.current_period_end ? `Próxima cobrança em ${formatDateBR(row!.current_period_end)}.` : 'Assinatura em dia.'
   }
 
-  return { access, title: PLAN_NAME, detail, showSubscribe: false, showPortal: true }
+  return { access, title: `${PLAN_NAME} — Ativo`, detail, showSubscribe: false, showPortal: true }
 }

@@ -17,8 +17,16 @@ function useBillingRedirect(url: string | undefined) {
 
 const EMPTY: BillingRedirectState = {}
 
-// Um plano, uma cobrança: o botão já diz o preço ("Assinar por R$ 79,90 por mês").
-export function SubscribeForm({ priceLabel, className = '' }: { priceLabel: string; className?: string }) {
+// Um plano, uma cobrança: o botão já diz o preço ("Assinar por R$ 79,90 por mês"), a não ser que venha outro rótulo.
+export function SubscribeForm({
+  priceLabel,
+  label,
+  className = '',
+}: {
+  priceLabel: string
+  label?: string
+  className?: string
+}) {
   const [state, formAction, pending] = useActionState(startCheckoutAction, EMPTY)
   useBillingRedirect(state.url)
   const busy = pending || Boolean(state.url)
@@ -27,7 +35,7 @@ export function SubscribeForm({ priceLabel, className = '' }: { priceLabel: stri
     <form action={formAction} className={`flex flex-col gap-3 ${className}`}>
       <Button type="submit" variant="sun" size="lg" disabled={busy} aria-busy={busy} className="w-full sm:w-auto">
         {busy ? <Spinner /> : null}
-        Assinar por {priceLabel}
+        {label ?? `Assinar por ${priceLabel}`}
         {busy ? null : <ArrowRight aria-hidden="true" className="size-5" strokeWidth={3} />}
       </Button>
       <FormMessage error={state.error} />

@@ -3,7 +3,6 @@
 import { Moon, Sun } from 'lucide-react'
 import { useActionState, useState } from 'react'
 import { ImageSlot } from '@/components/media/image-slot'
-import { VideoSlot } from '@/components/media/video-slot'
 import { Button } from '@/components/ui/button'
 import { ChoiceCard } from '@/components/ui/choice-card'
 import { ConfigBlock, ConfigToggle, SaveBar } from '@/components/ui/config-section'
@@ -35,16 +34,12 @@ export function AppearanceForm({
   vitrineId,
   logo,
   banner,
-  bannerVideo,
-  videoLimits,
   buttonText,
   initial,
 }: {
   vitrineId: string
   logo: Slot
   banner: Slot
-  bannerVideo: { id: string; status: 'processing' | 'ready' | 'failed'; thumbnailUrl: string | null } | null
-  videoLimits: { maxSeconds: number; maxUploadMb: number }
   buttonText: string
   initial: Appearance
 }) {
@@ -174,17 +169,6 @@ export function AppearanceForm({
           <ImageSlot label="Logo" role="logo" vitrineId={vitrineId} initial={logo} removable />
           <ImageSlot label="Banner" role="banner" vitrineId={vitrineId} initial={banner} removable onChange={turnBannerOn} />
         </div>
-        <VideoSlot
-          label="Banner em vídeo"
-          role="banner"
-          vitrineId={vitrineId}
-          initial={bannerVideo}
-          onChange={turnBannerOn}
-          limits={videoLimits}
-        />
-        <p className="text-sm font-semibold text-ink-muted">
-          O banner mostra a imagem ou o vídeo enviado por último. Vídeo só horizontal.
-        </p>
       </ConfigBlock>
       <UnsavedChangesGuard formId="appearance-form" />
     </>

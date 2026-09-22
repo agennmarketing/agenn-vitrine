@@ -170,14 +170,14 @@ describe('describeSubscription', () => {
       { ...base, ...unpaid, trial_ends_at: '2026-09-24T12:00:00.000Z', subscription_status: 'trialing' },
       NOW,
     )
-    expect([summary.title, summary.showSubscribe, summary.showPortal]).toEqual(['Teste grátis', true, false])
-    expect(summary.detail).toBe('Seu teste grátis vai até 24/09/2026. Assine para continuar usando o Agenn.')
+    expect([summary.title, summary.showSubscribe, summary.showPortal]).toEqual(['Teste grátis — 7 dias restantes', true, false])
+    expect(summary.detail).toBe('Vai até 24/09/2026. Assine para continuar usando o Agenn depois disso.')
   })
 
   it('teste encerrado lembra que os dados continuam guardados', () => {
     const summary = describeSubscription({ ...base, ...unpaid, subscription_status: 'expired' }, NOW)
-    expect([summary.access.status, summary.title, summary.showSubscribe]).toEqual(['expired', 'Plano Essencial', true])
-    expect(summary.detail).toBe('Seu teste grátis terminou. Seus dados continuam guardados: assine para voltar a usar o Agenn.')
+    expect([summary.access.status, summary.title, summary.showSubscribe]).toEqual(['expired', 'Seu teste terminou', true])
+    expect(summary.detail).toBe('Seus dados continuam guardados: assine para voltar a usar o Agenn.')
   })
 
   it('checkout começado e não concluído não mostra o portal', () => {
@@ -185,9 +185,9 @@ describe('describeSubscription', () => {
     expect([summary.access.hasAccess, summary.showSubscribe, summary.showPortal]).toEqual([false, true, false])
   })
 
-  it('assinatura ativa mostra a renovação', () => {
+  it('assinatura ativa mostra a próxima cobrança', () => {
     const summary = describeSubscription({ ...base, status: 'active' }, NOW)
-    expect([summary.title, summary.detail]).toEqual(['Plano Essencial', 'Renova em 17/10/2026.'])
+    expect([summary.title, summary.detail]).toEqual(['Plano Essencial — Ativo', 'Próxima cobrança em 17/10/2026.'])
     expect([summary.showSubscribe, summary.showPortal]).toEqual([false, true])
   })
 
@@ -210,8 +210,9 @@ describe('describeSubscription', () => {
       NOW,
     )
     expect([summary.access.status, summary.showSubscribe, summary.showPortal]).toEqual(['canceled', true, true])
-    expect(summary.detail).toBe(
-      'Sua assinatura foi cancelada. Seus dados continuam guardados: assine de novo para voltar a usar o Agenn.',
-    )
+    expect([summary.title, summary.detail]).toEqual([
+      'Sua assinatura terminou',
+      'Seus dados continuam guardados: assine para voltar a usar o Agenn.',
+    ])
   })
 })
