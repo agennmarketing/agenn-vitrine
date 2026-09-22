@@ -57,7 +57,8 @@ test('Agenda: agendamento aparece, cancelar libera o horário e bloqueio tira a 
   await page.getByLabel('Motivo (opcional)').fill('Feriado')
   await page.getByRole('button', { name: 'Adicionar bloqueio' }).click()
   await expect(page.getByText('Bloqueio adicionado.')).toBeVisible()
-  await expect(page.getByText('Feriado')).toBeVisible()
+  await expect(page.getByRole('button', { name: /^Remover bloqueio de / })).toHaveCount(1)
+  await expect(page.getByText('Feriado', { exact: true })).toBeVisible()
   const dates = (await (await page.request.get(agenda)).json()) as { dates: string[] }
   expect(dates.dates).not.toContain(tomorrow)
 
