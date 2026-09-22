@@ -41,7 +41,7 @@ export function Contacts({
     })
   }
 
-  // O principal vem primeiro: é para ele que vão os pedidos.
+  // O principal vem primeiro: é para ele que vão as mensagens.
   const ordered = [...contacts].sort((a, b) => Number(b.id === primaryId) - Number(a.id === primaryId))
 
   return (
@@ -85,7 +85,7 @@ export function Contacts({
                 </div>
 
                 {primary ? (
-                  <p className="text-sm font-semibold text-ink-muted">Os pedidos da vitrine chegam neste número.</p>
+                  <p className="text-sm font-semibold text-ink-muted">As mensagens da vitrine chegam neste número.</p>
                 ) : (
                   <div className="flex flex-wrap items-center gap-2">
                     <Button

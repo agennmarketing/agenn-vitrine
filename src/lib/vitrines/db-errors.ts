@@ -27,6 +27,12 @@ export function mapDbError(error: DbError): string {
       return 'Este item foi excluído.'
     case 'vitrine_not_found':
       return 'Vitrine não encontrada.'
+    case 'appointment_not_found':
+      return 'Este agendamento não está mais confirmado. Recarregue a página.'
+    case 'slot_unavailable':
+      return 'Esse horário está ocupado ou bloqueado. Escolha outro.'
+    case 'slot_in_past':
+      return 'Esse horário já passou. Escolha outro.'
   }
   if (error.message?.startsWith('invalid_reference:')) {
     return 'Algum dado escolhido não pertence a esta vitrine. Recarregue a página.'

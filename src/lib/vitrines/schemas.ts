@@ -316,3 +316,8 @@ export const bookingBlockSchema = z
     else if (!time.safeParse(data.end).success) ctx.addIssue({ code: 'custom', path: ['end'], message: 'Informe o fim.' })
     else if (data.start >= data.end) ctx.addIssue({ code: 'custom', path: ['end'], message: 'O fim deve ser depois do início.' })
   })
+
+export const appointmentRescheduleSchema = z.object({
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Informe a data.'),
+  time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Informe o horário.'),
+})

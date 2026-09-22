@@ -19,7 +19,9 @@ test('simulador recalcula pedido pelo código e soma no modo manual', async ({ p
     .throwOnError()
 
   await signIn(page, user.email, user.password)
-  await page.getByRole('link', { name: 'Consultar Pedido' }).filter({ visible: true }).first().click()
+  // Consultar Pedido saiu da barra lateral (produto de serviços); a página continua no endereço.
+  await expect(page.getByRole('link', { name: 'Consultar Pedido' })).toHaveCount(0)
+  await page.goto('/painel/simulador')
 
   await page.getByLabel('Código do pedido').fill('#k7f2')
   await page.getByRole('button', { name: 'Consultar' }).click()

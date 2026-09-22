@@ -5,6 +5,12 @@ export type ServiceSegment = (typeof SERVICE_SEGMENTS)[number]
 
 export type SegmentCopy = {
   label: string
+  /** Como o painel chama o negócio: "Studio", "Salão"... */
+  place: string
+  /** O mesmo, dentro de uma frase: "seu studio", "sua barbearia". */
+  yourPlace: string
+  /** Exemplo de motivo de bloqueio na Agenda. */
+  blockExample: string
   /** Exemplo do nome do negócio no assistente. */
   businessName: string
   /** Exemplo do endereço (subdomínio) no assistente. */
@@ -18,6 +24,9 @@ export type SegmentCopy = {
 export const SEGMENT_COPY: Record<ServiceSegment, SegmentCopy> = {
   nail: {
     label: 'Nail Designer / Manicure',
+    place: 'Studio',
+    yourPlace: 'seu studio',
+    blockExample: 'Folga',
     businessName: 'Studio Ana Nails',
     subdomain: 'ananails',
     serviceExample: 'Alongamento em gel',
@@ -25,6 +34,9 @@ export const SEGMENT_COPY: Record<ServiceSegment, SegmentCopy> = {
   },
   cabelo: {
     label: 'Cabeleireiro(a) / Salão',
+    place: 'Salão',
+    yourPlace: 'seu salão',
+    blockExample: 'Feriado',
     businessName: 'Salão da Bia',
     subdomain: 'salaodabia',
     serviceExample: 'Corte e escova',
@@ -32,6 +44,9 @@ export const SEGMENT_COPY: Record<ServiceSegment, SegmentCopy> = {
   },
   lash: {
     label: 'Lash Designer',
+    place: 'Negócio',
+    yourPlace: 'seu negócio',
+    blockExample: 'Feriado',
     businessName: 'Ana Lash Studio',
     subdomain: 'analash',
     serviceExample: 'Volume brasileiro',
@@ -39,6 +54,9 @@ export const SEGMENT_COPY: Record<ServiceSegment, SegmentCopy> = {
   },
   sobrancelha: {
     label: 'Designer de Sobrancelhas',
+    place: 'Negócio',
+    yourPlace: 'seu negócio',
+    blockExample: 'Feriado',
     businessName: 'Bia Sobrancelhas',
     subdomain: 'biasobrancelhas',
     serviceExample: 'Design com henna',
@@ -46,6 +64,9 @@ export const SEGMENT_COPY: Record<ServiceSegment, SegmentCopy> = {
   },
   barbearia: {
     label: 'Barbearia',
+    place: 'Barbearia',
+    yourPlace: 'sua barbearia',
+    blockExample: 'Folga',
     businessName: 'Barbearia do Zé',
     subdomain: 'barbeariadoze',
     serviceExample: 'Corte + barba',
@@ -53,6 +74,9 @@ export const SEGMENT_COPY: Record<ServiceSegment, SegmentCopy> = {
   },
   estetica: {
     label: 'Estética',
+    place: 'Clínica/Studio',
+    yourPlace: 'sua clínica ou studio',
+    blockExample: 'Congresso',
     businessName: 'Clínica Bem Estar',
     subdomain: 'clinicabemestar',
     serviceExample: 'Limpeza de pele',
@@ -60,11 +84,19 @@ export const SEGMENT_COPY: Record<ServiceSegment, SegmentCopy> = {
   },
   outro: {
     label: 'Outro',
+    place: 'Negócio',
+    yourPlace: 'seu negócio',
+    blockExample: 'Feriado',
     businessName: 'Studio da Ana',
     subdomain: 'studiodaana',
     serviceExample: 'Atendimento',
     categories: ['Serviços', 'Pacotes'],
   },
+}
+
+/** Textos do segmento; vitrines sem segmento usam os de "Outro". */
+export function segmentCopy(segment: unknown): SegmentCopy {
+  return SEGMENT_COPY[isServiceSegment(segment) ? segment : 'outro']
 }
 
 export function isServiceSegment(value: unknown): value is ServiceSegment {
