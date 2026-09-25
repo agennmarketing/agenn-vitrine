@@ -86,8 +86,10 @@ async function handleApp(request: NextRequest, resolution: HostResolution) {
   )
 }
 
-// `.txt` e `.xml` passam pelo proxy de propósito: robots.txt e sitemap.xml são
-// rotas por host (vitrine, site e painel têm conteúdos diferentes).
+// `.txt`, `.xml` e `.webmanifest` passam pelo proxy de propósito: robots.txt, sitemap.xml e
+// o manifesto do aplicativo são rotas por host (vitrine, site e painel têm conteúdos
+// diferentes). `sw.js` fica fora: é um arquivo estático só, igual para todos os hosts, e
+// precisa ser servido na raiz para o service worker valer para o site inteiro.
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|api/|brand/|favicon.ico|.*\\.(?:png|jpg|jpeg|svg|webp|ico)$).*)'],
+  matcher: ['/((?!_next/static|_next/image|api/|brand/|favicon.ico|sw\\.js|.*\\.(?:png|jpg|jpeg|svg|webp|ico)$).*)'],
 }

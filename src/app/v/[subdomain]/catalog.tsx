@@ -9,6 +9,7 @@ import { addToCart, replaceLine, type CartLine } from '@/lib/cart/cart'
 import { cartSummary } from '@/lib/cart/reconcile'
 import { formatOrderTotal, formatPriceLabel, priceLabel } from '@/lib/pricing/price'
 import { useCart } from './cart-store'
+import { InstallApp } from './install-app'
 import { useItemParam } from './item-param'
 import { vitrineTheme } from './theme'
 import { brandButtonClass, TagList } from './vitrine-ui'
@@ -365,6 +366,7 @@ function StoreHeader({ vitrine, hasBanner, action }: { vitrine: PublicVitrine; h
         <p className="mt-2 max-w-[65ch] whitespace-pre-line text-[0.9375rem] leading-relaxed text-ink-muted">{vitrine.description}</p>
       ) : null}
       {action ? <div className="mt-4 sm:hidden">{action}</div> : null}
+      <InstallApp name={vitrine.name} />
     </header>
   )
 }

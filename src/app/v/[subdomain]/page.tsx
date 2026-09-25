@@ -1,9 +1,11 @@
 import { Store } from 'lucide-react'
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { notFound } from 'next/navigation'
 import { loadPublicVitrine } from '@/features/public/load-vitrine'
 import { env } from '@/lib/env'
 import { buildVitrineUrl, originFor } from '@/lib/hosts/urls'
+import { logoMetadataIcons } from '@/lib/pwa/icons'
+import { shortName, VITRINE_MANIFEST_PATH } from '@/lib/pwa/manifest'
 import { Catalog } from './catalog'
 import { vitrineTheme } from './theme'
 
@@ -30,9 +32,23 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: vitrine.description || undefined,
       images: absoluteImage ? [absoluteImage] : undefined,
     },
-    icons: vitrine.logo?.small?.startsWith('http') ? { icon: vitrine.logo.small } : undefined,
-    other: vitrine.brandColor ? { 'theme-color': vitrine.brandColor } : undefined,
+    // A logo do lojista é o ícone da aba e o da tela de início; sem logo vale o do Agenn
+    // (o `icon.png` da raiz, que o Next usa quando a página não declara ícone nenhum).
+    icons: vitrine.logo ? logoMetadataIcons(vitrine.logo) : undefined,
+    manifest: vitrine.status === 'active' ? VITRINE_MANIFEST_PATH : undefined,
+    appleWebApp: { capable: true, title: shortName(vitrine.name), statusBarStyle: 'default' },
   }
+}
+
+// A cor do navegador (aba, barra de endereço) é a do lojista. Precisa sair no viewport, e
+// não em `metadata.other`: com duas <meta name="theme-color"> na página o navegador usa a
+// primeira, que é a da raiz — a cor da vitrine nunca chegava a valer.
+export async function generateViewport({ params }: Props): Promise<Viewport> {
+  const { subdomain } = await params
+  const vitrine = await loadPublicVitrine(subdomain)
+  if (!vitrine) return {}
+  const { canvas } = vitrineTheme(vitrine.brandColor, vitrine.theme)
+  return { themeColor: vitrine.brandColor ?? canvas }
 }
 
 export default async function VitrinePage({ params }: Props) {

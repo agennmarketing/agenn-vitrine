@@ -30,6 +30,8 @@ describe('decideAppRoute', () => {
       '/auth/callback',
       '/auth/confirm',
       '/robots.txt',
+      // O navegador pede o manifesto do aplicativo sem cookie, logado ou não.
+      '/pwa/manifest.webmanifest',
       '/termos',
       '/privacidade',
     ]) {
