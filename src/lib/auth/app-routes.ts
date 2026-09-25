@@ -7,6 +7,9 @@ export const PUBLIC_APP_PATHS = [
   '/auth/confirm',
   // Buscadores acessam sem cookie: precisa responder sem cair no login.
   '/robots.txt',
+  // O navegador busca o manifesto do aplicativo sem mandar cookie, mesmo com a pessoa
+  // logada: se caísse no login, não daria para instalar o painel.
+  '/pwa',
   // Precisam abrir sem sessão: o link vai para quem ainda está criando a conta.
   '/termos',
   '/privacidade',

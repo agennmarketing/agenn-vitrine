@@ -30,6 +30,8 @@ Vitrine bonita e agenda de verdade no mesmo link: o cliente vê o serviço e já
   - Plano: situação da assinatura (teste grátis, ativo, vencido) e assinatura pelo Stripe.
   - Conta: dados de acesso e exclusão da conta.
 - Vitrine pública: lista de serviços; "Agendar horário" abre a escolha de dia e horário livre (grade de 30 min, um atendimento por vez); confirmação na tela com botão opcional para avisar o negócio no WhatsApp.
+- Aplicativo (PWA), opcional e sem loja de aplicativos: o dono pode instalar o painel no celular (abre em `/painel`, com atalhos para Vitrine e Agenda) e o cliente pode instalar a vitrine, que ganha o nome, a logo e a cor do negócio na tela de início. Sem internet, os dois mostram a tela "Sem conexão". Nada no produto exige instalar.
+- O ícone da aba (favicon) da vitrine pública é a logo do negócio; sem logo, é o símbolo do Agenn.
 - Fora da interface, mas ainda no código e no banco: vitrines de Produtos/Comida com sacola, complementos e pedido pelo WhatsApp com código, simulador de pedidos e vídeos. Não reintroduzir na UI sem pedido.
 
 ## Capabilities and Constraints

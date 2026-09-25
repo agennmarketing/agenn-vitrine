@@ -10,6 +10,7 @@ import { accessFor, trialNotice, type Access } from '@/lib/billing/status'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { AccessGate } from './access-gate'
 import { AccessWall } from './access-wall'
+import { InstallApp } from './install-app'
 import { BottomNav, SideNav } from './painel-nav'
 import { TrialBanner } from './trial-banner'
 import { LogoMark, Wordmark } from '@/components/brand/logo'
@@ -93,6 +94,7 @@ export default async function PainelLayout({ children }: { children: ReactNode }
 
       <main className="flex min-w-0 flex-col pb-40 group-has-[[data-focus-mode]]/shell:pb-10 lg:pb-16">
         {notice ? <TrialBanner message={notice} /> : null}
+        <InstallApp />
         <AccessGate blocked={!access.hasAccess} wall={<AccessWall status={access.status} priceLabel={priceLabel} />}>
           {children}
         </AccessGate>
