@@ -263,7 +263,8 @@ export function Catalog({ vitrine, siteUrl }: { vitrine: PublicVitrine; siteUrl:
           item={openItemData}
           onClose={closeItem}
           cart={
-            vitrine.cartEnabled
+            // Produto de link externo não entra na sacola: o popup mostra "Comprar agora".
+            vitrine.cartEnabled && openItemData.saleMode !== 'link'
               ? {
                   onSubmit: (line) => {
                     setLines(addToCart(lines, line))

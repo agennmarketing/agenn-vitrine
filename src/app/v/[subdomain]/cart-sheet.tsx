@@ -1,12 +1,13 @@
 'use client'
 
-import { Bike, CircleAlert, Pencil, ShoppingBag, Store, Trash2 } from 'lucide-react'
+import { Bike, CircleAlert, Info, Pencil, ShoppingBag, Store, Trash2 } from 'lucide-react'
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import type { PublicItem, PublicVitrine } from '@/features/public/build-catalog'
 import { removeLine, setLineQty, type CartLine } from '@/lib/cart/cart'
 import {
   CASH_OPTION,
   EMPTY_CHECKOUT_INPUT,
+  fulfillmentOptions,
   todayInSaoPaulo,
   validateCheckout,
   type CheckoutInput,
@@ -111,8 +112,10 @@ export default function CartSheet({
     window.location.assign(url)
   }
 
+  const fulfillment = fulfillmentOptions(settings)
   const hasCheckout =
     settings.nameMode !== 'off' ||
+    settings.phoneMode !== 'off' ||
     settings.fulfillmentMode !== 'off' ||
     settings.paymentMode !== 'off' ||
     settings.scheduleMode !== 'off' ||
@@ -256,16 +259,34 @@ export default function CartSheet({
                 </CheckoutField>
               ) : null}
 
-              {settings.fulfillmentMode !== 'off' ? (
+              {settings.phoneMode !== 'off' ? (
+                <CheckoutField label="Telefone" htmlFor={fieldId('phone')} error={errorText('phone')}>
+                  <input
+                    id={fieldId('phone')}
+                    className={fieldClass}
+                    value={input.phone}
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    placeholder="(11) 98765-4321"
+                    aria-invalid={invalid('phone')}
+                    onChange={(e) => set('phone')(e.target.value)}
+                  />
+                </CheckoutField>
+              ) : null}
+
+              {settings.fulfillmentMode !== 'off' && fulfillment.length > 0 ? (
                 <fieldset className="flex min-w-0 flex-col gap-2">
                   <legend className="mb-2 text-[0.9375rem] font-bold">Como você quer receber?</legend>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className={`grid gap-2 ${fulfillment.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
                     {(
                       [
                         ['retirada', 'Retirada', Store],
                         ['entrega', 'Entrega', Bike],
                       ] as const
-                    ).map(([value, label, Icon]) => (
+                    )
+                      .filter(([value]) => fulfillment.includes(value))
+                      .map(([value, label, Icon]) => (
                       <label key={value} className={optionCardClass}>
                         <input
                           type="radio"
@@ -378,6 +399,12 @@ export default function CartSheet({
 
         {lines.length > 0 ? (
           <div className="shrink-0 border-t border-line bg-surface px-5 pb-[calc(0.875rem+env(safe-area-inset-bottom))] pt-3.5 md:px-7 md:pb-6 md:pt-4">
+            {settings.extraNote ? (
+              <p className="mb-3 flex items-start gap-2 rounded-2xl bg-brand-soft px-4 py-3 text-[0.9375rem] font-medium leading-snug">
+                <Info aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-(--color-accent)" strokeWidth={2.5} />
+                {settings.extraNote}
+              </p>
+            ) : null}
             {vitrine.showPrices ? (
               <p className="numeric mb-3 flex items-baseline justify-between text-lg font-extrabold">Total: {formatOrderTotal(summary.total)}</p>
             ) : null}

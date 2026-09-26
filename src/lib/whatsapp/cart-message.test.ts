@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { buildCartMessage } from './cart-message'
 
 const retiradaAna = {
-  name: 'Ana', fulfillment: 'retirada' as const, address: null, payment: 'Pix', changeForCents: null, schedule: null, notes: null,
+  name: 'Ana', phone: '+5511987654321', fulfillment: 'retirada' as const, address: null, payment: 'Pix',
+  changeForCents: null, schedule: null, notes: null,
 }
 
 describe('buildCartMessage', () => {
@@ -30,7 +31,7 @@ describe('buildCartMessage', () => {
         '',
         '*Total: R$ 124,80*',
         '',
-        'Nome: Ana\nEntrega: retirada\nPagamento: Pix',
+        'Nome: Ana\nTelefone: +55 11 98765 4321\nEntrega: retirada\nPagamento: Pix',
       ].join('\n'),
     )
   })
@@ -42,7 +43,7 @@ describe('buildCartMessage', () => {
         orderCode: null,
         lines: [{ qty: 1, itemName: 'Tênis', variationName: 'Azul', code: '301', unitCents: 19900, note: null }],
         checkout: {
-          name: 'Bia', fulfillment: 'entrega', address: 'Rua A, 10', payment: 'Dinheiro', changeForCents: 30000,
+          name: 'Bia', phone: null, fulfillment: 'entrega', address: 'Rua A, 10', payment: 'Dinheiro', changeForCents: 30000,
           schedule: { date: '2026-09-20', time: '19:30' }, notes: 'Portão azul',
         },
       }),
@@ -66,7 +67,7 @@ describe('buildCartMessage', () => {
   })
 
   it('formulário vazio não gera rodapé', () => {
-    const empty = { name: null, fulfillment: null, address: null, payment: null, changeForCents: null, schedule: null, notes: null }
+    const empty = { name: null, phone: null, fulfillment: null, address: null, payment: null, changeForCents: null, schedule: null, notes: null }
     expect(
       buildCartMessage({
         vitrineName: 'Loja',
@@ -78,7 +79,7 @@ describe('buildCartMessage', () => {
   })
 
   it('sem preço no item (vitrine sem preços ou sob consulta) não soma total', () => {
-    const empty = { name: null, fulfillment: null, address: null, payment: null, changeForCents: null, schedule: null, notes: null }
+    const empty = { name: null, phone: null, fulfillment: null, address: null, payment: null, changeForCents: null, schedule: null, notes: null }
     expect(
       buildCartMessage({
         vitrineName: 'Loja',

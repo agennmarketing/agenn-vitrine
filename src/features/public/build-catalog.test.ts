@@ -28,8 +28,8 @@ const base: CatalogRows = {
     { id: 'v-a', item_id: 'i2', name: 'P', price_cents: 100, promo_price_cents: null, sold_out: false, position: 0 },
   ],
   checkout: {
-    name_mode: 'required', fulfillment_mode: 'optional', payment_mode: 'off', schedule_mode: 'off', notes_mode: 'optional',
-    payment_options: ['Pix'],
+    name_mode: 'required', phone_mode: 'optional', fulfillment_mode: 'optional', allow_pickup: true, allow_delivery: false,
+    payment_mode: 'off', schedule_mode: 'off', notes_mode: 'optional', payment_options: ['Pix'], extra_note: null,
   },
   media: [
     { id: 'm1', item_id: 'i2', role: 'cover', kind: 'image', position: 0, storage_paths: { '480': 'a-480.webp', '1080': 'a-1080.webp' }, mux_playback_id: null, thumbnail_url: null, aspect: null },
@@ -44,7 +44,8 @@ function item(id: string, categoryId: string | null, position: number, extra: Pa
   return {
     id, category_id: categoryId, code: id.toUpperCase().slice(0, 6), name: `Item ${id}`, description: '',
     price_type: 'fixed' as const, price_cents: 1000, promo_price_cents: null, duration_minutes: null, tags: [],
-    sold_out: false, position, whatsapp_id: null, button_text: null, custom_message: null, notice: null, ...extra,
+    sold_out: false, position, whatsapp_id: null, button_text: null, custom_message: null, notice: null,
+    sale_mode: 'whatsapp', external_url: null, ...extra,
   }
 }
 
@@ -123,10 +124,12 @@ describe('sacola', () => {
     const catalog = buildPublicCatalog(base, 'https://cdn', 'https://vz')
     expect([catalog.cartEnabled, catalog.cartButtonText]).toEqual([true, 'Enviar pedido'])
     expect(catalog.checkout).toEqual({
-      nameMode: 'required', fulfillmentMode: 'optional', paymentMode: 'off', scheduleMode: 'off', notesMode: 'optional', paymentOptions: ['Pix'],
+      nameMode: 'required', phoneMode: 'optional', fulfillmentMode: 'optional', allowPickup: true, allowDelivery: false,
+      paymentMode: 'off', scheduleMode: 'off', notesMode: 'optional', paymentOptions: ['Pix'], extraNote: null,
     })
     expect(buildPublicCatalog({ ...base, checkout: null }, 'https://cdn', 'https://vz').checkout).toEqual({
-      nameMode: 'optional', fulfillmentMode: 'off', paymentMode: 'off', scheduleMode: 'off', notesMode: 'optional', paymentOptions: [],
+      nameMode: 'optional', phoneMode: 'off', fulfillmentMode: 'off', allowPickup: true, allowDelivery: true,
+      paymentMode: 'off', scheduleMode: 'off', notesMode: 'optional', paymentOptions: [], extraNote: null,
     })
   })
 })

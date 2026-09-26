@@ -18,9 +18,11 @@ export type CatalogRows = {
     id: string; category_id: string | null; code: string; name: string; description: string; price_type: PriceType
     price_cents: number | null; promo_price_cents: number | null; duration_minutes: number | null; tags: string[]
     sold_out: boolean; position: number; whatsapp_id: string | null; button_text: string | null; custom_message: string | null; notice: string | null
+    sale_mode: string; external_url: string | null
   }[]
   checkout: {
-    name_mode: string; fulfillment_mode: string; payment_mode: string; schedule_mode: string; notes_mode: string; payment_options: string[]
+    name_mode: string; phone_mode: string; fulfillment_mode: string; allow_pickup: boolean; allow_delivery: boolean
+    payment_mode: string; schedule_mode: string; notes_mode: string; payment_options: string[]; extra_note: string | null
   } | null
   variations: { id: string; item_id: string; name: string; price_cents: number; promo_price_cents: number | null; sold_out: boolean; position: number }[]
   media: {
@@ -44,6 +46,8 @@ export type PublicItem = {
   id: string; code: string; name: string; description: string; priceType: PriceType; priceCents: number | null
   promoPriceCents: number | null; durationMinutes: number | null; tags: string[]; soldOut: boolean
   whatsappPhone: string | null; buttonText: string | null; customMessage: string | null; notice: string | null
+  /** 'link' vende fora da vitrine ("Comprar agora") e fica fora da sacola. */
+  saleMode: 'whatsapp' | 'link'; externalUrl: string | null
   cover: PublicImage | null; gallery: PublicImage[]; video: PublicVideo | null
   variations: { id: string; name: string; priceCents: number; promoPriceCents: number | null; soldOut: boolean }[]
 }
@@ -100,6 +104,8 @@ export function buildPublicCatalog(rows: CatalogRows, mediaBaseUrl: string, vide
       buttonText: row.button_text,
       customMessage: row.custom_message,
       notice: row.notice,
+      saleMode: row.sale_mode === 'link' && row.external_url ? 'link' : 'whatsapp',
+      externalUrl: row.sale_mode === 'link' ? row.external_url : null,
       cover,
       gallery: media
         .filter((m) => m.role === 'gallery')
@@ -125,11 +131,15 @@ export function buildPublicCatalog(rows: CatalogRows, mediaBaseUrl: string, vide
     value === 'off' || value === 'optional' || value === 'required' ? value : fallback
   const checkout: CheckoutSettings = {
     nameMode: mode(rows.checkout?.name_mode, 'optional'),
+    phoneMode: mode(rows.checkout?.phone_mode, 'off'),
     fulfillmentMode: mode(rows.checkout?.fulfillment_mode, 'off'),
+    allowPickup: rows.checkout?.allow_pickup ?? true,
+    allowDelivery: rows.checkout?.allow_delivery ?? true,
     paymentMode: mode(rows.checkout?.payment_mode, 'off'),
     scheduleMode: mode(rows.checkout?.schedule_mode, 'off'),
     notesMode: mode(rows.checkout?.notes_mode, 'optional'),
     paymentOptions: rows.checkout?.payment_options ?? [],
+    extraNote: rows.checkout?.extra_note ?? null,
   }
 
   const branding = rows.plan.allow_branding

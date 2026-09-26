@@ -26,7 +26,9 @@ async function fetchCatalog(subdomain: string): Promise<PublicVitrine | null> {
     admin.from('categories').select('id, name, position').eq('vitrine_id', vitrine.id),
     admin
       .from('items')
-      .select('id, category_id, code, name, description, price_type, price_cents, promo_price_cents, duration_minutes, tags, sold_out, position, whatsapp_id, button_text, custom_message, notice')
+      .select(
+        'id, category_id, code, name, description, price_type, price_cents, promo_price_cents, duration_minutes, tags, sold_out, position, whatsapp_id, button_text, custom_message, notice, sale_mode, external_url',
+      )
       .eq('vitrine_id', vitrine.id)
       .is('deleted_at', null)
       .order('position')
@@ -34,7 +36,9 @@ async function fetchCatalog(subdomain: string): Promise<PublicVitrine | null> {
     admin.from('media').select('id, item_id, role, kind, position, storage_paths, mux_playback_id, thumbnail_url, aspect').eq('vitrine_id', vitrine.id).eq('status', 'ready'),
     admin
       .from('checkout_settings')
-      .select('name_mode, fulfillment_mode, payment_mode, schedule_mode, notes_mode, payment_options')
+      .select(
+        'name_mode, phone_mode, fulfillment_mode, allow_pickup, allow_delivery, payment_mode, schedule_mode, notes_mode, payment_options, extra_note',
+      )
       .eq('vitrine_id', vitrine.id)
       .maybeSingle(),
   ])
