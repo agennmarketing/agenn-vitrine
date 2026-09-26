@@ -391,13 +391,13 @@ grant execute on function public.reschedule_appointment(uuid, timestamptz) to au
 -- ligada a ele ao salvar. Se a pessoa desistir no meio, a foto ficaria para sempre
 -- no armazenamento — a tarefa diária passa a recolher essas também.
 create or replace function public.media_cleanup_candidates(p_older_than interval default interval '24 hours')
-returns table (id uuid, storage_paths jsonb, bunny_video_id text)
+returns table (id uuid, storage_paths jsonb, mux_asset_id text)
 language sql
 stable
 security definer
 set search_path = ''
 as $$
-  select m.id, m.storage_paths, m.bunny_video_id
+  select m.id, m.storage_paths, m.mux_asset_id
   from public.media m
   where (m.status = 'failed' and m.updated_at < now() - p_older_than)
      or (m.status = 'processing' and m.created_at < now() - p_older_than)
