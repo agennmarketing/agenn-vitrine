@@ -15,6 +15,7 @@ const TILE_WIDTH: Record<ImageRole, string> = {
   gallery: 'w-full',
   banner: 'w-full',
   logo: 'w-36',
+  avatar: 'w-28',
 }
 
 /*
@@ -26,6 +27,7 @@ export function ImageSlot(props: {
   role: ImageRole
   vitrineId: string
   itemId?: string | null
+  professionalId?: string | null
   position?: 1 | 2
   initial: SlotMedia | null
   removable?: boolean
@@ -63,6 +65,7 @@ export function ImageSlot(props: {
       body.set('role', props.role)
       body.set('vitrineId', props.vitrineId)
       if (props.itemId) body.set('itemId', props.itemId)
+      if (props.professionalId) body.set('professionalId', props.professionalId)
       if (props.position) body.set('position', String(props.position))
       body.set('small', small, 'small')
       body.set('large', large, 'large')

@@ -156,7 +156,7 @@ export function MessagesForm({ vitrineId, initial }: { vitrineId: string; initia
           <FormMessage error={state.error} success={state.success} />
           <Button type="submit" size="lg" disabled={pending} aria-busy={pending} className="w-full lg:w-auto lg:self-start">
             {pending ? <Spinner /> : null}
-            Salvar configurações
+            Salvar configurações de pedido
           </Button>
         </SaveBar>
       </form>

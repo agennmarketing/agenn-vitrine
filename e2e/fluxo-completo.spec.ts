@@ -64,8 +64,8 @@ test('sacola: vitrine → item → sacola → WhatsApp → simulador', async ({ 
   await page.getByLabel('Nome', { exact: true }).selectOption('required')
   await page.getByLabel('Retirada ou entrega').selectOption('required')
   await page.getByLabel('Forma de pagamento', { exact: true }).selectOption('required')
-  await page.getByRole('button', { name: 'Salvar mensagens' }).click()
-  await expect(page.getByText('Mensagens salvas.')).toBeVisible()
+  await page.getByRole('button', { name: 'Salvar configurações de pedido' }).click()
+  await expect(page.getByText('Configurações de pedido salvas.')).toBeVisible()
 
   await page.goto(`${vitrinePath}/itens/novo`)
   await uploadImage(page, 'Capa', await makeTestImage(page))

@@ -370,3 +370,34 @@ export const appointmentRescheduleSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Informe a data.'),
   time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Informe o horário.'),
 })
+
+/*
+ * Profissionais da vitrine de serviços: nome, foto, quais serviços ele faz e,
+ * quando tem horário próprio, os dias e horários dele (sem isso, vale o da vitrine).
+ */
+export const professionalSchema = z
+  .object({
+    name: z.string().trim().min(1, 'Informe o nome do profissional.').max(60, 'Use até 60 caracteres.'),
+    active: checkbox,
+    itemIds: jsonArray(z.uuid(), 200),
+    ownHours: checkbox,
+    businessHours: businessHoursDays,
+    avatarMediaId: z.union([z.uuid(), z.literal('')]).transform((value) => value || null),
+  })
+  .superRefine((data, ctx) => {
+    if (data.itemIds.length === 0) {
+      ctx.addIssue({ code: 'custom', path: ['itemIds'], message: 'Escolha pelo menos um serviço.' })
+    }
+    if (data.ownHours && data.businessHours.length === 0) {
+      ctx.addIssue({ code: 'custom', path: ['businessHours'], message: 'Marque pelo menos um dia de atendimento.' })
+    }
+  })
+  .transform((data) => ({
+    name: data.name,
+    active: data.active,
+    itemIds: data.itemIds,
+    businessHours: data.ownHours ? data.businessHours : null,
+    avatarMediaId: data.avatarMediaId,
+  }))
+
+export type ProfessionalInput = z.output<typeof professionalSchema>

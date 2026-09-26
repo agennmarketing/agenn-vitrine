@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation'
 import { SectionIntro } from '@/components/ui/config-section'
 import { getMyVitrine, getPanelSession } from '@/features/vitrines/queries'
 import { formatPhone } from '@/lib/whatsapp/phone'
@@ -8,6 +9,8 @@ export const metadata = { title: 'WhatsApp' }
 export default async function WhatsAppPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const vitrine = await getMyVitrine(id)
+  // Na vitrine de serviços o lugar do WhatsApp é dos Profissionais.
+  if (vitrine.type === 'servicos') redirect(`/painel/vitrines/${id}/profissionais`)
   const { supabase } = await getPanelSession()
   const { data: contacts } = await supabase
     .from('whatsapp_contacts')
