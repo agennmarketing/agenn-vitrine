@@ -217,6 +217,18 @@ export const itemSchema = z
       return tags
     }),
     soldOut: checkbox,
+    // Forma de venda (só as vitrines com sacola usam): pedido pelo WhatsApp ou link externo.
+    saleMode: z.enum(['whatsapp', 'link']).default('whatsapp'),
+    externalUrl: z
+      .string()
+      .trim()
+      .max(500, 'Use até 500 caracteres.')
+      .transform((value) => value || null)
+      .refine(
+        (value) => value === null || /^https:\/\/[^\s]+\.[^\s]+$/.test(value),
+        'Informe o link completo, começando com https://',
+      )
+      .default(null),
     whatsappId: z.union([z.uuid(), z.literal('')]).transform((value) => value || null),
     buttonText: optionalText(30),
     customMessage: optionalText(500),
@@ -230,6 +242,9 @@ export const itemSchema = z
       .transform((value) => value || null),
   })
   .superRefine((data, ctx) => {
+    if (data.saleMode === 'link' && data.externalUrl === null) {
+      ctx.addIssue({ code: 'custom', path: ['externalUrl'], message: 'Informe o link do produto.' })
+    }
     if (data.priceType === 'on_request') return
     if (data.variations.length === 0 && data.price === null) {
       ctx.addIssue({ code: 'custom', path: ['price'], message: 'Informe o preço.' })
@@ -262,6 +277,9 @@ export const itemSchema = z
       durationMinutes: data.durationMinutes,
       tags: data.tags,
       soldOut: data.soldOut,
+      // Sem link externo, o produto vende pelo WhatsApp e não guarda endereço nenhum.
+      saleMode: data.saleMode,
+      externalUrl: data.saleMode === 'link' ? data.externalUrl : null,
       whatsappId: data.whatsappId,
       buttonText: data.buttonText,
       customMessage: data.customMessage,
@@ -288,7 +306,11 @@ export const checkoutSettingsSchema = z
     cartButtonText: z.string().trim().min(1, 'Informe o texto do botão da sacola.').max(30, 'Use até 30 caracteres.'),
     defaultButtonText: z.string().trim().min(1, 'Informe o texto do botão.').max(30, 'Use até 30 caracteres.'),
     nameMode: fieldMode,
+    phoneMode: fieldMode,
     fulfillmentMode: fieldMode,
+    allowPickup: checkbox,
+    allowDelivery: checkbox,
+    extraNote: optionalText(300),
     paymentMode: fieldMode,
     scheduleMode: fieldMode,
     notesMode: fieldMode,
@@ -304,6 +326,9 @@ export const checkoutSettingsSchema = z
   .superRefine((data, ctx) => {
     if (data.paymentMode !== 'off' && data.paymentOptions.length === 0) {
       ctx.addIssue({ code: 'custom', path: ['paymentOptions'], message: 'Informe pelo menos uma forma de pagamento.' })
+    }
+    if (data.fulfillmentMode !== 'off' && !data.allowPickup && !data.allowDelivery) {
+      ctx.addIssue({ code: 'custom', path: ['allowPickup'], message: 'Marque pelo menos retirada ou entrega.' })
     }
   })
 

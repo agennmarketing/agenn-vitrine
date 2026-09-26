@@ -80,7 +80,7 @@ const STEP_COUNT = 4
 const STEP_FIELDS: string[][] = [
   ['coverMediaId', 'galleryMediaIds', 'videoMediaId'],
   ['name', 'description', 'categoryId', 'code', 'durationMinutes', 'notice', 'tags'],
-  ['priceType', 'price', 'promoPrice', 'soldOut', 'variations'],
+  ['saleMode', 'externalUrl', 'priceType', 'price', 'promoPrice', 'soldOut', 'variations'],
   [...ADVANCED_FIELDS],
 ]
 
@@ -229,6 +229,7 @@ export function ItemForm(props: {
   const videoId = item?.video?.id ?? ''
   const [galleryIds, setGalleryIds] = useState<(string | null)[]>([item?.gallery[0]?.id ?? null, item?.gallery[1]?.id ?? null])
   const [priceType, setPriceType] = useState<string>(produto ? 'fixed' : (item?.price_type ?? 'fixed'))
+  const [saleMode, setSaleMode] = useState<string>(item?.sale_mode ?? 'whatsapp')
   const [variations, setVariations] = useState<VariationRow[]>(
     (item?.variations ?? []).map((v) => ({
       key: v.id,
@@ -499,9 +500,64 @@ export function ItemForm(props: {
               </FormSection>
             </div>
 
-            {/* Passo 3: preço, esgotado e variações. */}
+            {/* Passo 3: forma de venda (produtos), preço, esgotado e variações. */}
             <div hidden={step !== 2} className="flex flex-col gap-7">
               <FormSection>
+                {produto ? (
+                  <fieldset className="flex min-w-0 flex-col gap-2">
+                    <legend className="mb-2 text-[0.9375rem] font-extrabold leading-5 text-ink">Como o cliente compra</legend>
+                    <div className="grid grid-cols-2 gap-2">
+                      {(
+                        [
+                          ['whatsapp', 'Pedido pelo WhatsApp'],
+                          ['link', 'Link externo'],
+                        ] as const
+                      ).map(([value, label]) => (
+                        <label key={value} className={CHOICE_CARD}>
+                          <input
+                            type="radio"
+                            name="saleMode"
+                            value={value}
+                            checked={saleMode === value}
+                            onChange={(event) => setSaleMode(event.target.value)}
+                            className="absolute inset-0 m-0 size-full cursor-pointer appearance-none rounded-control opacity-0"
+                          />
+                          {label}
+                        </label>
+                      ))}
+                    </div>
+                    <p className="text-sm font-semibold leading-5 text-ink-muted">
+                      {saleMode === 'link'
+                        ? 'O produto mostra "Comprar agora" e abre o site que você informar. Ele não entra na sacola.'
+                        : 'O produto entra na sacola e o pedido vai para o seu WhatsApp.'}
+                    </p>
+                  </fieldset>
+                ) : (
+                  <input type="hidden" name="saleMode" value="whatsapp" />
+                )}
+                {produto && saleMode === 'link' ? (
+                  <Field
+                    label="Link do produto"
+                    htmlFor="externalUrl"
+                    error={errors.externalUrl}
+                    hint="Mercado Livre, Shopee, seu site…"
+                  >
+                    <Input
+                      id="externalUrl"
+                      name="externalUrl"
+                      type="url"
+                      inputMode="url"
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      placeholder="https://..."
+                      defaultValue={values?.externalUrl ?? item?.external_url ?? ''}
+                      invalid={!!errors.externalUrl}
+                    />
+                  </Field>
+                ) : (
+                  <input type="hidden" name="externalUrl" value="" />
+                )}
                 {produto ? <input type="hidden" name="priceType" value="fixed" /> : null}
                 <fieldset hidden={produto} className="flex min-w-0 flex-col gap-2">
                   <legend className="mb-2 text-[0.9375rem] font-extrabold leading-5 text-ink">Tipo de preço</legend>

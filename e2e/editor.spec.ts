@@ -23,7 +23,7 @@ test('abas do editor por tipo de vitrine', async ({ page }) => {
   await page.context().clearCookies()
   await signIn(page, lojista.email, lojista.password)
   await page.goto(`/painel/vitrines/${loja.id}/itens`)
-  await expect(abas.getByRole('link')).toHaveText(['Itens', 'Aparência', 'WhatsApp', 'Sacola e mensagens', 'Configurações', 'Compartilhar'])
+  await expect(abas.getByRole('link')).toHaveText(['Produtos', 'Aparência', 'WhatsApp', 'Sacola e mensagens', 'Configurações', 'Compartilhar'])
 })
 
 test('configurações, mensagens e WhatsApp', async ({ page }) => {

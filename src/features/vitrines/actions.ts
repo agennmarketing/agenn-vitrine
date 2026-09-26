@@ -132,7 +132,8 @@ export async function deleteVitrineAction(vitrineId: string, _prev: FormState, f
 
 const CHECKOUT_FIELDS = [
   'cartEnabled', 'cartButtonText', 'defaultButtonText',
-  'nameMode', 'fulfillmentMode', 'paymentMode', 'scheduleMode', 'notesMode', 'paymentOptions',
+  'nameMode', 'phoneMode', 'fulfillmentMode', 'allowPickup', 'allowDelivery', 'paymentMode', 'scheduleMode',
+  'notesMode', 'paymentOptions', 'extraNote',
 ] as const
 
 export async function updateCheckoutAction(vitrineId: string, _prev: FormState, formData: FormData): Promise<FormState> {
@@ -152,17 +153,21 @@ export async function updateCheckoutAction(vitrineId: string, _prev: FormState, 
     .from('checkout_settings')
     .update({
       name_mode: input.nameMode,
+      phone_mode: input.phoneMode,
       fulfillment_mode: input.fulfillmentMode,
+      allow_pickup: input.allowPickup,
+      allow_delivery: input.allowDelivery,
       payment_mode: input.paymentMode,
       schedule_mode: input.scheduleMode,
       notes_mode: input.notesMode,
       payment_options: input.paymentOptions,
+      extra_note: input.extraNote,
     })
     .eq('vitrine_id', vitrineId)
   if (error) return { error: mapDbError(error), values: fields }
 
   revalidateVitrine(vitrine.subdomain)
-  return { success: 'Mensagens salvas.', values: fields }
+  return { success: 'Configurações de pedido salvas.', values: fields }
 }
 
 export async function updateAppearanceAction(vitrineId: string, _prev: FormState, formData: FormData): Promise<FormState> {

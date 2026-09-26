@@ -13,7 +13,9 @@ export default async function MensagensPage({ params }: { params: Promise<{ id: 
   const { supabase } = await getPanelSession()
   const { data: checkout, error } = await supabase
     .from('checkout_settings')
-    .select('name_mode, fulfillment_mode, payment_mode, schedule_mode, notes_mode, payment_options')
+    .select(
+      'name_mode, phone_mode, fulfillment_mode, allow_pickup, allow_delivery, payment_mode, schedule_mode, notes_mode, payment_options, extra_note',
+    )
     .eq('vitrine_id', id)
     .single()
   if (error) throw error
@@ -31,7 +33,11 @@ export default async function MensagensPage({ params }: { params: Promise<{ id: 
           cartButtonText: vitrine.cart_button_text,
           defaultButtonText: vitrine.default_button_text,
           nameMode: checkout.name_mode,
+          phoneMode: checkout.phone_mode,
           fulfillmentMode: checkout.fulfillment_mode,
+          allowPickup: checkout.allow_pickup ? 'on' : '',
+          allowDelivery: checkout.allow_delivery ? 'on' : '',
+          extraNote: checkout.extra_note ?? '',
           paymentMode: checkout.payment_mode,
           scheduleMode: checkout.schedule_mode,
           notesMode: checkout.notes_mode,

@@ -169,15 +169,17 @@ describe('itemSchema', () => {
 describe('checkoutSettingsSchema', () => {
   const form = {
     cartEnabled: 'on', cartButtonText: 'Enviar pedido', defaultButtonText: 'Pedir',
-    nameMode: 'required', fulfillmentMode: 'required', paymentMode: 'required', scheduleMode: 'off', notesMode: 'optional',
-    paymentOptions: 'Pix\nCartão na entrega\n\nPix\nDinheiro',
+    nameMode: 'required', phoneMode: 'optional', fulfillmentMode: 'required', allowPickup: 'on', allowDelivery: 'on',
+    paymentMode: 'required', scheduleMode: 'off', notesMode: 'optional',
+    paymentOptions: 'Pix\nCartão na entrega\n\nPix\nDinheiro', extraNote: '  ',
   }
 
   it('converte as formas de pagamento (uma por linha)', () => {
     expect(checkoutSettingsSchema.parse(form)).toEqual({
       cartEnabled: true, cartButtonText: 'Enviar pedido', defaultButtonText: 'Pedir',
-      nameMode: 'required', fulfillmentMode: 'required', paymentMode: 'required', scheduleMode: 'off', notesMode: 'optional',
-      paymentOptions: ['Pix', 'Cartão na entrega', 'Dinheiro'],
+      nameMode: 'required', phoneMode: 'optional', fulfillmentMode: 'required', allowPickup: true, allowDelivery: true,
+      paymentMode: 'required', scheduleMode: 'off', notesMode: 'optional',
+      paymentOptions: ['Pix', 'Cartão na entrega', 'Dinheiro'], extraNote: null,
     })
   })
 

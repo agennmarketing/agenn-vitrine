@@ -8,7 +8,9 @@ import type { VitrineType } from './vitrine-types'
 export function editorSections(type: VitrineType) {
   const servicos = type === 'servicos'
   return [
-    servicos ? { slug: 'itens', label: 'Serviços', Icon: Wrench } : { slug: 'itens', label: 'Itens', Icon: LayoutGrid },
+    servicos
+      ? { slug: 'itens', label: 'Serviços', Icon: Wrench }
+      : { slug: 'itens', label: type === 'produtos' ? 'Produtos' : 'Itens', Icon: LayoutGrid },
     { slug: 'aparencia', label: 'Aparência', Icon: Palette },
     { slug: 'whatsapp', label: 'WhatsApp', Icon: MessageCircle },
     ...(servicos ? [] : [{ slug: 'mensagens', label: 'Sacola e mensagens', Icon: ShoppingBag }]),

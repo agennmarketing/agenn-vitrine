@@ -13,7 +13,8 @@ import { itemSchema, type ItemInput } from '@/lib/vitrines/schemas'
 
 const ITEM_FIELDS = [
   'name', 'description', 'categoryId', 'code', 'priceType', 'price', 'promoPrice', 'durationMinutes', 'tags',
-  'soldOut', 'whatsappId', 'buttonText', 'customMessage', 'notice', 'variations', 'coverMediaId', 'galleryMediaIds', 'videoMediaId',
+  'soldOut', 'saleMode', 'externalUrl', 'whatsappId', 'buttonText', 'customMessage', 'notice', 'variations',
+  'coverMediaId', 'galleryMediaIds', 'videoMediaId',
 ] as const
 
 export async function saveItemAction(
@@ -61,6 +62,9 @@ export async function saveItemAction(
     duration_minutes: servico ? input.durationMinutes : null,
     tags: input.tags,
     sold_out: input.soldOut,
+    // Forma de venda é coisa de vitrine com sacola; serviço sempre vende agendando.
+    sale_mode: servico ? 'whatsapp' : input.saleMode,
+    external_url: servico ? null : input.externalUrl,
     whatsapp_id: input.whatsappId,
     button_text: input.buttonText,
     custom_message: input.customMessage,
