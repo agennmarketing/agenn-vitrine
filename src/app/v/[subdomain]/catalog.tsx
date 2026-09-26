@@ -1,6 +1,6 @@
 'use client'
 
-import { Clock, ChevronRight, Plus, Search, ShoppingBag } from 'lucide-react'
+import { Clock, ChevronRight, Plus, Search, ShoppingBag, UserRound } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { PublicImage, PublicItem, PublicVitrine } from '@/features/public/build-catalog'
@@ -16,6 +16,7 @@ import { brandButtonClass, TagList } from './vitrine-ui'
 
 // Tela do item, galeria e envio só carregam quando um item é aberto.
 const ItemSheet = dynamic(() => import('./item-sheet'), { ssr: false })
+const ProfessionalSheet = dynamic(() => import('./professional-sheet'), { ssr: false })
 const CartSheet = dynamic(() => import('./cart-sheet'), { ssr: false })
 
 function fold(text: string) {
@@ -44,6 +45,10 @@ export function Catalog({ vitrine, siteUrl }: { vitrine: PublicVitrine; siteUrl:
   const { lines, setLines } = useCart(vitrine.id)
   const [cartOpen, setCartOpen] = useState(false)
   const [editing, setEditing] = useState<CartLine | null>(null)
+  // Caminho pelo profissional: quem foi escolhido e, depois, o serviço dele.
+  const [professionalId, setProfessional] = useState<string | null>(null)
+  const [bookingWith, setBookingWith] = useState<string | null>(null)
+  const openProfessional = professionalId ? (vitrine.professionals.find((p) => p.id === professionalId) ?? null) : null
   const itemsById = useMemo(
     () => new Map(vitrine.categories.flatMap((category) => category.items).map((item) => [item.id, item])),
     [vitrine.categories],
@@ -70,6 +75,7 @@ export function Catalog({ vitrine, siteUrl }: { vitrine: PublicVitrine; siteUrl:
         .filter((category) => category.items.length > 0),
     [vitrine.categories, search],
   )
+  const allItems = useMemo(() => vitrine.categories.flatMap((category) => category.items), [vitrine.categories])
   const openItemData = itemCode
     ? vitrine.categories.flatMap((category) => category.items).find((item) => item.code === itemCode)
     : undefined
@@ -216,6 +222,38 @@ export function Catalog({ vitrine, siteUrl }: { vitrine: PublicVitrine; siteUrl:
       ) : null}
 
       <main className={`${container} flex flex-col gap-10 pb-12 pt-6`}>
+        {/* Caminho curto para quem já tem preferência: escolhe o profissional e vê o que ele faz. */}
+        {vitrine.professionals.length > 0 ? (
+          <section aria-labelledby="profissionais-title">
+            <h2 id="profissionais-title" className="mb-3 text-xl font-extrabold tracking-[-0.02em] sm:text-2xl">
+              Profissionais
+            </h2>
+            <ul className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
+              {vitrine.professionals.map((professional) => (
+                <li key={professional.id}>
+                  <button
+                    type="button"
+                    onClick={() => setProfessional(professional.id)}
+                    className="flex w-24 flex-col items-center gap-2 rounded-2xl p-2 text-center transition-colors hover:bg-subtle"
+                  >
+                    {professional.photo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={professional.photo.small} alt="" className="size-16 rounded-full object-cover" />
+                    ) : (
+                      <span
+                        aria-hidden="true"
+                        className="flex size-16 items-center justify-center rounded-full bg-brand-soft text-(--color-accent)"
+                      >
+                        <UserRound className="size-7" strokeWidth={2.5} />
+                      </span>
+                    )}
+                    <span className="line-clamp-2 text-sm font-bold leading-tight">{professional.name}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
         {categories.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-16 text-center">
             <p className="text-ink-muted">Nenhum item encontrado.</p>
@@ -255,6 +293,28 @@ export function Catalog({ vitrine, siteUrl }: { vitrine: PublicVitrine; siteUrl:
             Feito com Vitrimove
           </a>
         </footer>
+      ) : null}
+
+      {openProfessional && !bookingWith ? (
+        <ProfessionalSheet
+          vitrine={vitrine}
+          professional={openProfessional}
+          items={allItems.filter((item) => openProfessional.itemIds.includes(item.id))}
+          onChoose={(item) => setBookingWith(item.id)}
+          onClose={() => setProfessional(null)}
+        />
+      ) : null}
+
+      {openProfessional && bookingWith && itemsById.get(bookingWith) ? (
+        <ItemSheet
+          vitrine={vitrine}
+          item={itemsById.get(bookingWith)!}
+          professional={openProfessional}
+          onClose={() => {
+            setBookingWith(null)
+            setProfessional(null)
+          }}
+        />
       ) : null}
 
       {itemCode && openItemData ? (

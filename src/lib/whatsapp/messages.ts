@@ -42,6 +42,7 @@ export function buildDirectMessage(input: DirectMessageInput): string {
 export type BookingMessageInput = {
   vitrineName: string
   serviceName: string
+  professionalName?: string | null
   date: string
   time: string
   priceText: string | null
@@ -54,6 +55,7 @@ export function buildBookingMessage(input: BookingMessageInput): string {
   const lines = [
     `*${input.serviceName}*`,
     `Data: ${bookingDateLabel(input.date)} às ${input.time}`,
+    ...(input.professionalName ? [`Profissional: ${input.professionalName}`] : []),
     ...(input.priceText ? [`Valor: ${input.priceText}`] : []),
     `Nome: ${input.customerName}`,
     `Agendamento #${input.code}`,

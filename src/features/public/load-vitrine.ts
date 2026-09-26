@@ -33,7 +33,11 @@ async function fetchCatalog(subdomain: string): Promise<PublicVitrine | null> {
       .is('deleted_at', null)
       .order('position')
       .order('created_at'),
-    admin.from('media').select('id, item_id, role, kind, position, storage_paths, mux_playback_id, thumbnail_url, aspect').eq('vitrine_id', vitrine.id).eq('status', 'ready'),
+    admin
+      .from('media')
+      .select('id, item_id, professional_id, role, kind, position, storage_paths, mux_playback_id, thumbnail_url, aspect')
+      .eq('vitrine_id', vitrine.id)
+      .eq('status', 'ready'),
     admin
       .from('checkout_settings')
       .select(
@@ -43,6 +47,19 @@ async function fetchCatalog(subdomain: string): Promise<PublicVitrine | null> {
       .maybeSingle(),
   ])
   for (const result of [plan, contacts, categories, items, media, checkout]) if (result.error) throw result.error
+
+  // Profissionais ativos e o que cada um atende (só vitrine de serviços tem).
+  const professionals = await admin
+    .from('professionals')
+    .select('id, name, position')
+    .eq('vitrine_id', vitrine.id)
+    .eq('active', true)
+  if (professionals.error) throw professionals.error
+  const professionalIds = (professionals.data ?? []).map((p) => p.id)
+  const professionalItems = professionalIds.length
+    ? await admin.from('professional_items').select('professional_id, item_id').in('professional_id', professionalIds)
+    : { data: [], error: null }
+  if (professionalItems.error) throw professionalItems.error
 
   const itemIds = (items.data ?? []).map((i) => i.id)
   const variations = itemIds.length
@@ -66,6 +83,8 @@ async function fetchCatalog(subdomain: string): Promise<PublicVitrine | null> {
       variations: variations.data ?? [],
       media: media.data ?? [],
       checkout: checkout.data ?? null,
+      professionals: professionals.data ?? [],
+      professionalItems: professionalItems.data ?? [],
     },
     env.NEXT_PUBLIC_MEDIA_BASE_URL,
     env.NEXT_PUBLIC_VIDEO_CDN_BASE_URL,

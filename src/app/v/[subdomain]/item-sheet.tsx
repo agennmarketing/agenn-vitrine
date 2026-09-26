@@ -2,7 +2,7 @@
 
 import { CalendarDays, ChevronLeft, ChevronRight, CircleAlert, Clock, ExternalLink, Info } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
-import type { PublicItem, PublicVitrine } from '@/features/public/build-catalog'
+import type { PublicItem, PublicProfessional, PublicVitrine } from '@/features/public/build-catalog'
 import type { CartLine, NewCartLine } from '@/lib/cart/cart'
 import { lineUnitCents } from '@/lib/cart/reconcile'
 import { formatBRL } from '@/lib/money/money'
@@ -28,9 +28,11 @@ export type ItemSheetProps = {
   item: PublicItem
   onClose: () => void
   cart?: { initial?: CartLine; onSubmit: (line: NewCartLine) => void }
+  /** Chegou pelo profissional: o agendamento já abre com ele escolhido. */
+  professional?: PublicProfessional | null
 }
 
-export default function ItemSheet({ vitrine, item, onClose, cart }: ItemSheetProps) {
+export default function ItemSheet({ vitrine, item, onClose, cart, professional = null }: ItemSheetProps) {
   // Serviços: o CTA abre o agendamento (data, horário e dados do cliente) no próprio popup.
   const isService = !cart && vitrine.type === 'servicos'
   // Produto vendido fora da vitrine: o CTA é um link para a loja, e ele nunca entra na sacola.
@@ -43,7 +45,7 @@ export default function ItemSheet({ vitrine, item, onClose, cart }: ItemSheetPro
   const [activeIndex, setActiveIndex] = useState(0)
   // O vídeo começa sozinho só na primeira vez; depois, só pelo Play.
   const [videoStarted, setVideoStarted] = useState(false)
-  const [booking, setBooking] = useState(false)
+  const [booking, setBooking] = useState(professional !== null)
   const closeRef = useRef<HTMLButtonElement>(null)
   const choicesRef = useRef<HTMLFieldSetElement>(null)
   const galleryRef = useRef<HTMLDivElement>(null)
@@ -245,7 +247,8 @@ export default function ItemSheet({ vitrine, item, onClose, cart }: ItemSheetPro
             priceText={vitrine.showPrices ? headerPrice : null}
             bodyClassName={bodyClassName}
             footerClassName={footerClassName}
-            onBack={() => setBooking(false)}
+            lockedProfessional={professional}
+            onBack={() => (professional ? onClose() : setBooking(false))}
           />
         ) : (
         <>

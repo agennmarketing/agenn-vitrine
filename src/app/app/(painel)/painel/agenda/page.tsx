@@ -27,12 +27,14 @@ const STATUS_TABS = [
 ] as const
 type StatusTab = (typeof STATUS_TABS)[number]['slug']
 
-const SELECT = 'id, code, service_name, price_text, customer_name, customer_phone, notes, starts_at, ends_at'
+const SELECT =
+  'id, code, service_name, professional_name, price_text, customer_name, customer_phone, notes, starts_at, ends_at'
 
 type Row = {
   id: string
   code: string
   service_name: string
+  professional_name: string | null
   price_text: string | null
   customer_name: string
   customer_phone: string
@@ -46,6 +48,7 @@ function toAppointment(row: Row): AppointmentRow {
     id: row.id,
     code: row.code,
     serviceName: row.service_name,
+    professionalName: row.professional_name,
     priceText: row.price_text,
     customerName: row.customer_name,
     phone: row.customer_phone,

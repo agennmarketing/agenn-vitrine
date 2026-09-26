@@ -1,8 +1,8 @@
 'use client'
 
-import { ArrowLeft, CalendarCheck, CircleAlert, Clock, Info } from 'lucide-react'
+import { ArrowLeft, CalendarCheck, CircleAlert, Clock, Info, UserRound } from 'lucide-react'
 import { useCallback, useEffect, useId, useState, type ReactNode } from 'react'
-import type { PublicItem, PublicVitrine } from '@/features/public/build-catalog'
+import type { PublicItem, PublicProfessional, PublicVitrine } from '@/features/public/build-catalog'
 import {
   EMPTY_BOOKING_CONTACT,
   validateBookingContact,
@@ -14,14 +14,25 @@ import { buildBookingMessage, buildWhatsAppUrl } from '@/lib/whatsapp/messages'
 import { brandButtonClass, fieldClass, WhatsAppIcon } from './vitrine-ui'
 
 /*
- * Agendamento dentro do popup do serviço: data → horário → nome → WhatsApp →
- * observação → confirmar. A vitrine só recebe datas com horário livre e, depois da
- * escolha da data, os horários livres dela — nunca a agenda.
+ * Agendamento dentro do popup do serviço: data → horário → profissional (quando há
+ * mais de um caminho) → nome → WhatsApp → observação → confirmar. A vitrine só recebe
+ * datas com horário livre e, depois da escolha da data, os horários livres dela —
+ * nunca a agenda.
+ *
+ * Quem entra pelo profissional (escolheu antes o profissional e depois o serviço) já
+ * chega com ele travado: a agenda consultada é só a dele e o passo some.
  */
 
-type Step = 'slot' | 'contact' | 'done'
+type Step = 'slot' | 'professional' | 'contact' | 'done'
 type Loadable<T> = { status: 'loading' } | { status: 'error'; message: string } | { status: 'ready'; value: T }
-type Confirmation = { code: string; serviceName: string; date: string; time: string; priceText: string | null }
+type Confirmation = {
+  code: string
+  serviceName: string
+  date: string
+  time: string
+  priceText: string | null
+  professionalName: string | null
+}
 
 const LOAD_ERROR = 'Não foi possível carregar a agenda. Tente de novo.'
 
@@ -44,6 +55,19 @@ function Field({ label, htmlFor, error, hint, children }: { label: string; htmlF
   )
 }
 
+// Foto do profissional, ou as iniciais quando ele não tem foto.
+function ProfessionalAvatar({ professional }: { professional: PublicProfessional }) {
+  if (professional.photo) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src={professional.photo.small} alt="" className="size-11 shrink-0 rounded-full object-cover" />
+  }
+  return (
+    <span aria-hidden="true" className="flex size-11 shrink-0 items-center justify-center rounded-full bg-brand-soft text-(--color-accent)">
+      <UserRound className="size-5" strokeWidth={2.5} />
+    </span>
+  )
+}
+
 function ErrorLine({ children }: { children: ReactNode }) {
   return (
     <p role="alert" className="flex items-center gap-1.5 text-sm font-semibold text-danger">
@@ -56,6 +80,8 @@ function ErrorLine({ children }: { children: ReactNode }) {
 const chipClass =
   'relative flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-line bg-surface font-bold transition-colors duration-150 hover:border-line-strong has-[:checked]:border-(--color-accent) has-[:checked]:bg-brand-soft has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-(--color-accent)'
 const chipInputClass = 'absolute inset-0 z-10 m-0 size-full cursor-pointer appearance-none rounded-2xl opacity-0'
+// Mesmo cartão, deitado: foto à esquerda e nome do profissional ao lado.
+const rowChipClass = chipClass.replace('flex-col items-center justify-center', 'flex-row items-center gap-3')
 
 export function BookingFlow({
   vitrine,
@@ -64,6 +90,7 @@ export function BookingFlow({
   priceText,
   bodyClassName,
   footerClassName,
+  lockedProfessional = null,
   onBack,
 }: {
   vitrine: PublicVitrine
@@ -72,6 +99,7 @@ export function BookingFlow({
   priceText: string | null
   bodyClassName: string
   footerClassName: string
+  lockedProfessional?: PublicProfessional | null
   onBack: () => void
 }) {
   const id = useId()
@@ -86,8 +114,16 @@ export function BookingFlow({
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null)
+  const [professionalId, setProfessionalId] = useState<string | null>(lockedProfessional?.id ?? null)
+  const [freeProfessionals, setFreeProfessionals] = useState<Loadable<PublicProfessional[]> | null>(null)
 
-  const base = `/api/agenda?item=${encodeURIComponent(item.id)}`
+  // Profissionais desta vitrine que fazem este serviço.
+  const serviceProfessionals = vitrine.professionals.filter((professional) => professional.itemIds.includes(item.id))
+  const chooseProfessional = !lockedProfessional && serviceProfessionals.length > 0
+
+  const base = `/api/agenda?item=${encodeURIComponent(item.id)}${
+    lockedProfessional ? `&profissional=${encodeURIComponent(lockedProfessional.id)}` : ''
+  }`
 
   const loadDates = useCallback(async () => {
     setDates({ status: 'loading' })
@@ -127,6 +163,31 @@ export function BookingFlow({
     void loadTimes(value)
   }
 
+  // Quem está livre neste dia e horário, entre os que fazem o serviço.
+  async function loadProfessionals(day: string, hour: string) {
+    setFreeProfessionals({ status: 'loading' })
+    try {
+      const { professionals } = await getJson<{ professionals: { id: string; name: string }[] }>(
+        `${base}&data=${day}&hora=${encodeURIComponent(hour)}`,
+      )
+      const list = professionals.flatMap((free) => serviceProfessionals.filter((p) => p.id === free.id))
+      setFreeProfessionals({ status: 'ready', value: list })
+    } catch {
+      setFreeProfessionals({ status: 'error', message: LOAD_ERROR })
+    }
+  }
+
+  function afterSlot() {
+    if (!date || !time) return
+    if (!chooseProfessional) {
+      setStep('contact')
+      return
+    }
+    setProfessionalId(null)
+    setStep('professional')
+    void loadProfessionals(date, time)
+  }
+
   function field(key: keyof BookingContactInput) {
     return {
       id: `${id}-${key}`,
@@ -150,7 +211,7 @@ export function BookingFlow({
       const response = await fetch('/api/agendamentos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ itemId: item.id, date, time, ...contact }),
+        body: JSON.stringify({ itemId: item.id, date, time, professionalId, ...contact }),
       })
       const body = (await response.json().catch(() => ({}))) as Partial<Confirmation> & { error?: string; fieldErrors?: BookingContactErrors }
       if (response.status === 201 && body.code) {
@@ -178,6 +239,9 @@ export function BookingFlow({
       setSubmitting(false)
     }
   }
+
+  const chosenProfessional =
+    lockedProfessional ?? serviceProfessionals.find((professional) => professional.id === professionalId) ?? null
 
   const header = (
     <>
@@ -209,6 +273,7 @@ export function BookingFlow({
       time: confirmation.time,
       priceText: confirmation.priceText,
       customerName: contact.name.trim(),
+      professionalName: confirmation.professionalName,
       code: confirmation.code,
       notes: contact.notes.trim() || null,
     })
@@ -229,6 +294,12 @@ export function BookingFlow({
             <dd className="font-bold first-letter:uppercase">{bookingDateLabel(confirmation.date)}</dd>
             <dt className="text-ink-muted">Horário</dt>
             <dd className="numeric font-bold">{confirmation.time}</dd>
+            {confirmation.professionalName ? (
+              <>
+                <dt className="text-ink-muted">Profissional</dt>
+                <dd className="font-bold">{confirmation.professionalName}</dd>
+              </>
+            ) : null}
             {confirmation.priceText ? (
               <>
                 <dt className="text-ink-muted">Valor</dt>
@@ -256,12 +327,68 @@ export function BookingFlow({
     <button
       type="button"
       aria-label="Voltar"
-      onClick={() => (step === 'contact' ? setStep('slot') : onBack())}
+      onClick={() => (step === 'contact' ? setStep(chooseProfessional ? 'professional' : 'slot') : step === 'professional' ? setStep('slot') : onBack())}
       className="flex size-12 shrink-0 items-center justify-center rounded-full border-2 border-line-strong bg-surface text-ink transition-transform duration-150 active:scale-95"
     >
       <ArrowLeft aria-hidden="true" className="size-5" strokeWidth={2.5} />
     </button>
   )
+
+  if (step === 'professional' && date && time) {
+    const list = freeProfessionals
+    return (
+      <>
+        <div className={bodyClassName}>
+          {header}
+          <p className="mt-4 rounded-2xl bg-subtle px-4 py-3 font-bold first-letter:uppercase">
+            {bookingDateLabel(date)} às <span className="numeric">{time}</span>
+          </p>
+          <fieldset className="mt-6 min-w-0">
+            <legend className="mb-3 text-lg font-extrabold tracking-[-0.01em]">Escolha o profissional</legend>
+            {!list || list.status === 'loading' ? (
+              <p className="text-ink-muted">Carregando profissionais…</p>
+            ) : list.status === 'error' ? (
+              <ErrorLine>{list.message}</ErrorLine>
+            ) : list.value.length === 0 ? (
+              <p className="rounded-2xl bg-subtle px-4 py-3 text-ink-muted">
+                Ninguém está livre nesse horário. Volte e escolha outro.
+              </p>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {list.value.map((professional) => (
+                  <label key={professional.id} className={`${rowChipClass} min-h-16 px-4 py-3`}>
+                    <input
+                      type="radio"
+                      name={`${id}-professional`}
+                      value={professional.id}
+                      checked={professionalId === professional.id}
+                      onChange={() => setProfessionalId(professional.id)}
+                      aria-label={professional.name}
+                      className={chipInputClass}
+                    />
+                    <ProfessionalAvatar professional={professional} />
+                    <span className="min-w-0 flex-1 text-left">{professional.name}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </fieldset>
+          {notice ? <div className="mt-4">{notice}</div> : null}
+        </div>
+        <div className={footerClassName}>
+          {backButton}
+          <button
+            type="button"
+            disabled={!professionalId}
+            onClick={() => setStep('contact')}
+            className={`${brandButtonClass} min-w-0 flex-1 px-4 text-[0.9375rem] leading-tight sm:text-base`}
+          >
+            Continuar
+          </button>
+        </div>
+      </>
+    )
+  }
 
   if (step === 'contact' && date && time) {
     return (
@@ -270,6 +397,7 @@ export function BookingFlow({
           {header}
           <p className="mt-4 rounded-2xl bg-subtle px-4 py-3 font-bold first-letter:uppercase">
             {bookingDateLabel(date)} às <span className="numeric">{time}</span>
+            {chosenProfessional ? <span className="font-bold"> · com {chosenProfessional.name}</span> : null}
           </p>
           <div className="mt-5 flex flex-col gap-5">
             <Field label="Nome" htmlFor={`${id}-name`} error={errors.name}>
@@ -391,7 +519,7 @@ export function BookingFlow({
         <button
           type="button"
           disabled={!date || !time}
-          onClick={() => setStep('contact')}
+          onClick={afterSlot}
           className={`${brandButtonClass} min-w-0 flex-1 px-4 text-[0.9375rem] leading-tight sm:text-base`}
         >
           Continuar

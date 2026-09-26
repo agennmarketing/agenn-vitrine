@@ -18,6 +18,7 @@ export type AppointmentRow = {
   id: string
   code: string
   serviceName: string
+  professionalName: string | null
   priceText: string | null
   customerName: string
   phone: string
@@ -149,7 +150,12 @@ export function Appointments({
                       </span>
                       <span className="flex min-w-0 flex-1 flex-col gap-1">
                         <span className="font-extrabold text-ink">{appointment.customerName}</span>
-                        <span className="font-bold text-ink">{appointment.serviceName}</span>
+                        <span className="font-bold text-ink">
+                          {appointment.serviceName}
+                          {appointment.professionalName ? (
+                            <span className="font-semibold text-ink-muted"> · com {appointment.professionalName}</span>
+                          ) : null}
+                        </span>
                         <a
                           href={buildWhatsAppUrl(appointment.phone, `Olá, ${appointment.customerName}!`)}
                           target="_blank"

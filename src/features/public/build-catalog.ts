@@ -25,9 +25,12 @@ export type CatalogRows = {
     payment_mode: string; schedule_mode: string; notes_mode: string; payment_options: string[]; extra_note: string | null
   } | null
   variations: { id: string; item_id: string; name: string; price_cents: number; promo_price_cents: number | null; sold_out: boolean; position: number }[]
+  professionals: { id: string; name: string; position: number }[]
+  professionalItems: { professional_id: string; item_id: string }[]
   media: {
     id: string
     item_id: string | null
+    professional_id: string | null
     role: string
     kind: string
     position: number
@@ -52,12 +55,16 @@ export type PublicItem = {
   variations: { id: string; name: string; priceCents: number; promoPriceCents: number | null; soldOut: boolean }[]
 }
 
+/** Profissional que atende na vitrine, com os serviços que ele faz. */
+export type PublicProfessional = { id: string; name: string; photo: PublicImage | null; itemIds: string[] }
+
 export type PublicVitrine = {
   id: string; subdomain: string; type: VitrineType; name: string; description: string; theme: 'light' | 'dark'
   status: 'active' | 'frozen'; showPrices: boolean; showMedia: boolean; defaultButtonText: string
   primaryPhone: string | null; logo: PublicImage | null; brandColor: string | null; banner: PublicImage | null
   bannerVideo: PublicVideo | null
   cartEnabled: boolean; cartButtonText: string; checkout: CheckoutSettings
+  professionals: PublicProfessional[]
   showWatermark: boolean; categories: { id: string; name: string; items: PublicItem[] }[]
 }
 
@@ -175,6 +182,20 @@ export function buildPublicCatalog(rows: CatalogRows, mediaBaseUrl: string, vide
           }
         : null,
     showWatermark: rows.plan.show_watermark,
+    // Só serviços que ainda aparecem na vitrine contam: um profissional sem serviço visível
+    // não tem o que oferecer e fica de fora.
+    professionals: [...rows.professionals]
+      .sort((a, b) => a.position - b.position)
+      .map((professional) => ({
+        id: professional.id,
+        name: professional.name,
+        photo: image(rows.media.find((m) => m.professional_id === professional.id && m.role === 'avatar')?.storage_paths),
+        itemIds: rows.professionalItems
+          .filter((link) => link.professional_id === professional.id)
+          .map((link) => link.item_id)
+          .filter((itemId) => visible.some((item) => item.id === itemId)),
+      }))
+      .filter((professional) => professional.itemIds.length > 0),
     categories: categories.map((c) => ({
       id: c.id,
       name: c.name,

@@ -6,6 +6,7 @@ import {
   itemStep,
   openAgenda,
   seedItem,
+  seedProfessional,
   seedVitrine,
   signIn,
   tomorrowInSaoPaulo,
@@ -234,4 +235,66 @@ test('alteração no painel aparece na vitrine pública', async ({ page }) => {
 
   await page.goto(vitrineUrl(vitrine.subdomain))
   await expect(page.getByText('Nome Novo')).toBeVisible()
+})
+
+test('serviço com profissionais: escolher o horário e depois quem atende, sem dupla reserva', async ({ page }) => {
+  const user = await createConfirmedUser('profissionais')
+  const vitrine = await seedVitrine(user.id, { type: 'servicos', name: 'Studio Duo', phone: '+5511912345678' })
+  await openAgenda(vitrine.id)
+  const corte = await seedItem(vitrine, user.id, { name: 'Corte', priceCents: 5000, durationMinutes: 60 })
+  const unha = await seedItem(vitrine, user.id, { name: 'Unha', priceCents: 4000, durationMinutes: 60 })
+  await seedProfessional(vitrine.id, user.id, { name: 'Ana Souza', itemIds: [corte.id, unha.id] })
+  await seedProfessional(vitrine.id, user.id, { name: 'Bia Lima', itemIds: [corte.id] })
+  const tomorrow = tomorrowInSaoPaulo()
+
+  // Caminho 1: serviço → data → horário → profissional.
+  await page.goto(vitrineUrl(vitrine.subdomain))
+  await page.getByRole('button', { name: 'Corte', exact: true }).click()
+  const dialog = page.getByRole('dialog', { name: 'Corte' })
+  await dialog.getByRole('button', { name: 'Agendar horário' }).click()
+  await dialog.locator(`input[value="${tomorrow}"]`).check()
+  await dialog.getByRole('radio', { name: '10:00', exact: true }).check()
+  await dialog.getByRole('button', { name: 'Continuar' }).click()
+
+  // As duas atendem esse horário; o cliente escolhe.
+  await expect(dialog.getByRole('radio', { name: 'Ana Souza' })).toBeVisible()
+  await dialog.getByRole('radio', { name: 'Bia Lima' }).check()
+  await dialog.getByRole('button', { name: 'Continuar' }).click()
+  await dialog.getByLabel('Nome', { exact: true }).fill('Carla')
+  await dialog.getByLabel('WhatsApp', { exact: true }).fill('(11) 98888-7777')
+  await dialog.getByRole('button', { name: 'Confirmar agendamento' }).click()
+  await expect(dialog.getByText('Horário agendado!')).toBeVisible()
+  await expect(dialog.getByText('Bia Lima')).toBeVisible()
+
+  const [primeiro] = await appointmentsOf(vitrine.id)
+  expect(primeiro).toMatchObject({ status: 'confirmed', service_name: 'Corte', professional_name: 'Bia Lima' })
+
+  // Mesmo horário continua livre: sobrou a Ana.
+  await page.goto(vitrineUrl(vitrine.subdomain))
+  await page.getByRole('button', { name: 'Corte', exact: true }).click()
+  await dialog.getByRole('button', { name: 'Agendar horário' }).click()
+  await dialog.locator(`input[value="${tomorrow}"]`).check()
+  await dialog.getByRole('radio', { name: '10:00', exact: true }).check()
+  await dialog.getByRole('button', { name: 'Continuar' }).click()
+  await expect(dialog.getByRole('radio', { name: 'Ana Souza' })).toBeVisible()
+  await expect(dialog.getByRole('radio', { name: 'Bia Lima' })).toHaveCount(0)
+
+  // Caminho 2: profissional → serviço → data → horário. A Bia só faz Corte.
+  await page.goto(vitrineUrl(vitrine.subdomain))
+  await page.getByRole('button', { name: 'Bia Lima' }).click()
+  const escolha = page.getByRole('dialog', { name: 'Bia Lima' })
+  await expect(escolha.getByRole('button', { name: /Unha/ })).toHaveCount(0)
+  await escolha.getByRole('button', { name: /Corte/ }).click()
+  await dialog.locator(`input[value="${tomorrow}"]`).check()
+  // O horário que ela já tem marcado não aparece na agenda dela.
+  await expect(dialog.getByRole('radio', { name: '10:00', exact: true })).toHaveCount(0)
+  await dialog.getByRole('radio', { name: '11:00', exact: true }).check()
+  await dialog.getByRole('button', { name: 'Continuar' }).click()
+  await dialog.getByLabel('Nome', { exact: true }).fill('Duda')
+  await dialog.getByLabel('WhatsApp', { exact: true }).fill('(11) 97777-6666')
+  await dialog.getByRole('button', { name: 'Confirmar agendamento' }).click()
+  await expect(dialog.getByText('Horário agendado!')).toBeVisible()
+
+  const agendamentos = await appointmentsOf(vitrine.id)
+  expect(agendamentos.map((a) => a.professional_name)).toEqual(['Bia Lima', 'Bia Lima'])
 })
