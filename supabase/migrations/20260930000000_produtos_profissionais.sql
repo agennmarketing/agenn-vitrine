@@ -382,3 +382,28 @@ $$;
 
 revoke execute on function public.reschedule_appointment(uuid, timestamptz) from public, anon;
 grant execute on function public.reschedule_appointment(uuid, timestamptz) to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- 6. Faxina: foto enviada e abandonada antes de salvar o profissional
+-- ---------------------------------------------------------------------------
+
+-- A foto é enviada antes de o profissional existir (professional_id nulo) e só é
+-- ligada a ele ao salvar. Se a pessoa desistir no meio, a foto ficaria para sempre
+-- no armazenamento — a tarefa diária passa a recolher essas também.
+create or replace function public.media_cleanup_candidates(p_older_than interval default interval '24 hours')
+returns table (id uuid, storage_paths jsonb, bunny_video_id text)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select m.id, m.storage_paths, m.bunny_video_id
+  from public.media m
+  where (m.status = 'failed' and m.updated_at < now() - p_older_than)
+     or (m.status = 'processing' and m.created_at < now() - p_older_than)
+     or (m.item_id is null and m.role in ('cover', 'gallery', 'video') and m.created_at < now() - p_older_than)
+     or (m.professional_id is null and m.role = 'avatar' and m.created_at < now() - p_older_than);
+$$;
+
+revoke execute on function public.media_cleanup_candidates(interval) from public, anon, authenticated;
+grant execute on function public.media_cleanup_candidates(interval) to service_role;
