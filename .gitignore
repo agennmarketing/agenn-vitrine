@@ -56,3 +56,8 @@ e2e/fixtures/*.webm
 .impeccable/mocks/
 .impeccable/build/
 .impeccable/questions/
+
+# cloudflare (build e tipos do wrangler)
+.open-next/
+.wrangler/
+worker-configuration.d.ts

@@ -2,19 +2,28 @@ import { z } from 'zod'
 
 type Source = Record<string, string | undefined>
 
+/*
+ * Em produção nenhum driver falso é aceito. A Vercel informa isso em VERCEL_ENV;
+ * em qualquer outra hospedagem (Cloudflare, por exemplo) vale APP_ENV, que a gente
+ * define nas variáveis do ambiente.
+ */
+const inProduction = (value: { APP_ENV?: string; VERCEL_ENV?: string }) =>
+  (value.APP_ENV ?? value.VERCEL_ENV) === 'production'
+
 const mediaStorageSchema = z
   .object({
     MEDIA_STORAGE_DRIVER: z.enum(['bunny', 'fake']).default('bunny'),
     BUNNY_STORAGE_ZONE: z.string().default(''),
     BUNNY_STORAGE_PASSWORD: z.string().default(''),
     BUNNY_STORAGE_HOST: z.string().default('br.storage.bunnycdn.com'),
+    APP_ENV: z.string().optional(),
     VERCEL_ENV: z.string().optional(),
   })
   .superRefine((value, ctx) => {
     if (value.MEDIA_STORAGE_DRIVER === 'bunny' && (!value.BUNNY_STORAGE_ZONE || !value.BUNNY_STORAGE_PASSWORD)) {
       ctx.addIssue({ code: 'custom', message: 'BUNNY_STORAGE_ZONE e BUNNY_STORAGE_PASSWORD são obrigatórias com o driver bunny.' })
     }
-    if (value.MEDIA_STORAGE_DRIVER === 'fake' && value.VERCEL_ENV === 'production') {
+    if (value.MEDIA_STORAGE_DRIVER === 'fake' && inProduction(value)) {
       ctx.addIssue({ code: 'custom', message: 'MEDIA_STORAGE_DRIVER=fake não pode ser usado em produção.' })
     }
   })
@@ -44,13 +53,14 @@ const videoServiceSchema = z
     VIDEO_DRIVER: z.enum(['mux', 'fake']).default('mux'),
     MUX_TOKEN_ID: z.string().default(''),
     MUX_TOKEN_SECRET: z.string().default(''),
+    APP_ENV: z.string().optional(),
     VERCEL_ENV: z.string().optional(),
   })
   .superRefine((value, ctx) => {
     if (value.VIDEO_DRIVER === 'mux' && (!value.MUX_TOKEN_ID || !value.MUX_TOKEN_SECRET)) {
       ctx.addIssue({ code: 'custom', message: 'MUX_TOKEN_ID e MUX_TOKEN_SECRET são obrigatórias com o driver mux.' })
     }
-    if (value.VIDEO_DRIVER === 'fake' && value.VERCEL_ENV === 'production') {
+    if (value.VIDEO_DRIVER === 'fake' && inProduction(value)) {
       ctx.addIssue({ code: 'custom', message: 'VIDEO_DRIVER=fake não pode ser usado em produção.' })
     }
   })
@@ -76,13 +86,14 @@ const emailSchema = z
     EMAIL_DRIVER: z.enum(['off', 'fake', 'resend']).default('off'),
     RESEND_API_KEY: z.string().default(''),
     EMAIL_FROM: z.string().default(''),
+    APP_ENV: z.string().optional(),
     VERCEL_ENV: z.string().optional(),
   })
   .superRefine((value, ctx) => {
     if (value.EMAIL_DRIVER === 'resend' && (!value.RESEND_API_KEY || !value.EMAIL_FROM)) {
       ctx.addIssue({ code: 'custom', message: 'RESEND_API_KEY e EMAIL_FROM são obrigatórias com EMAIL_DRIVER=resend.' })
     }
-    if (value.EMAIL_DRIVER === 'fake' && value.VERCEL_ENV === 'production') {
+    if (value.EMAIL_DRIVER === 'fake' && inProduction(value)) {
       ctx.addIssue({ code: 'custom', message: 'EMAIL_DRIVER=fake não pode ser usado em produção.' })
     }
   })
@@ -101,6 +112,7 @@ const billingSchema = z
     STRIPE_SECRET_KEY: z.string().default(''),
     STRIPE_WEBHOOK_SECRET: z.string().default(''),
     STRIPE_PRICE_MONTH: z.string().default(''),
+    APP_ENV: z.string().optional(),
     VERCEL_ENV: z.string().optional(),
   })
   .superRefine((value, ctx) => {
@@ -117,7 +129,7 @@ const billingSchema = z
     if (value.STRIPE_WEBHOOK_SECRET.length < 8) {
       ctx.addIssue({ code: 'custom', message: 'STRIPE_WEBHOOK_SECRET não configurada.' })
     }
-    if (value.BILLING_DRIVER === 'fake' && value.VERCEL_ENV === 'production') {
+    if (value.BILLING_DRIVER === 'fake' && inProduction(value)) {
       ctx.addIssue({ code: 'custom', message: 'BILLING_DRIVER=fake não pode ser usado em produção.' })
     }
   })

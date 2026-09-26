@@ -1,0 +1,22 @@
+/**
+ * Worker da tarefa diária (só Cloudflare). Mesmo horário do vercel.json: 07:00 UTC,
+ * que é 04:00 em Brasília.
+ *
+ * CRON_SECRET entra como segredo, não aqui:
+ *   npx wrangler secret put CRON_SECRET --config workers/cron-diaria/wrangler.jsonc
+ */
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "vitrimove-cron-diaria",
+  "main": "index.ts",
+  "compatibility_date": "2026-09-01",
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    "CRON_TARGET_URL": "https://app.agenn.com.br/"
+  },
+  "triggers": {
+    "crons": ["0 7 * * *"]
+  }
+}
