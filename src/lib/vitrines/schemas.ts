@@ -4,7 +4,7 @@ import { ITEM_CODE_MESSAGES, validateItemCode } from '@/lib/codes/item-code'
 import { validateSubdomain } from '@/lib/hosts/subdomain'
 import { parseBRLToCents } from '@/lib/money/money'
 import { normalizePhone } from '@/lib/whatsapp/phone'
-import { SERVICE_SEGMENTS } from './service-segments'
+import { isServiceSegment } from './service-segments'
 import { WIZARD_VITRINE_TYPES } from './vitrine-types'
 
 const SUBDOMAIN_MESSAGES = {
@@ -68,28 +68,52 @@ const instagram = z.string().transform((value, ctx) => {
 })
 
 const time = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Horário inválido.')
-const businessHours = jsonArray(z.object({ day: z.number().int().min(0).max(6), open: time, close: time }), 7).superRefine(
+// Dias sem repetição e com abertura antes do fechamento. A lista vazia só é recusada
+// onde ela é obrigatória (vitrine de serviços), por isso essa parte fica de fora.
+const businessHoursDays = jsonArray(z.object({ day: z.number().int().min(0).max(6), open: time, close: time }), 7).superRefine(
   (days, ctx) => {
-    if (days.length === 0) ctx.addIssue({ code: 'custom', message: 'Marque pelo menos um dia de atendimento.' })
-    else if (new Set(days.map((entry) => entry.day)).size !== days.length) ctx.addIssue({ code: 'custom', message: 'Dia repetido.' })
+    if (new Set(days.map((entry) => entry.day)).size !== days.length) ctx.addIssue({ code: 'custom', message: 'Dia repetido.' })
     else if (days.some((entry) => entry.open >= entry.close)) {
       ctx.addIssue({ code: 'custom', message: 'O horário de abrir deve ser antes do de fechar.' })
     }
   },
 )
-
-export const createVitrineSchema = z.object({
-  type: z.enum(WIZARD_VITRINE_TYPES, 'Escolha o tipo da vitrine.'),
-  serviceSegment: z.enum(SERVICE_SEGMENTS, 'Escolha o tipo do seu negócio.'),
-  name: vitrineName,
-  subdomain: subdomainField,
-  whatsappLabel: contactLabel,
-  whatsappPhone: phone,
-  instagram,
-  address: optionalText(200),
-  businessHours,
-  theme,
+export const businessHours = businessHoursDays.superRefine((days, ctx) => {
+  if (days.length === 0) ctx.addIssue({ code: 'custom', message: 'Marque pelo menos um dia de atendimento.' })
 })
+
+/*
+ * O assistente cria dois tipos de vitrine. Segmento do negócio e horários de
+ * atendimento são do fluxo de serviços; a vitrine de produtos não os pergunta e
+ * guarda nulo nos dois.
+ */
+export const createVitrineSchema = z
+  .object({
+    type: z.enum(WIZARD_VITRINE_TYPES, 'Escolha o tipo da vitrine.'),
+    serviceSegment: z.string().trim(),
+    name: vitrineName,
+    subdomain: subdomainField,
+    whatsappLabel: contactLabel,
+    whatsappPhone: phone,
+    instagram,
+    address: optionalText(200),
+    businessHours: businessHoursDays,
+    theme,
+  })
+  .superRefine((data, ctx) => {
+    if (data.type !== 'servicos') return
+    if (!isServiceSegment(data.serviceSegment)) {
+      ctx.addIssue({ code: 'custom', path: ['serviceSegment'], message: 'Escolha o tipo do seu negócio.' })
+    }
+    if (data.businessHours.length === 0) {
+      ctx.addIssue({ code: 'custom', path: ['businessHours'], message: 'Marque pelo menos um dia de atendimento.' })
+    }
+  })
+  .transform((data) => ({
+    ...data,
+    serviceSegment: isServiceSegment(data.serviceSegment) ? data.serviceSegment : null,
+    businessHours: data.type === 'servicos' ? data.businessHours : null,
+  }))
 
 export const vitrineSettingsSchema = z.object({
   name: vitrineName,

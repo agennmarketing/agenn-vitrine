@@ -31,14 +31,17 @@ export default async function PainelLayout({ children }: { children: ReactNode }
   const userId = claims.sub
   const email = typeof claims.email === 'string' ? claims.email : ''
 
-  const [{ data: profile }, { data: subscription }] = await Promise.all([
+  const [{ data: profile }, { data: subscription }, { data: vitrine }] = await Promise.all([
     supabase.from('profiles').select('name').eq('id', userId).single(),
     supabase
       .from('subscriptions')
       .select('status, grace_until, trial_ends_at, subscription_status')
       .eq('user_id', userId)
       .maybeSingle(),
+    // Só o tipo: a barra lateral esconde a Agenda nas vitrines de produtos.
+    supabase.from('vitrines').select('type').order('created_at').limit(1).maybeSingle(),
   ])
+  const showAgenda = vitrine?.type !== 'produtos'
   const displayName = profile?.name || email
   const access = accessFor(subscription, new Date())
   const notice = trialNotice(access)
@@ -53,7 +56,7 @@ export default async function PainelLayout({ children }: { children: ReactNode }
           <LogoMark size={34} />
           <Wordmark className="text-lg" />
         </Link>
-        <SideNav />
+        <SideNav showAgenda={showAgenda} />
 
         <div className="mt-auto flex flex-col gap-3">
           <div className="flex items-center gap-2.5 border-t border-line px-1 pt-3">
@@ -100,7 +103,7 @@ export default async function PainelLayout({ children }: { children: ReactNode }
         </AccessGate>
       </main>
 
-      <BottomNav />
+      <BottomNav showAgenda={showAgenda} />
     </div>
   )
 }

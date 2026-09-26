@@ -5,21 +5,21 @@ const uuid = '00000000-0000-4000-8000-000000000001'
 
 describe('createVitrineSchema', () => {
   const hours = JSON.stringify([{ day: 1, open: '09:00', close: '18:00' }])
+  const servico = {
+    type: 'servicos',
+    serviceSegment: 'nail',
+    name: ' Studio Ana ',
+    subdomain: ' Studio-Ana ',
+    whatsappLabel: '',
+    whatsappPhone: '(11) 98765-4321',
+    instagram: 'https://www.instagram.com/Studio.Ana/',
+    address: '  ',
+    businessHours: hours,
+    theme: 'dark',
+  }
 
   it('normaliza subdomínio, telefone e Instagram', () => {
-    const parsed = createVitrineSchema.parse({
-      type: 'servicos',
-      serviceSegment: 'nail',
-      name: ' Studio Ana ',
-      subdomain: ' Studio-Ana ',
-      whatsappLabel: '',
-      whatsappPhone: '(11) 98765-4321',
-      instagram: 'https://www.instagram.com/Studio.Ana/',
-      address: '  ',
-      businessHours: hours,
-      theme: 'dark',
-    })
-    expect(parsed).toEqual({
+    expect(createVitrineSchema.parse(servico)).toEqual({
       type: 'servicos',
       serviceSegment: 'nail',
       name: 'Studio Ana',
@@ -31,14 +31,35 @@ describe('createVitrineSchema', () => {
       businessHours: [{ day: 1, open: '09:00', close: '18:00' }],
       theme: 'dark',
     })
-    expect(createVitrineSchema.shape.instagram.parse('@ana_nails')).toBe('ana_nails')
-    expect(createVitrineSchema.shape.instagram.parse('')).toBeNull()
+    expect(createVitrineSchema.parse({ ...servico, instagram: '@ana_nails' }).instagram).toBe('ana_nails')
+    expect(createVitrineSchema.parse({ ...servico, instagram: '' }).instagram).toBeNull()
+  })
+
+  it('vitrine de produtos não tem segmento nem horários', () => {
+    const parsed = createVitrineSchema.parse({
+      ...servico,
+      type: 'produtos',
+      serviceSegment: '',
+      businessHours: '[]',
+    })
+    expect(parsed.serviceSegment).toBeNull()
+    expect(parsed.businessHours).toBeNull()
+  })
+
+  it('serviços exigem segmento e pelo menos um dia de atendimento', () => {
+    const result = createVitrineSchema.safeParse({ ...servico, serviceSegment: '', businessHours: '[]' })
+    expect(result.success).toBe(false)
+    const messages = Object.fromEntries(result.error!.issues.map((issue) => [issue.path[0], issue.message]))
+    expect(messages).toEqual({
+      serviceSegment: 'Escolha o tipo do seu negócio.',
+      businessHours: 'Marque pelo menos um dia de atendimento.',
+    })
   })
 
   it('mensagens em português', () => {
     const result = createVitrineSchema.safeParse({
-      type: 'produtos',
-      serviceSegment: 'padaria',
+      ...servico,
+      type: 'padaria',
       name: '',
       subdomain: 'app',
       whatsappLabel: 'Principal',
@@ -46,22 +67,17 @@ describe('createVitrineSchema', () => {
       instagram: 'ana nails!',
       address: '',
       businessHours: JSON.stringify([{ day: 1, open: '18:00', close: '09:00' }]),
-      theme: 'light',
     })
     expect(result.success).toBe(false)
     const messages = Object.fromEntries(result.error!.issues.map((issue) => [issue.path[0], issue.message]))
     expect(messages).toMatchObject({
       type: 'Escolha o tipo da vitrine.',
-      serviceSegment: 'Escolha o tipo do seu negócio.',
       name: 'Informe o nome da vitrine.',
       subdomain: 'Este endereço é reservado. Escolha outro.',
       whatsappPhone: 'Informe um WhatsApp válido com DDD.',
       instagram: 'Informe um Instagram válido. Ex.: @seuestudio',
       businessHours: 'O horário de abrir deve ser antes do de fechar.',
     })
-    expect(createVitrineSchema.shape.businessHours.safeParse('[]').error!.issues[0].message).toBe(
-      'Marque pelo menos um dia de atendimento.',
-    )
   })
 })
 
