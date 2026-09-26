@@ -8,7 +8,7 @@ test('abas do editor por tipo de vitrine', async ({ page }) => {
 
   const abas = page.getByRole('navigation', { name: 'Seções da vitrine' })
   await page.goto(`/painel/vitrines/${vitrine.id}/itens`)
-  await expect(abas.getByRole('link')).toHaveText(['Serviços', 'Aparência', 'WhatsApp', 'Configurações', 'Compartilhar'])
+  await expect(abas.getByRole('link')).toHaveText(['Serviços', 'Aparência', 'Profissionais', 'Configurações', 'Compartilhar'])
   const principal = page.getByRole('navigation', { name: 'Principal' }).filter({ visible: true })
   await expect(principal.getByRole('link')).toHaveText(['Vitrine', 'Agenda', 'Plano', 'Conta'])
   await expect(abas.getByRole('link', { name: 'Complementos' })).toHaveCount(0)
@@ -23,7 +23,7 @@ test('abas do editor por tipo de vitrine', async ({ page }) => {
   await page.context().clearCookies()
   await signIn(page, lojista.email, lojista.password)
   await page.goto(`/painel/vitrines/${loja.id}/itens`)
-  await expect(abas.getByRole('link')).toHaveText(['Itens', 'Aparência', 'WhatsApp', 'Sacola e mensagens', 'Configurações', 'Compartilhar'])
+  await expect(abas.getByRole('link')).toHaveText(['Produtos', 'Aparência', 'WhatsApp', 'Sacola e mensagens', 'Configurações', 'Compartilhar'])
 })
 
 test('configurações, mensagens e WhatsApp', async ({ page }) => {
@@ -43,8 +43,8 @@ test('configurações, mensagens e WhatsApp', async ({ page }) => {
 
   await page.getByRole('link', { name: 'Sacola e mensagens' }).click()
   await page.getByLabel('Texto padrão do botão').fill('Quero este')
-  await page.getByRole('button', { name: 'Salvar mensagens' }).click()
-  await expect(page.getByText('Mensagens salvas.')).toBeVisible()
+  await page.getByRole('button', { name: 'Salvar configurações de pedido' }).click()
+  await expect(page.getByText('Configurações de pedido salvas.')).toBeVisible()
 
   await page.getByRole('link', { name: 'WhatsApp' }).click()
   await page.getByLabel('Nome do novo contato').fill('Loja 2')

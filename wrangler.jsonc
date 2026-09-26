@@ -1,0 +1,47 @@
+/**
+ * Cloudflare Workers (adaptador OpenNext). Só vale para a publicação no Cloudflare;
+ * a Vercel continua usando vercel.json.
+ *
+ * Antes do primeiro deploy é preciso criar os recursos e trocar os ids aqui —
+ * o passo a passo está em docs/setup/cloudflare-migracao.md.
+ */
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "vitrimove",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-09-01",
+  // nodejs_compat: o app usa APIs de Node (Stripe, Supabase, crypto, Buffer).
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    "APP_ENV": "production"
+  },
+  // Guarda as páginas geradas da vitrine pública.
+  "r2_buckets": [
+    {
+      "binding": "NEXT_INC_CACHE_R2_BUCKET",
+      "bucket_name": "vitrimove-cache"
+    }
+  ],
+  // É o que faz revalidateTag valer quando o painel edita a vitrine.
+  "d1_databases": [
+    {
+      "binding": "NEXT_TAG_CACHE_D1",
+      "database_name": "vitrimove-tags",
+      "database_id": "A PREENCHER — id do banco D1"
+    }
+  ],
+  // O adaptador precisa conseguir chamar o próprio worker.
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "vitrimove"
+    }
+  ]
+}

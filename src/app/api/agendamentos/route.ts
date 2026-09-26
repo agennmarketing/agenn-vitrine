@@ -34,7 +34,17 @@ export async function POST(request: NextRequest) {
 
     const service = await loadBookableService(subdomain, booking.itemId)
     if (!service) return jsonError(404, 'Serviço indisponível.')
-    if (!slotsForDate(booking.date, service.availability).includes(booking.time)) return jsonError(409, SLOT_TAKEN_MESSAGE)
+
+    // Com profissionais cadastrados, o agendamento é sempre com um deles: quem escolher
+    // o horário escolhe também quem atende (o popup só oferece quem está livre).
+    const professional = booking.professionalId
+      ? (service.professionals.find((p) => p.id === booking.professionalId) ?? null)
+      : null
+    if (booking.professionalId && !professional) return jsonError(404, 'Profissional indisponível.')
+    if (!professional && service.professionals.length > 0) return jsonError(422, 'Escolha o profissional.')
+
+    const agenda = professional ? professional.availability : service.availability
+    if (!slotsForDate(booking.date, agenda).includes(booking.time)) return jsonError(409, SLOT_TAKEN_MESSAGE)
 
     const priceText = formatPriceLabel(priceLabel(service.item))
     for (let attempt = 0; attempt < 5; attempt++) {
@@ -48,9 +58,11 @@ export async function POST(request: NextRequest) {
         p_customer_phone: booking.phone,
         p_notes: booking.notes ?? '',
         p_price_text: priceText,
+        p_professional_id: professional?.id ?? undefined,
       })
       if (error?.message === 'slot_unavailable') return jsonError(409, SLOT_TAKEN_MESSAGE)
       if (error?.message === 'item_unavailable' || error?.message === 'vitrine_not_found') return jsonError(404, 'Serviço indisponível.')
+      if (error?.message === 'professional_unavailable') return jsonError(404, 'Profissional indisponível.')
       if (error) throw error
       if (id) {
         return NextResponse.json(
@@ -59,6 +71,7 @@ export async function POST(request: NextRequest) {
             serviceName: service.item.name,
             date: booking.date,
             time: booking.time,
+            professionalName: professional?.name ?? null,
             priceText: service.vitrine.showPrices ? priceText : null,
           },
           { status: 201 },

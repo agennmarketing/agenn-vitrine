@@ -15,5 +15,5 @@ test('uma vitrine por conta; no teste a marca é liberada e a vitrine pública s
 
   await page.goto(`http://${vitrine.subdomain}.localhost:3000/`)
   await expect(page.getByRole('heading', { level: 1, name: vitrine.name })).toBeVisible()
-  await expect(page.getByText('Feito com Agenn')).toHaveCount(0)
+  await expect(page.getByText('Feito com Vitrimove')).toHaveCount(0)
 })

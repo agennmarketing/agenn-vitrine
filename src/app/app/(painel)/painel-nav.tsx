@@ -11,17 +11,22 @@ const ITEMS = [
   { href: '/painel/conta', label: 'Conta', Icon: UserRound },
 ] as const
 
+// Vitrine de produtos não tem agenda: a seção some da navegação em vez de redirecionar.
+function items(showAgenda: boolean) {
+  return showAgenda ? ITEMS : ITEMS.filter((item) => item.href !== '/painel/agenda')
+}
+
 function isActive(pathname: string, href: string) {
   if (href === '/painel') return pathname === '/painel' || pathname.startsWith('/painel/vitrines')
   return pathname === href || pathname.startsWith(`${href}/`)
 }
 
 // Barra lateral (computador): o ativo ganha placa lilás-clara e texto roxo.
-export function SideNav() {
+export function SideNav({ showAgenda = true }: { showAgenda?: boolean }) {
   const pathname = usePathname()
   return (
     <nav aria-label="Principal" className="flex flex-col gap-0.5">
-      {ITEMS.map(({ href, label, Icon }) => {
+      {items(showAgenda).map(({ href, label, Icon }) => {
         const active = isActive(pathname, href)
         return (
           <Link
@@ -42,15 +47,15 @@ export function SideNav() {
 }
 
 // Barra inferior (celular): quatro destinos rotulados ao alcance do polegar.
-export function BottomNav() {
+export function BottomNav({ showAgenda = true }: { showAgenda?: boolean }) {
   const pathname = usePathname()
   return (
     <nav
       aria-label="Principal"
       className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)] group-has-[[data-focus-mode]]/shell:hidden lg:hidden"
     >
-      <ul className="mx-auto grid max-w-md grid-cols-4">
-        {ITEMS.map(({ href, label, Icon }) => {
+      <ul className={`mx-auto grid max-w-md ${showAgenda ? 'grid-cols-4' : 'grid-cols-3'}`}>
+        {items(showAgenda).map(({ href, label, Icon }) => {
           const active = isActive(pathname, href)
           return (
             <li key={href}>

@@ -18,14 +18,19 @@ export type CatalogRows = {
     id: string; category_id: string | null; code: string; name: string; description: string; price_type: PriceType
     price_cents: number | null; promo_price_cents: number | null; duration_minutes: number | null; tags: string[]
     sold_out: boolean; position: number; whatsapp_id: string | null; button_text: string | null; custom_message: string | null; notice: string | null
+    sale_mode: string; external_url: string | null
   }[]
   checkout: {
-    name_mode: string; fulfillment_mode: string; payment_mode: string; schedule_mode: string; notes_mode: string; payment_options: string[]
+    name_mode: string; phone_mode: string; fulfillment_mode: string; allow_pickup: boolean; allow_delivery: boolean
+    payment_mode: string; schedule_mode: string; notes_mode: string; payment_options: string[]; extra_note: string | null
   } | null
   variations: { id: string; item_id: string; name: string; price_cents: number; promo_price_cents: number | null; sold_out: boolean; position: number }[]
+  professionals: { id: string; name: string; position: number }[]
+  professionalItems: { professional_id: string; item_id: string }[]
   media: {
     id: string
     item_id: string | null
+    professional_id: string | null
     role: string
     kind: string
     position: number
@@ -44,9 +49,14 @@ export type PublicItem = {
   id: string; code: string; name: string; description: string; priceType: PriceType; priceCents: number | null
   promoPriceCents: number | null; durationMinutes: number | null; tags: string[]; soldOut: boolean
   whatsappPhone: string | null; buttonText: string | null; customMessage: string | null; notice: string | null
+  /** 'link' vende fora da vitrine ("Comprar agora") e fica fora da sacola. */
+  saleMode: 'whatsapp' | 'link'; externalUrl: string | null
   cover: PublicImage | null; gallery: PublicImage[]; video: PublicVideo | null
   variations: { id: string; name: string; priceCents: number; promoPriceCents: number | null; soldOut: boolean }[]
 }
+
+/** Profissional que atende na vitrine, com os serviços que ele faz. */
+export type PublicProfessional = { id: string; name: string; photo: PublicImage | null; itemIds: string[] }
 
 export type PublicVitrine = {
   id: string; subdomain: string; type: VitrineType; name: string; description: string; theme: 'light' | 'dark'
@@ -54,6 +64,7 @@ export type PublicVitrine = {
   primaryPhone: string | null; logo: PublicImage | null; brandColor: string | null; banner: PublicImage | null
   bannerVideo: PublicVideo | null
   cartEnabled: boolean; cartButtonText: string; checkout: CheckoutSettings
+  professionals: PublicProfessional[]
   showWatermark: boolean; categories: { id: string; name: string; items: PublicItem[] }[]
 }
 
@@ -100,6 +111,8 @@ export function buildPublicCatalog(rows: CatalogRows, mediaBaseUrl: string, vide
       buttonText: row.button_text,
       customMessage: row.custom_message,
       notice: row.notice,
+      saleMode: row.sale_mode === 'link' && row.external_url ? 'link' : 'whatsapp',
+      externalUrl: row.sale_mode === 'link' ? row.external_url : null,
       cover,
       gallery: media
         .filter((m) => m.role === 'gallery')
@@ -125,11 +138,15 @@ export function buildPublicCatalog(rows: CatalogRows, mediaBaseUrl: string, vide
     value === 'off' || value === 'optional' || value === 'required' ? value : fallback
   const checkout: CheckoutSettings = {
     nameMode: mode(rows.checkout?.name_mode, 'optional'),
+    phoneMode: mode(rows.checkout?.phone_mode, 'off'),
     fulfillmentMode: mode(rows.checkout?.fulfillment_mode, 'off'),
+    allowPickup: rows.checkout?.allow_pickup ?? true,
+    allowDelivery: rows.checkout?.allow_delivery ?? true,
     paymentMode: mode(rows.checkout?.payment_mode, 'off'),
     scheduleMode: mode(rows.checkout?.schedule_mode, 'off'),
     notesMode: mode(rows.checkout?.notes_mode, 'optional'),
     paymentOptions: rows.checkout?.payment_options ?? [],
+    extraNote: rows.checkout?.extra_note ?? null,
   }
 
   const branding = rows.plan.allow_branding
@@ -165,6 +182,20 @@ export function buildPublicCatalog(rows: CatalogRows, mediaBaseUrl: string, vide
           }
         : null,
     showWatermark: rows.plan.show_watermark,
+    // Só serviços que ainda aparecem na vitrine contam: um profissional sem serviço visível
+    // não tem o que oferecer e fica de fora.
+    professionals: [...rows.professionals]
+      .sort((a, b) => a.position - b.position)
+      .map((professional) => ({
+        id: professional.id,
+        name: professional.name,
+        photo: image(rows.media.find((m) => m.professional_id === professional.id && m.role === 'avatar')?.storage_paths),
+        itemIds: rows.professionalItems
+          .filter((link) => link.professional_id === professional.id)
+          .map((link) => link.item_id)
+          .filter((itemId) => visible.some((item) => item.id === itemId)),
+      }))
+      .filter((professional) => professional.itemIds.length > 0),
     categories: categories.map((c) => ({
       id: c.id,
       name: c.name,

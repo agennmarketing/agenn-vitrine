@@ -60,7 +60,7 @@ describe('vitrineManifest', () => {
 describe('painelManifest', () => {
   it('abre no painel e tem atalhos para vitrine e agenda', () => {
     const manifest = painelManifest()
-    expect(manifest.name).toBe('Agenn')
+    expect(manifest.name).toBe('Vitrimove')
     expect(manifest.start_url).toBe('/painel')
     expect(manifest.scope).toBe('/')
     expect(manifest.shortcuts?.map((shortcut) => shortcut.url)).toEqual(['/painel', '/painel/agenda'])

@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowLeft, ArrowRight, Brush, Eye, Hand, Moon, Scissors, Sparkles, Store, Sun, X } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Brush, CalendarClock, Eye, Hand, Moon, Scissors, ShoppingBag, Sparkles, Store, Sun, X } from 'lucide-react'
 import Link from 'next/link'
 import { useActionState, useEffect, useRef, useState } from 'react'
 import { BusinessHoursEditor } from '@/components/ui/business-hours-editor'
@@ -22,15 +22,49 @@ import {
   type BusinessHours,
   type ServiceSegment,
 } from '@/lib/vitrines/service-segments'
+import { WIZARD_TYPE_COPY, WIZARD_VITRINE_TYPES } from '@/lib/vitrines/vitrine-types'
 
-// Por enquanto o Agenn é só para serviços com agendamento: toda vitrine nasce 'servicos'
-// e o segmento escolhido no primeiro passo só personaliza textos e exemplos.
-const STEPS = [
-  { label: 'Tipo de negócio', question: 'Qual é o seu tipo de negócio?', help: 'Assim a vitrine já vem com exemplos do seu ramo.' },
-  { label: 'Seu negócio', question: 'Como o seu negócio se chama?', help: 'O endereço é o link que você vai divulgar para os clientes.' },
-  { label: 'Contato', question: 'Para onde vão as solicitações?', help: 'O cliente pode avisar por este WhatsApp depois de agendar.' },
-  { label: 'Horários e aparência', question: 'Quando você atende?', help: 'Os horários livres para agendar saem daqui. Dá para mudar depois, na Agenda.' },
-] as const
+/*
+ * A trilha começa pelo tipo da vitrine. Serviços continua igual (segmento do negócio,
+ * horários de atendimento); produtos pula esses dois passos, que só existem para quem
+ * trabalha com hora marcada.
+ */
+type StepKey = 'tipo' | 'segmento' | 'negocio' | 'contato' | 'final'
+
+const SERVICE_STEPS: StepKey[] = ['tipo', 'segmento', 'negocio', 'contato', 'final']
+const PRODUCT_STEPS: StepKey[] = ['tipo', 'negocio', 'contato', 'final']
+
+const STEP_COPY: Record<StepKey, { label: string; question: string; help: string }> = {
+  tipo: {
+    label: 'Tipo de vitrine',
+    question: 'Que tipo de vitrine você quer criar?',
+    help: 'É isso que define como o cliente compra: marcando um horário ou pedindo um produto.',
+  },
+  segmento: { label: 'Tipo de negócio', question: 'Qual é o seu tipo de negócio?', help: 'Assim a vitrine já vem com exemplos do seu ramo.' },
+  negocio: { label: 'Seu negócio', question: 'Como o seu negócio se chama?', help: 'O endereço é o link que você vai divulgar para os clientes.' },
+  contato: { label: 'Contato', question: 'Para onde vão as solicitações?', help: 'É por este WhatsApp que o cliente fala com você.' },
+  final: { label: 'Horários e aparência', question: 'Quando você atende?', help: 'Os horários livres para agendar saem daqui. Dá para mudar depois, na Agenda.' },
+}
+
+const PRODUCT_FINAL = { label: 'Aparência', question: 'Como a vitrine vai aparecer?', help: 'Escolha o tema; o resto você ajusta depois.' }
+
+const TYPE_ICON: Record<(typeof WIZARD_VITRINE_TYPES)[number], typeof Scissors> = {
+  servicos: CalendarClock,
+  produtos: ShoppingBag,
+}
+
+// Mesmo quadrado do SegmentIcon, com o ícone do tipo de vitrine.
+function TypeIcon({ type }: { type: (typeof WIZARD_VITRINE_TYPES)[number] }) {
+  const Icon = TYPE_ICON[type]
+  return (
+    <span
+      aria-hidden="true"
+      className="inline-flex size-12 shrink-0 items-center justify-center rounded-control bg-go-strong text-white shadow-[0_3px_0_var(--lip)] [--lip:var(--color-go-lip)]"
+    >
+      <Icon className="size-6" strokeWidth={2.5} />
+    </span>
+  )
+}
 
 const SEGMENT_ICON: Record<ServiceSegment, typeof Scissors> = {
   nail: Hand,
@@ -55,22 +89,26 @@ function SegmentIcon({ segment }: { segment: ServiceSegment }) {
   )
 }
 
-function stepForErrors(errors: FormState['fieldErrors']): number | null {
+function stepKeyForErrors(errors: FormState['fieldErrors']): StepKey | null {
   if (!errors) return null
-  if (errors.type || errors.serviceSegment) return 0
-  if (errors.name || errors.subdomain) return 1
-  if (errors.whatsappPhone || errors.whatsappLabel || errors.instagram || errors.address) return 2
-  return 3
+  if (errors.type) return 'tipo'
+  if (errors.serviceSegment) return 'segmento'
+  if (errors.name || errors.subdomain) return 'negocio'
+  if (errors.whatsappPhone || errors.whatsappLabel || errors.instagram || errors.address) return 'contato'
+  return 'final'
 }
 
 export function VitrineWizard({ rootDomain }: { rootDomain: string }) {
   const [step, setStep] = useState(0)
+  const [type, setType] = useState<(typeof WIZARD_VITRINE_TYPES)[number]>('servicos')
   const [segment, setSegment] = useState<ServiceSegment | null>(null)
   const [hours, setHours] = useState<BusinessHours>(DEFAULT_BUSINESS_HOURS)
+  const steps = type === 'servicos' ? SERVICE_STEPS : PRODUCT_STEPS
   const [state, formAction, pending] = useActionState(async (prev: FormState, formData: FormData) => {
     const result = await createVitrineAction(prev, formData)
-    const errorStep = stepForErrors(result.fieldErrors)
-    if (errorStep !== null) setStep(errorStep)
+    const errorKey = stepKeyForErrors(result.fieldErrors)
+    const errorStep = errorKey ? steps.indexOf(errorKey) : -1
+    if (errorStep >= 0) setStep(errorStep)
     return result
   }, initialFormState)
 
@@ -104,8 +142,9 @@ export function VitrineWizard({ rootDomain }: { rootDomain: string }) {
   const values = state.values ?? {}
   const chosenSegment = segment ?? (isServiceSegment(values.serviceSegment) ? values.serviceSegment : null)
   const copy = SEGMENT_COPY[chosenSegment ?? 'outro']
-  const current = STEPS[step]
-  const last = step === STEPS.length - 1
+  const stepKey = steps[step]
+  const current = stepKey === 'final' && type === 'produtos' ? PRODUCT_FINAL : STEP_COPY[stepKey]
+  const last = step === steps.length - 1
 
   return (
     // data-focus-mode: o layout do painel esconde cabeçalho e navegação enquanto a trilha está aberta.
@@ -118,9 +157,9 @@ export function VitrineWizard({ rootDomain }: { rootDomain: string }) {
         >
           <X aria-hidden="true" className="size-6" strokeWidth={3} />
         </Link>
-        <ProgressBar value={step + 1} max={STEPS.length} label="Progresso da nova vitrine" />
+        <ProgressBar value={step + 1} max={steps.length} label="Progresso da nova vitrine" />
         <p className="numeric shrink-0 text-sm font-extrabold text-go-strong">
-          Passo {step + 1} de {STEPS.length}
+          Passo {step + 1} de {steps.length}
           <span className="sr-only"> · {current.label}</span>
         </p>
       </div>
@@ -133,8 +172,28 @@ export function VitrineWizard({ rootDomain }: { rootDomain: string }) {
       </div>
 
       <form action={formAction} noValidate className="flex flex-col gap-7">
-        <input type="hidden" name="type" value="servicos" />
-        <fieldset hidden={step !== 0} className="flex flex-col gap-3.5">
+        <fieldset hidden={stepKey !== 'tipo'} className="flex flex-col gap-3.5">
+          <legend className="sr-only">Tipo de vitrine</legend>
+          {WIZARD_VITRINE_TYPES.map((value) => (
+            <ChoiceCard
+              key={value}
+              name="type"
+              value={value}
+              checked={type === value}
+              onChange={() => {
+                setType(value)
+                setStep(0)
+              }}
+              aria-label={WIZARD_TYPE_COPY[value].title}
+              title={WIZARD_TYPE_COPY[value].title}
+              description={WIZARD_TYPE_COPY[value].description}
+              icon={<TypeIcon type={value} />}
+            />
+          ))}
+          <FormMessage error={errors.type} />
+        </fieldset>
+
+        <fieldset hidden={stepKey !== 'segmento'} className="flex flex-col gap-3.5">
           <legend className="sr-only">Tipo de negócio</legend>
           {SERVICE_SEGMENTS.map((value) => (
             <ChoiceCard
@@ -148,10 +207,10 @@ export function VitrineWizard({ rootDomain }: { rootDomain: string }) {
               icon={<SegmentIcon segment={value} />}
             />
           ))}
-          <FormMessage error={errors.serviceSegment ?? errors.type} />
+          <FormMessage error={errors.serviceSegment} />
         </fieldset>
 
-        <fieldset hidden={step !== 1} className="flex flex-col gap-5">
+        <fieldset hidden={stepKey !== 'negocio'} className="flex flex-col gap-5">
           <legend className="sr-only">Seu negócio</legend>
           <Field label="Nome do negócio" htmlFor="name" error={errors.name}>
             <Input
@@ -191,7 +250,7 @@ export function VitrineWizard({ rootDomain }: { rootDomain: string }) {
           ) : null}
         </fieldset>
 
-        <fieldset hidden={step !== 2} className="flex flex-col gap-5">
+        <fieldset hidden={stepKey !== 'contato'} className="flex flex-col gap-5">
           <legend className="sr-only">Contato</legend>
           <Field label="WhatsApp" htmlFor="whatsappPhone" error={errors.whatsappPhone}>
             <Input
@@ -240,14 +299,14 @@ export function VitrineWizard({ rootDomain }: { rootDomain: string }) {
           </Field>
         </fieldset>
 
-        <fieldset hidden={step !== 3} className="flex flex-col gap-3.5">
+        <fieldset hidden={stepKey !== 'final' || type !== 'servicos'} className="flex flex-col gap-3.5">
           <legend className="sr-only">Horários de atendimento</legend>
           <input type="hidden" name="businessHours" value={JSON.stringify(hours)} />
           <BusinessHoursEditor hours={hours} onChange={setHours} />
           <FormMessage error={errors.businessHours} />
         </fieldset>
 
-        <fieldset hidden={step !== 3} className="flex flex-col gap-3.5">
+        <fieldset hidden={stepKey !== 'final'} className="flex flex-col gap-3.5">
           <legend className="mb-1 text-lg font-black text-ink">Aparência: clara ou escura?</legend>
           <div className="grid grid-cols-2 gap-3.5">
             {(

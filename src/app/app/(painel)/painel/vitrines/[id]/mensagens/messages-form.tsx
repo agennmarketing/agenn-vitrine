@@ -1,6 +1,6 @@
 'use client'
 
-import { CalendarClock, MessageSquareText, Store, UserRound, Wallet } from 'lucide-react'
+import { Bike, CalendarClock, MessageSquareText, Phone, Store, UserRound, Wallet } from 'lucide-react'
 import { useActionState } from 'react'
 import { Button } from '@/components/ui/button'
 import { ConfigBlock, ConfigToggle, SaveBar } from '@/components/ui/config-section'
@@ -16,15 +16,20 @@ type Values = {
   cartButtonText: string
   defaultButtonText: string
   nameMode: string
+  phoneMode: string
   fulfillmentMode: string
+  allowPickup: string
+  allowDelivery: string
   paymentMode: string
   scheduleMode: string
   notesMode: string
   paymentOptions: string
+  extraNote: string
 }
 
 const MODE_FIELDS = [
   ['nameMode', 'Nome', UserRound],
+  ['phoneMode', 'Telefone', Phone],
   ['fulfillmentMode', 'Retirada ou entrega', Store],
   ['paymentMode', 'Forma de pagamento', Wallet],
   ['scheduleMode', 'Data e horário', CalendarClock],
@@ -95,6 +100,30 @@ export function MessagesForm({ vitrineId, initial }: { vitrineId: string; initia
               </li>
             ))}
           </ul>
+          <fieldset className="flex flex-col gap-3">
+            <legend className="mb-2 text-[0.9375rem] font-extrabold leading-5 text-ink">Como o cliente recebe</legend>
+            <ConfigToggle
+              id="allowPickup"
+              name="allowPickup"
+              title="Aceita retirada"
+              description="O cliente busca no seu endereço."
+              defaultChecked={values.allowPickup === 'on'}
+              className="rounded-control bg-canvas p-4"
+            />
+            <ConfigToggle
+              id="allowDelivery"
+              name="allowDelivery"
+              title="Aceita entrega"
+              description="Escolhendo entrega, o cliente informa o endereço."
+              defaultChecked={values.allowDelivery === 'on'}
+              className="rounded-control bg-canvas p-4"
+            />
+            <FormMessage error={errors.allowPickup} />
+            <p className="-mt-1 flex items-center gap-2 text-sm font-semibold text-ink-muted">
+              <Bike aria-hidden="true" className="size-4 shrink-0" strokeWidth={2.5} />
+              Só vale com &quot;Retirada ou entrega&quot; ligado acima.
+            </p>
+          </fieldset>
           <Field label="Formas de pagamento (uma por linha)" htmlFor="paymentOptions" error={errors.paymentOptions}>
             <Textarea
               id="paymentOptions"
@@ -109,11 +138,25 @@ export function MessagesForm({ vitrineId, initial }: { vitrineId: string; initia
           </p>
         </ConfigBlock>
 
+        <ConfigBlock title="Aviso no pedido" description="Um recado curto que aparece para o cliente antes de ele enviar o pedido.">
+          <Field label="Observação para o cliente" htmlFor="extraNote" error={errors.extraNote} hint="Opcional.">
+            <Textarea
+              id="extraNote"
+              name="extraNote"
+              rows={3}
+              maxLength={300}
+              placeholder="Ex.: entregamos só na região central, das 9h às 18h."
+              defaultValue={values.extraNote}
+              invalid={!!errors.extraNote}
+            />
+          </Field>
+        </ConfigBlock>
+
         <SaveBar>
           <FormMessage error={state.error} success={state.success} />
           <Button type="submit" size="lg" disabled={pending} aria-busy={pending} className="w-full lg:w-auto lg:self-start">
             {pending ? <Spinner /> : null}
-            Salvar mensagens
+            Salvar configurações de pedido
           </Button>
         </SaveBar>
       </form>

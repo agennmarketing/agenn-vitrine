@@ -1,8 +1,8 @@
 'use client'
 
-import { CalendarDays, ChevronLeft, ChevronRight, CircleAlert, Clock, Info } from 'lucide-react'
+import { CalendarDays, ChevronLeft, ChevronRight, CircleAlert, Clock, ExternalLink, Info } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
-import type { PublicItem, PublicVitrine } from '@/features/public/build-catalog'
+import type { PublicItem, PublicProfessional, PublicVitrine } from '@/features/public/build-catalog'
 import type { CartLine, NewCartLine } from '@/lib/cart/cart'
 import { lineUnitCents } from '@/lib/cart/reconcile'
 import { formatBRL } from '@/lib/money/money'
@@ -28,11 +28,15 @@ export type ItemSheetProps = {
   item: PublicItem
   onClose: () => void
   cart?: { initial?: CartLine; onSubmit: (line: NewCartLine) => void }
+  /** Chegou pelo profissional: o agendamento já abre com ele escolhido. */
+  professional?: PublicProfessional | null
 }
 
-export default function ItemSheet({ vitrine, item, onClose, cart }: ItemSheetProps) {
+export default function ItemSheet({ vitrine, item, onClose, cart, professional = null }: ItemSheetProps) {
   // Serviços: o CTA abre o agendamento (data, horário e dados do cliente) no próprio popup.
   const isService = !cart && vitrine.type === 'servicos'
+  // Produto vendido fora da vitrine: o CTA é um link para a loja, e ele nunca entra na sacola.
+  const externalUrl = item.saleMode === 'link' ? item.externalUrl : null
   const [variationId, setVariationId] = useState<string | null>(cart?.initial?.variationId ?? null)
   const [qty, setQty] = useState(cart?.initial?.qty ?? 1)
   const [note, setNote] = useState(cart?.initial?.note ?? '')
@@ -41,7 +45,7 @@ export default function ItemSheet({ vitrine, item, onClose, cart }: ItemSheetPro
   const [activeIndex, setActiveIndex] = useState(0)
   // O vídeo começa sozinho só na primeira vez; depois, só pelo Play.
   const [videoStarted, setVideoStarted] = useState(false)
-  const [booking, setBooking] = useState(false)
+  const [booking, setBooking] = useState(professional !== null)
   const closeRef = useRef<HTMLButtonElement>(null)
   const choicesRef = useRef<HTMLFieldSetElement>(null)
   const galleryRef = useRef<HTMLDivElement>(null)
@@ -116,17 +120,19 @@ export default function ItemSheet({ vitrine, item, onClose, cart }: ItemSheetPro
   } else {
     buttonLabel = item.buttonText ?? vitrine.defaultButtonText
   }
+  if (externalUrl && !cart) buttonLabel = item.buttonText ?? 'Comprar agora'
   let disabled = sending
   if (item.soldOut) {
     buttonLabel = isService ? 'Indisponível' : 'Esgotado'
     disabled = true
-  } else if (!cart && !isService && !phone) {
+  } else if (!cart && !isService && !externalUrl && !phone) {
     buttonLabel = 'WhatsApp não configurado'
     disabled = true
   } else if (sending) {
     buttonLabel = 'Abrindo o WhatsApp…'
   }
-  const showWhatsAppIcon = !cart && !isService && !item.soldOut && Boolean(phone)
+  const showWhatsAppIcon = !cart && !isService && !externalUrl && !item.soldOut && Boolean(phone)
+  const showExternalLink = Boolean(externalUrl) && !cart && !item.soldOut
   const showCalendarIcon = isService && !item.soldOut
   const bodyClassName = `flex flex-col px-5 pb-6 md:col-start-2 md:min-h-0 md:overflow-y-auto md:px-7 md:pt-7 ${hasMedia ? 'pt-5' : 'pt-8'}`
   const footerClassName =
@@ -241,7 +247,8 @@ export default function ItemSheet({ vitrine, item, onClose, cart }: ItemSheetPro
             priceText={vitrine.showPrices ? headerPrice : null}
             bodyClassName={bodyClassName}
             footerClassName={footerClassName}
-            onBack={() => setBooking(false)}
+            lockedProfessional={professional}
+            onBack={() => (professional ? onClose() : setBooking(false))}
           />
         ) : (
         <>
@@ -368,16 +375,28 @@ export default function ItemSheet({ vitrine, item, onClose, cart }: ItemSheetPro
               />
             </div>
           ) : null}
-          <button
-            type="button"
-            disabled={disabled}
-            onClick={onPrimary}
-            className={`${brandButtonClass} numeric min-w-0 flex-1 px-4 text-[0.9375rem] leading-tight sm:text-base`}
-          >
-            {showWhatsAppIcon ? <WhatsAppIcon className="size-5 shrink-0" /> : null}
-            {showCalendarIcon ? <CalendarDays aria-hidden="true" className="size-5 shrink-0" strokeWidth={2.5} /> : null}
-            {buttonLabel}
-          </button>
+          {showExternalLink ? (
+            <a
+              href={externalUrl!}
+              target="_blank"
+              rel="noopener noreferrer nofollow"
+              className={`${brandButtonClass} numeric min-w-0 flex-1 px-4 text-[0.9375rem] leading-tight sm:text-base`}
+            >
+              <ExternalLink aria-hidden="true" className="size-5 shrink-0" strokeWidth={2.5} />
+              {buttonLabel}
+            </a>
+          ) : (
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={onPrimary}
+              className={`${brandButtonClass} numeric min-w-0 flex-1 px-4 text-[0.9375rem] leading-tight sm:text-base`}
+            >
+              {showWhatsAppIcon ? <WhatsAppIcon className="size-5 shrink-0" /> : null}
+              {showCalendarIcon ? <CalendarDays aria-hidden="true" className="size-5 shrink-0" strokeWidth={2.5} /> : null}
+              {buttonLabel}
+            </button>
+          )}
         </div>
         </>
         )}

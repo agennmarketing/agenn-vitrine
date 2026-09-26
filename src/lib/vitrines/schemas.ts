@@ -4,7 +4,7 @@ import { ITEM_CODE_MESSAGES, validateItemCode } from '@/lib/codes/item-code'
 import { validateSubdomain } from '@/lib/hosts/subdomain'
 import { parseBRLToCents } from '@/lib/money/money'
 import { normalizePhone } from '@/lib/whatsapp/phone'
-import { SERVICE_SEGMENTS } from './service-segments'
+import { isServiceSegment } from './service-segments'
 import { WIZARD_VITRINE_TYPES } from './vitrine-types'
 
 const SUBDOMAIN_MESSAGES = {
@@ -68,28 +68,52 @@ const instagram = z.string().transform((value, ctx) => {
 })
 
 const time = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Horário inválido.')
-const businessHours = jsonArray(z.object({ day: z.number().int().min(0).max(6), open: time, close: time }), 7).superRefine(
+// Dias sem repetição e com abertura antes do fechamento. A lista vazia só é recusada
+// onde ela é obrigatória (vitrine de serviços), por isso essa parte fica de fora.
+const businessHoursDays = jsonArray(z.object({ day: z.number().int().min(0).max(6), open: time, close: time }), 7).superRefine(
   (days, ctx) => {
-    if (days.length === 0) ctx.addIssue({ code: 'custom', message: 'Marque pelo menos um dia de atendimento.' })
-    else if (new Set(days.map((entry) => entry.day)).size !== days.length) ctx.addIssue({ code: 'custom', message: 'Dia repetido.' })
+    if (new Set(days.map((entry) => entry.day)).size !== days.length) ctx.addIssue({ code: 'custom', message: 'Dia repetido.' })
     else if (days.some((entry) => entry.open >= entry.close)) {
       ctx.addIssue({ code: 'custom', message: 'O horário de abrir deve ser antes do de fechar.' })
     }
   },
 )
-
-export const createVitrineSchema = z.object({
-  type: z.enum(WIZARD_VITRINE_TYPES, 'Escolha o tipo da vitrine.'),
-  serviceSegment: z.enum(SERVICE_SEGMENTS, 'Escolha o tipo do seu negócio.'),
-  name: vitrineName,
-  subdomain: subdomainField,
-  whatsappLabel: contactLabel,
-  whatsappPhone: phone,
-  instagram,
-  address: optionalText(200),
-  businessHours,
-  theme,
+export const businessHours = businessHoursDays.superRefine((days, ctx) => {
+  if (days.length === 0) ctx.addIssue({ code: 'custom', message: 'Marque pelo menos um dia de atendimento.' })
 })
+
+/*
+ * O assistente cria dois tipos de vitrine. Segmento do negócio e horários de
+ * atendimento são do fluxo de serviços; a vitrine de produtos não os pergunta e
+ * guarda nulo nos dois.
+ */
+export const createVitrineSchema = z
+  .object({
+    type: z.enum(WIZARD_VITRINE_TYPES, 'Escolha o tipo da vitrine.'),
+    serviceSegment: z.string().trim(),
+    name: vitrineName,
+    subdomain: subdomainField,
+    whatsappLabel: contactLabel,
+    whatsappPhone: phone,
+    instagram,
+    address: optionalText(200),
+    businessHours: businessHoursDays,
+    theme,
+  })
+  .superRefine((data, ctx) => {
+    if (data.type !== 'servicos') return
+    if (!isServiceSegment(data.serviceSegment)) {
+      ctx.addIssue({ code: 'custom', path: ['serviceSegment'], message: 'Escolha o tipo do seu negócio.' })
+    }
+    if (data.businessHours.length === 0) {
+      ctx.addIssue({ code: 'custom', path: ['businessHours'], message: 'Marque pelo menos um dia de atendimento.' })
+    }
+  })
+  .transform((data) => ({
+    ...data,
+    serviceSegment: isServiceSegment(data.serviceSegment) ? data.serviceSegment : null,
+    businessHours: data.type === 'servicos' ? data.businessHours : null,
+  }))
 
 export const vitrineSettingsSchema = z.object({
   name: vitrineName,
@@ -193,6 +217,18 @@ export const itemSchema = z
       return tags
     }),
     soldOut: checkbox,
+    // Forma de venda (só as vitrines com sacola usam): pedido pelo WhatsApp ou link externo.
+    saleMode: z.enum(['whatsapp', 'link']).default('whatsapp'),
+    externalUrl: z
+      .string()
+      .trim()
+      .max(500, 'Use até 500 caracteres.')
+      .transform((value) => value || null)
+      .refine(
+        (value) => value === null || /^https:\/\/[^\s]+\.[^\s]+$/.test(value),
+        'Informe o link completo, começando com https://',
+      )
+      .default(null),
     whatsappId: z.union([z.uuid(), z.literal('')]).transform((value) => value || null),
     buttonText: optionalText(30),
     customMessage: optionalText(500),
@@ -206,6 +242,9 @@ export const itemSchema = z
       .transform((value) => value || null),
   })
   .superRefine((data, ctx) => {
+    if (data.saleMode === 'link' && data.externalUrl === null) {
+      ctx.addIssue({ code: 'custom', path: ['externalUrl'], message: 'Informe o link do produto.' })
+    }
     if (data.priceType === 'on_request') return
     if (data.variations.length === 0 && data.price === null) {
       ctx.addIssue({ code: 'custom', path: ['price'], message: 'Informe o preço.' })
@@ -238,6 +277,9 @@ export const itemSchema = z
       durationMinutes: data.durationMinutes,
       tags: data.tags,
       soldOut: data.soldOut,
+      // Sem link externo, o produto vende pelo WhatsApp e não guarda endereço nenhum.
+      saleMode: data.saleMode,
+      externalUrl: data.saleMode === 'link' ? data.externalUrl : null,
       whatsappId: data.whatsappId,
       buttonText: data.buttonText,
       customMessage: data.customMessage,
@@ -264,7 +306,11 @@ export const checkoutSettingsSchema = z
     cartButtonText: z.string().trim().min(1, 'Informe o texto do botão da sacola.').max(30, 'Use até 30 caracteres.'),
     defaultButtonText: z.string().trim().min(1, 'Informe o texto do botão.').max(30, 'Use até 30 caracteres.'),
     nameMode: fieldMode,
+    phoneMode: fieldMode,
     fulfillmentMode: fieldMode,
+    allowPickup: checkbox,
+    allowDelivery: checkbox,
+    extraNote: optionalText(300),
     paymentMode: fieldMode,
     scheduleMode: fieldMode,
     notesMode: fieldMode,
@@ -280,6 +326,9 @@ export const checkoutSettingsSchema = z
   .superRefine((data, ctx) => {
     if (data.paymentMode !== 'off' && data.paymentOptions.length === 0) {
       ctx.addIssue({ code: 'custom', path: ['paymentOptions'], message: 'Informe pelo menos uma forma de pagamento.' })
+    }
+    if (data.fulfillmentMode !== 'off' && !data.allowPickup && !data.allowDelivery) {
+      ctx.addIssue({ code: 'custom', path: ['allowPickup'], message: 'Marque pelo menos retirada ou entrega.' })
     }
   })
 
@@ -321,3 +370,34 @@ export const appointmentRescheduleSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Informe a data.'),
   time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Informe o horário.'),
 })
+
+/*
+ * Profissionais da vitrine de serviços: nome, foto, quais serviços ele faz e,
+ * quando tem horário próprio, os dias e horários dele (sem isso, vale o da vitrine).
+ */
+export const professionalSchema = z
+  .object({
+    name: z.string().trim().min(1, 'Informe o nome do profissional.').max(60, 'Use até 60 caracteres.'),
+    active: checkbox,
+    itemIds: jsonArray(z.uuid(), 200),
+    ownHours: checkbox,
+    businessHours: businessHoursDays,
+    avatarMediaId: z.union([z.uuid(), z.literal('')]).transform((value) => value || null),
+  })
+  .superRefine((data, ctx) => {
+    if (data.itemIds.length === 0) {
+      ctx.addIssue({ code: 'custom', path: ['itemIds'], message: 'Escolha pelo menos um serviço.' })
+    }
+    if (data.ownHours && data.businessHours.length === 0) {
+      ctx.addIssue({ code: 'custom', path: ['businessHours'], message: 'Marque pelo menos um dia de atendimento.' })
+    }
+  })
+  .transform((data) => ({
+    name: data.name,
+    active: data.active,
+    itemIds: data.itemIds,
+    businessHours: data.ownHours ? data.businessHours : null,
+    avatarMediaId: data.avatarMediaId,
+  }))
+
+export type ProfessionalInput = z.output<typeof professionalSchema>

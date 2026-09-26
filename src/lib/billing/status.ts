@@ -6,10 +6,10 @@ export const GRACE_DAYS = 7
 export const TRIAL_DAYS = 7
 export const PLAN_NAME = 'Plano Essencial'
 /** Referência para textos; o valor cobrado vem do preço do Stripe. */
-export const PLAN_PRICE_CENTS = 7990
+export const PLAN_PRICE_CENTS = 6990
 const DAY_MS = 86_400_000
 
-export const NO_ACCESS_MESSAGE = 'Seu acesso está pausado. Assine o Plano Essencial para continuar usando o Agenn.'
+export const NO_ACCESS_MESSAGE = 'Seu acesso está pausado. Assine o Plano Essencial para continuar usando o Vitrimove.'
 
 /** Situação da conta guardada em `subscriptions.subscription_status`. */
 export type AccountStatus = 'trialing' | 'active' | 'expired' | 'canceled'
@@ -127,7 +127,7 @@ export function trialNotice(access: Access): string | null {
   const days = access.trialDaysLeft
   if (access.status !== 'trialing' || days === null || days > 3) return null
   const when = days === 0 ? 'hoje' : days === 1 ? 'amanhã' : `em ${days} dias`
-  return `Seu teste grátis termina ${when}. Assine para continuar usando o Agenn.`
+  return `Seu teste grátis termina ${when}. Assine para continuar usando o Vitrimove.`
 }
 
 export type SubscriptionView = {
@@ -164,19 +164,19 @@ export function describeSubscription(row: SubscriptionView | null, now: Date): S
       return {
         access,
         title: `Teste grátis — ${left}`,
-        detail: `Vai até ${formatDateBR(access.trialEndsAt)}. Assine para continuar usando o Agenn depois disso.`,
+        detail: `Vai até ${formatDateBR(access.trialEndsAt)}. Assine para continuar usando o Vitrimove depois disso.`,
         showSubscribe: true,
         showPortal,
       }
     }
     const title = access.status === 'canceled' ? 'Sua assinatura terminou' : 'Seu teste terminou'
-    const detail = 'Seus dados continuam guardados: assine para voltar a usar o Agenn.'
+    const detail = 'Seus dados continuam guardados: assine para voltar a usar o Vitrimove.'
     return { access, title, detail, showSubscribe: true, showPortal }
   }
 
   let detail: string
   if (row!.status === 'past_due') {
-    detail = `Não conseguimos cobrar seu cartão. Atualize o pagamento até ${formatDateBR(row!.grace_until)} para continuar usando o Agenn.`
+    detail = `Não conseguimos cobrar seu cartão. Atualize o pagamento até ${formatDateBR(row!.grace_until)} para continuar usando o Vitrimove.`
   } else if (row!.cancel_at_period_end) {
     detail = `Cancelamento agendado: a assinatura vale até ${formatDateBR(row!.current_period_end)}.`
   } else {

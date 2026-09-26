@@ -1,4 +1,4 @@
-export type ImageRole = 'cover' | 'gallery' | 'logo' | 'banner'
+export type ImageRole = 'cover' | 'gallery' | 'logo' | 'banner' | 'avatar'
 
 type ImageSpec = {
   aspect: readonly [number, number]
@@ -11,6 +11,8 @@ export const IMAGE_SPECS: Record<ImageRole, ImageSpec> = {
   gallery: { aspect: [4, 5], widths: [480, 1080], maxBytes: [400_000, 1_500_000] },
   logo: { aspect: [1, 1], widths: [128, 512], maxBytes: [100_000, 600_000] },
   banner: { aspect: [16, 9], widths: [960, 1920], maxBytes: [600_000, 2_500_000] },
+  // Foto do profissional: quadrada, do mesmo tamanho da logo.
+  avatar: { aspect: [1, 1], widths: [128, 512], maxBytes: [100_000, 600_000] },
 }
 
 export function heightFor(role: ImageRole, width: number): number {

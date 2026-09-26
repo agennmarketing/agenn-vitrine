@@ -7,7 +7,7 @@ import { PAINEL_MANIFEST_PATH } from '@/lib/pwa/manifest'
 // O painel é instalável: o profissional cuida da vitrine e da agenda como aplicativo.
 export const metadata: Metadata = {
   manifest: PAINEL_MANIFEST_PATH,
-  appleWebApp: { capable: true, title: 'Agenn', statusBarStyle: 'default' },
+  appleWebApp: { capable: true, title: 'Vitrimove', statusBarStyle: 'default' },
 }
 
 export default function AppAreaLayout({ children }: { children: ReactNode }) {

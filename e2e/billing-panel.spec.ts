@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 import { createConfirmedUser, seedVitrine, setPlan, setTrialEndsAt, signIn } from './helpers'
 
 // Os rótulos vêm do Intl (R$ + espaço não separável), por isso casamos por regex.
-const ASSINAR = /Assinar por R\$.?79,90 por mês/
+const ASSINAR = /Assinar por R\$.?69,90 por mês/
 const DAY_MS = 86_400_000
 
 test('conta nova está no teste grátis e assina o Plano Essencial', async ({ page }) => {
@@ -41,7 +41,7 @@ test('avisa nos últimos dias do teste', async ({ page }) => {
 
   await setTrialEndsAt(user.id, new Date(Date.now() + 2 * DAY_MS))
   await page.reload()
-  await expect(page.getByText('Seu teste grátis termina em 2 dias. Assine para continuar usando o Agenn.')).toBeVisible()
+  await expect(page.getByText('Seu teste grátis termina em 2 dias. Assine para continuar usando o Vitrimove.')).toBeVisible()
   await page.getByRole('link', { name: 'Assinar', exact: true }).click()
   await expect(page).toHaveURL(/\/painel\/plano$/)
 })
@@ -60,7 +60,7 @@ test('teste vencido: o painel vira a tela de assinatura, mas Conta continua aber
 
   await page.goto('/painel/plano')
   await expect(page.getByRole('heading', { name: 'Seu teste terminou' })).toBeVisible()
-  await expect(page.getByRole('button', { name: /Assinar por R\$.?79,90\/mês/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: /Assinar por R\$.?69,90\/mês/ })).toBeVisible()
 
   await page.goto('/painel/conta')
   await expect(page.getByRole('heading', { name: 'Seu teste grátis terminou' })).toHaveCount(0)

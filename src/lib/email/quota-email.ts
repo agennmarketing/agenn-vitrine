@@ -42,7 +42,7 @@ export function buildQuotaEmail(input: {
     `A franquia de vídeo deste mês (${input.quotaGb} GB) foi usada por completo.`,
     `Até ${until}, os itens de ${vitrines} mostram só as fotos. Os vídeos voltam sozinhos no próximo mês e nada foi apagado.`,
     `Acompanhe o consumo em: ${input.panelUrl}`,
-    'Equipe Agenn',
+    'Equipe Vitrimove',
   ]
 
   const html = [
@@ -50,7 +50,7 @@ export function buildQuotaEmail(input: {
     `<p>${escapeHtml(paragraphs[1])}</p>`,
     `<p>${escapeHtml(paragraphs[2])}</p>`,
     `<p>Acompanhe o consumo em: <a href="${escapeHtml(input.panelUrl)}">${escapeHtml(input.panelUrl)}</a></p>`,
-    '<p>Equipe Agenn</p>',
+    '<p>Equipe Vitrimove</p>',
   ].join('\n')
 
   return { subject: 'A franquia de vídeo deste mês acabou', text: paragraphs.join('\n\n'), html }

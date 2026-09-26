@@ -10,8 +10,8 @@ import { APP_URL } from '../playwright.config'
 const MAILPIT_URL = process.env.MAILPIT_URL ?? 'http://127.0.0.1:54324'
 
 const SUBJECT_BY_TYPE: Record<'email' | 'recovery', string> = {
-  email: 'Confirme seu e-mail no Agenn',
-  recovery: 'Redefina sua senha do Agenn',
+  email: 'Confirme seu e-mail no Vitrimove',
+  recovery: 'Redefina sua senha do Vitrimove',
 }
 
 export function createAdminClient() {
@@ -355,7 +355,7 @@ export async function setVitrineStatus(vitrineId: string, status: 'active' | 'fr
 export async function vitrineBySubdomain(subdomain: string) {
   const { data } = await createAdminClient()
     .from('vitrines')
-    .select('type, service_segment, instagram, address, business_hours, theme')
+    .select('type, service_segment, instagram, address, business_hours, theme, cart_enabled')
     .eq('subdomain', subdomain)
     .single()
     .throwOnError()
@@ -445,6 +445,34 @@ export async function openAgenda(vitrineId: string, patch: Record<string, unknow
     .throwOnError()
 }
 
+// Cria um profissional já ligado aos serviços informados.
+export async function seedProfessional(
+  vitrineId: string,
+  ownerId: string,
+  fields: { name: string; itemIds: string[]; businessHours?: { day: number; open: string; close: string }[]; active?: boolean },
+) {
+  const admin = createAdminClient()
+  const { data: professional } = await admin
+    .from('professionals')
+    .insert({
+      owner_id: ownerId,
+      vitrine_id: vitrineId,
+      name: fields.name,
+      active: fields.active ?? true,
+      business_hours: fields.businessHours ?? null,
+    })
+    .select('id')
+    .single()
+    .throwOnError()
+  if (fields.itemIds.length > 0) {
+    await admin
+      .from('professional_items')
+      .insert(fields.itemIds.map((itemId) => ({ owner_id: ownerId, professional_id: professional.id, item_id: itemId })))
+      .throwOnError()
+  }
+  return professional
+}
+
 // Data de amanhã em São Paulo (AAAA-MM-DD).
 export function tomorrowInSaoPaulo() {
   return new Date(Date.now() - 3 * 3_600_000 + 86_400_000).toISOString().slice(0, 10)
@@ -453,7 +481,7 @@ export function tomorrowInSaoPaulo() {
 export async function appointmentsOf(vitrineId: string) {
   const { data } = await createAdminClient()
     .from('appointments')
-    .select('code, status, customer_name, customer_phone, notes, service_name, starts_at, blocked_until')
+    .select('code, status, customer_name, customer_phone, notes, service_name, professional_name, starts_at, blocked_until')
     .eq('vitrine_id', vitrineId)
     .order('starts_at')
     .throwOnError()

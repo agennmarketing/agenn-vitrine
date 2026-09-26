@@ -1,5 +1,6 @@
 import type { CheckoutValue } from '@/lib/cart/checkout'
 import { formatBRL } from '@/lib/money/money'
+import { formatPhone } from '@/lib/whatsapp/phone'
 
 export type CartMessageLine = {
   qty: number
@@ -14,6 +15,7 @@ export type CartMessageLine = {
 function footer(checkout: CheckoutValue): string[] {
   const parts: string[] = []
   if (checkout.name) parts.push(`Nome: ${checkout.name}`)
+  if (checkout.phone) parts.push(`Telefone: ${formatPhone(checkout.phone)}`)
   if (checkout.fulfillment === 'retirada') parts.push('Entrega: retirada')
   if (checkout.fulfillment === 'entrega') {
     parts.push('Entrega: entrega')

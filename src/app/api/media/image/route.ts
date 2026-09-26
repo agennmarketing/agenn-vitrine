@@ -14,13 +14,16 @@ import { NO_ACCESS_MESSAGE } from '@/lib/billing/status'
 
 const fieldsSchema = z
   .object({
-    role: z.enum(['cover', 'gallery', 'logo', 'banner']),
+    role: z.enum(['cover', 'gallery', 'logo', 'banner', 'avatar']),
     vitrineId: z.uuid(),
     itemId: z.uuid().nullable(),
+    professionalId: z.uuid().nullable(),
     position: z.coerce.number().int().min(1).max(2).nullable(),
   })
   .refine((value) => value.role !== 'gallery' || value.position !== null)
-  .refine((value) => (value.role === 'logo' || value.role === 'banner' ? value.itemId === null : true))
+  .refine((value) => (value.role === 'logo' || value.role === 'banner' || value.role === 'avatar' ? value.itemId === null : true))
+  // professionalId só existe na foto do profissional.
+  .refine((value) => value.role === 'avatar' || value.professionalId === null)
 
 const REASON_MESSAGE = {
   size: 'Imagem grande demais. Tente outra foto.',
@@ -43,10 +46,11 @@ export async function POST(request: Request) {
     role: text('role'),
     vitrineId: text('vitrineId'),
     itemId: text('itemId'),
+    professionalId: text('professionalId'),
     position: text('position'),
   })
   if (!parsed.success) return fail(400, 'Dados do envio inválidos.')
-  const { role, vitrineId, itemId, position } = parsed.data
+  const { role, vitrineId, itemId, professionalId, position } = parsed.data
   const { supabase, userId } = session
 
   const { data: vitrine } = await supabase.from('vitrines').select('id, subdomain').eq('id', vitrineId).maybeSingle()
@@ -60,6 +64,15 @@ export async function POST(request: Request) {
       .is('deleted_at', null)
       .maybeSingle()
     if (!item) return fail(404, 'Item não encontrado.')
+  }
+  if (professionalId) {
+    const { data: professional } = await supabase
+      .from('professionals')
+      .select('id')
+      .eq('id', professionalId)
+      .eq('vitrine_id', vitrineId)
+      .maybeSingle()
+    if (!professional) return fail(404, 'Profissional não encontrado.')
   }
   const { data: plan } = await supabase.rpc('my_entitlements')
   if (plan?.id !== 'essencial') return fail(403, NO_ACCESS_MESSAGE)
@@ -106,6 +119,7 @@ export async function POST(request: Request) {
     owner_id: userId,
     vitrine_id: vitrineId,
     item_id: itemId,
+    professional_id: professionalId,
     role,
     kind: 'image' as const,
     position: role === 'gallery' ? position! : 0,
@@ -118,9 +132,10 @@ export async function POST(request: Request) {
 
   try {
     // Mídia que ocupa o mesmo espaço (capa, posição da galeria, logo ou banner) é substituída.
-    if (itemId || role === 'logo' || role === 'banner') {
+    if (itemId || professionalId || role === 'logo' || role === 'banner') {
       let previousQuery = admin.from('media').select('id, storage_paths, mux_upload_id, mux_asset_id').eq('vitrine_id', vitrineId).eq('role', role)
       if (itemId) previousQuery = previousQuery.eq('item_id', itemId)
+      if (professionalId) previousQuery = previousQuery.eq('professional_id', professionalId)
       if (role === 'gallery') previousQuery = previousQuery.eq('position', position!)
       const { data: previous, error: previousError } = await previousQuery
       if (previousError) throw previousError

@@ -2,8 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { EMPTY_CHECKOUT_INPUT, todayInSaoPaulo, validateCheckout, type CheckoutSettings } from './checkout'
 
 const comida: CheckoutSettings = {
-  nameMode: 'required', fulfillmentMode: 'required', paymentMode: 'required', scheduleMode: 'optional', notesMode: 'optional',
-  paymentOptions: ['Pix', 'Cartão na entrega', 'Dinheiro'],
+  nameMode: 'required', phoneMode: 'off', fulfillmentMode: 'required', allowPickup: true, allowDelivery: true,
+  paymentMode: 'required', scheduleMode: 'optional', notesMode: 'optional',
+  paymentOptions: ['Pix', 'Cartão na entrega', 'Dinheiro'], extraNote: null,
 }
 const today = '2026-09-17'
 
@@ -29,6 +30,7 @@ describe('validateCheckout', () => {
       ok: true,
       value: {
         name: 'Ana',
+        phone: null,
         fulfillment: 'entrega',
         address: 'Rua A, 10',
         payment: 'Dinheiro',
@@ -63,7 +65,7 @@ describe('validateCheckout', () => {
     const off: CheckoutSettings = { ...comida, nameMode: 'off', fulfillmentMode: 'off', paymentMode: 'off', scheduleMode: 'off' }
     expect(validateCheckout(off, { ...EMPTY_CHECKOUT_INPUT, name: 'Ana', payment: 'Pix', notes: ' sem pressa ' }, today)).toEqual({
       ok: true,
-      value: { name: null, fulfillment: null, address: null, payment: null, changeForCents: null, schedule: null, notes: 'sem pressa' },
+      value: { name: null, phone: null, fulfillment: null, address: null, payment: null, changeForCents: null, schedule: null, notes: 'sem pressa' },
     })
     expect(validateCheckout(off, { ...EMPTY_CHECKOUT_INPUT, notes: 'x'.repeat(301) }, today)).toEqual({
       ok: false,

@@ -20,7 +20,7 @@ describe('mapDbError', () => {
 
   it('limite zero é a conta sem acesso', () => {
     expect(mapDbError({ message: 'plan_limit:items', hint: '0' })).toBe(
-      'Seu acesso está pausado. Assine o Plano Essencial para continuar usando o Agenn.',
+      'Seu acesso está pausado. Assine o Plano Essencial para continuar usando o Vitrimove.',
     )
   })
 

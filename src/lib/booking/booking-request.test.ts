@@ -34,8 +34,19 @@ describe('corpo do agendamento', () => {
   it('aceita um pedido completo', () => {
     expect(parseBookingRequest(body)).toEqual({
       ok: true,
-      value: { itemId: ITEM, date: '2030-01-07', time: '09:30', name: 'Maria', phone: '+5511912345678', notes: 'unha curta' },
+      value: {
+        itemId: ITEM,
+        date: '2030-01-07',
+        time: '09:30',
+        professionalId: null,
+        name: 'Maria',
+        phone: '+5511912345678',
+        notes: 'unha curta',
+      },
     })
+    // Com profissional escolhido, o id vai junto.
+    const comProfissional = parseBookingRequest({ ...body, professionalId: ITEM })
+    expect(comProfissional.ok && comProfissional.value.professionalId).toBe(ITEM)
   })
 
   it('recusa serviço, data ou horário malformados', () => {

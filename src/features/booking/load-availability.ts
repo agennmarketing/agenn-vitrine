@@ -5,6 +5,7 @@ import {
   DEFAULT_SERVICE_MINUTES,
   type AvailabilityInput,
   type BookingRules,
+  type Interval,
 } from '@/lib/booking/availability'
 import { env } from '@/lib/env'
 import { parseHost } from '@/lib/hosts/parse-host'
@@ -22,10 +23,15 @@ export function vitrineSubdomain(request: NextRequest): string | null {
   return host.type === 'vitrine' ? host.subdomain : null
 }
 
+export type BookableProfessional = { id: string; name: string; availability: AvailabilityInput }
+
 export type BookableService = {
   vitrine: { id: string; name: string; showPrices: boolean }
   item: { id: string; name: string; priceType: 'fixed' | 'from' | 'on_request'; priceCents: number | null; promoPriceCents: number | null }
+  /** Agenda do negócio inteiro; é a que vale quando não há profissional cadastrado. */
   availability: AvailabilityInput
+  /** Profissionais ativos que fazem este serviço, cada um com a própria agenda. */
+  professionals: BookableProfessional[]
 }
 
 function readHours(value: unknown): BusinessHours {
@@ -40,6 +46,10 @@ function readHours(value: unknown): BusinessHours {
  * Tudo que o motor de disponibilidade precisa para um serviço: regras da vitrine e o
  * que ocupa a agenda dentro da janela. Os agendamentos entram só como trechos
  * ocupados — nada de nome ou contato sai daqui.
+ *
+ * Com profissionais cadastrados, cada um tem a própria lista de ocupados: os
+ * agendamentos dele mais os que não têm profissional (esses ocupam o negócio todo,
+ * e é o caso de tudo que foi marcado antes de existirem profissionais).
  */
 export async function loadBookableService(subdomain: string, itemId: string, now = new Date()): Promise<BookableService | null> {
   const admin = createSupabaseAdminClient()
@@ -68,10 +78,10 @@ export async function loadBookableService(subdomain: string, itemId: string, now
     maxDaysAhead: vitrine.booking_max_days_ahead,
   }
   const range = bookingRange(rules, now)
-  const [appointments, blocks] = await Promise.all([
+  const [appointments, blocks, links] = await Promise.all([
     admin
       .from('appointments')
-      .select('starts_at, blocked_until')
+      .select('starts_at, blocked_until, professional_id')
       .eq('vitrine_id', vitrine.id)
       .eq('status', 'confirmed')
       .lt('starts_at', range.end.toISOString())
@@ -82,9 +92,33 @@ export async function loadBookableService(subdomain: string, itemId: string, now
       .eq('vitrine_id', vitrine.id)
       .lt('starts_at', range.end.toISOString())
       .gt('ends_at', range.start.toISOString()),
+    admin.from('professional_items').select('professional_id').eq('item_id', item.id),
   ])
   if (appointments.error) throw appointments.error
   if (blocks.error) throw blocks.error
+  if (links.error) throw links.error
+
+  const professionalIds = (links.data ?? []).map((link) => link.professional_id)
+  const professionalRows = professionalIds.length
+    ? await admin
+        .from('professionals')
+        .select('id, name, business_hours')
+        .eq('vitrine_id', vitrine.id)
+        .eq('active', true)
+        .in('id', professionalIds)
+        .order('position')
+        .order('created_at')
+    : { data: [], error: null }
+  if (professionalRows.error) throw professionalRows.error
+
+  const interval = (row: { starts_at: string; blocked_until: string }): Interval => ({
+    start: new Date(row.starts_at),
+    end: new Date(row.blocked_until),
+  })
+  const busyRows = appointments.data ?? []
+  const blockList: Interval[] = (blocks.data ?? []).map((row) => ({ start: new Date(row.starts_at), end: new Date(row.ends_at) }))
+  const durationMinutes = item.duration_minutes ?? DEFAULT_SERVICE_MINUTES
+  const shared = { durationMinutes, rules, blocks: blockList, now }
 
   return {
     vitrine: { id: vitrine.id, name: vitrine.name, showPrices: vitrine.show_prices },
@@ -95,12 +129,24 @@ export async function loadBookableService(subdomain: string, itemId: string, now
       priceCents: item.price_cents,
       promoPriceCents: item.promo_price_cents,
     },
-    availability: {
-      durationMinutes: item.duration_minutes ?? DEFAULT_SERVICE_MINUTES,
-      rules,
-      busy: (appointments.data ?? []).map((row) => ({ start: new Date(row.starts_at), end: new Date(row.blocked_until) })),
-      blocks: (blocks.data ?? []).map((row) => ({ start: new Date(row.starts_at), end: new Date(row.ends_at) })),
-      now,
-    },
+    availability: { ...shared, busy: busyRows.map(interval) },
+    professionals: (professionalRows.data ?? []).map((professional) => {
+      // Sem horário próprio, o profissional atende nos horários da vitrine.
+      const ownHours = readHours(professional.business_hours)
+      return {
+        id: professional.id,
+        name: professional.name,
+        availability: {
+          ...shared,
+          rules: { ...rules, hours: ownHours.length > 0 ? ownHours : rules.hours },
+          busy: busyRows.filter((row) => row.professional_id === null || row.professional_id === professional.id).map(interval),
+        },
+      }
+    }),
   }
+}
+
+/** Agendas que valem para este serviço: a de cada profissional ou, sem nenhum, a do negócio. */
+export function bookableAgendas(service: BookableService): AvailabilityInput[] {
+  return service.professionals.length > 0 ? service.professionals.map((p) => p.availability) : [service.availability]
 }

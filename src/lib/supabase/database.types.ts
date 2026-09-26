@@ -150,6 +150,8 @@ export type Database = {
           notes: string | null
           owner_id: string
           price_text: string | null
+          professional_id: string | null
+          professional_name: string | null
           service_name: string
           starts_at: string
           status: string
@@ -170,6 +172,8 @@ export type Database = {
           notes?: string | null
           owner_id: string
           price_text?: string | null
+          professional_id?: string | null
+          professional_name?: string | null
           service_name: string
           starts_at: string
           status?: string
@@ -190,6 +194,8 @@ export type Database = {
           notes?: string | null
           owner_id?: string
           price_text?: string | null
+          professional_id?: string | null
+          professional_name?: string | null
           service_name?: string
           starts_at?: string
           status?: string
@@ -201,6 +207,13 @@ export type Database = {
             columns: ["item_id"]
             isOneToOne: false
             referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
             referencedColumns: ["id"]
           },
           {
@@ -290,7 +303,10 @@ export type Database = {
       }
       checkout_settings: {
         Row: {
+          allow_delivery: boolean
+          allow_pickup: boolean
           created_at: string
+          extra_note: string | null
           fulfillment_mode: string
           id: string
           name_mode: string
@@ -298,12 +314,16 @@ export type Database = {
           owner_id: string
           payment_mode: string
           payment_options: string[]
+          phone_mode: string
           schedule_mode: string
           updated_at: string
           vitrine_id: string
         }
         Insert: {
+          allow_delivery?: boolean
+          allow_pickup?: boolean
           created_at?: string
+          extra_note?: string | null
           fulfillment_mode?: string
           id?: string
           name_mode?: string
@@ -311,12 +331,16 @@ export type Database = {
           owner_id: string
           payment_mode?: string
           payment_options?: string[]
+          phone_mode?: string
           schedule_mode?: string
           updated_at?: string
           vitrine_id: string
         }
         Update: {
+          allow_delivery?: boolean
+          allow_pickup?: boolean
           created_at?: string
+          extra_note?: string | null
           fulfillment_mode?: string
           id?: string
           name_mode?: string
@@ -324,6 +348,7 @@ export type Database = {
           owner_id?: string
           payment_mode?: string
           payment_options?: string[]
+          phone_mode?: string
           schedule_mode?: string
           updated_at?: string
           vitrine_id?: string
@@ -478,6 +503,7 @@ export type Database = {
           deleted_at: string | null
           description: string
           duration_minutes: number | null
+          external_url: string | null
           id: string
           name: string
           notice: string | null
@@ -486,6 +512,7 @@ export type Database = {
           price_cents: number | null
           price_type: string
           promo_price_cents: number | null
+          sale_mode: string
           sold_out: boolean
           tags: string[]
           updated_at: string
@@ -501,6 +528,7 @@ export type Database = {
           deleted_at?: string | null
           description?: string
           duration_minutes?: number | null
+          external_url?: string | null
           id?: string
           name: string
           notice?: string | null
@@ -509,6 +537,7 @@ export type Database = {
           price_cents?: number | null
           price_type?: string
           promo_price_cents?: number | null
+          sale_mode?: string
           sold_out?: boolean
           tags?: string[]
           updated_at?: string
@@ -524,6 +553,7 @@ export type Database = {
           deleted_at?: string | null
           description?: string
           duration_minutes?: number | null
+          external_url?: string | null
           id?: string
           name?: string
           notice?: string | null
@@ -532,6 +562,7 @@ export type Database = {
           price_cents?: number | null
           price_type?: string
           promo_price_cents?: number | null
+          sale_mode?: string
           sold_out?: boolean
           tags?: string[]
           updated_at?: string
@@ -577,6 +608,7 @@ export type Database = {
           mux_upload_id: string | null
           owner_id: string
           position: number
+          professional_id: string | null
           role: string
           status: string
           storage_paths: Json | null
@@ -599,6 +631,7 @@ export type Database = {
           mux_upload_id?: string | null
           owner_id: string
           position?: number
+          professional_id?: string | null
           role: string
           status?: string
           storage_paths?: Json | null
@@ -621,6 +654,7 @@ export type Database = {
           mux_upload_id?: string | null
           owner_id?: string
           position?: number
+          professional_id?: string | null
           role?: string
           status?: string
           storage_paths?: Json | null
@@ -635,6 +669,13 @@ export type Database = {
             columns: ["item_id"]
             isOneToOne: false
             referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
             referencedColumns: ["id"]
           },
           {
@@ -725,6 +766,86 @@ export type Database = {
           show_watermark?: boolean
         }
         Relationships: []
+      }
+      professional_items: {
+        Row: {
+          created_at: string
+          item_id: string
+          owner_id: string
+          professional_id: string
+        }
+        Insert: {
+          created_at?: string
+          item_id: string
+          owner_id?: string
+          professional_id: string
+        }
+        Update: {
+          created_at?: string
+          item_id?: string
+          owner_id?: string
+          professional_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professional_items_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "professional_items_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      professionals: {
+        Row: {
+          active: boolean
+          business_hours: Json | null
+          created_at: string
+          id: string
+          name: string
+          owner_id: string
+          position: number
+          updated_at: string
+          vitrine_id: string
+        }
+        Insert: {
+          active?: boolean
+          business_hours?: Json | null
+          created_at?: string
+          id?: string
+          name: string
+          owner_id?: string
+          position?: number
+          updated_at?: string
+          vitrine_id: string
+        }
+        Update: {
+          active?: boolean
+          business_hours?: Json | null
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          position?: number
+          updated_at?: string
+          vitrine_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professionals_vitrine_id_fkey"
+            columns: ["vitrine_id"]
+            isOneToOne: false
+            referencedRelation: "vitrines"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -1051,6 +1172,7 @@ export type Database = {
           p_item_id: string
           p_notes: string
           p_price_text: string
+          p_professional_id?: string
           p_starts_at: string
           p_vitrine_id: string
         }

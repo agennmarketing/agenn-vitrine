@@ -17,7 +17,7 @@ import {
   vitrineSettingsSchema,
 } from '@/lib/vitrines/schemas'
 import { SEGMENT_COPY } from '@/lib/vitrines/service-segments'
-import { DEFAULT_BUTTON_TEXT } from '@/lib/vitrines/vitrine-types'
+import { DEFAULT_BUTTON_TEXT, SAMPLE_CATEGORIES } from '@/lib/vitrines/vitrine-types'
 
 export async function createVitrineAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const fields = readFormFields(formData, [
@@ -45,12 +45,15 @@ export async function createVitrineAction(_prev: FormState, formData: FormData):
     p_default_button_text: DEFAULT_BUTTON_TEXT[input.type],
     p_whatsapp_label: input.whatsappLabel,
     p_whatsapp_phone: input.whatsappPhone,
-    // As categorias de exemplo seguem o segmento; ele só muda textos, a vitrine é sempre de serviços.
-    p_categories: [...SEGMENT_COPY[input.serviceSegment].categories],
-    p_service_segment: input.serviceSegment,
+    // Serviços: as categorias de exemplo seguem o segmento, que só muda textos.
+    // Produtos: as categorias de exemplo do tipo.
+    p_categories: input.serviceSegment
+      ? [...SEGMENT_COPY[input.serviceSegment].categories]
+      : [...SAMPLE_CATEGORIES[input.type]],
+    p_service_segment: input.serviceSegment ?? undefined,
     p_instagram: input.instagram ?? undefined,
     p_address: input.address ?? undefined,
-    p_business_hours: input.businessHours,
+    p_business_hours: input.businessHours ?? undefined,
   })
   if (error) {
     if (error.code === '23505') return { fieldErrors: { subdomain: SUBDOMAIN_TAKEN_MESSAGE }, values: fields }
@@ -129,7 +132,8 @@ export async function deleteVitrineAction(vitrineId: string, _prev: FormState, f
 
 const CHECKOUT_FIELDS = [
   'cartEnabled', 'cartButtonText', 'defaultButtonText',
-  'nameMode', 'fulfillmentMode', 'paymentMode', 'scheduleMode', 'notesMode', 'paymentOptions',
+  'nameMode', 'phoneMode', 'fulfillmentMode', 'allowPickup', 'allowDelivery', 'paymentMode', 'scheduleMode',
+  'notesMode', 'paymentOptions', 'extraNote',
 ] as const
 
 export async function updateCheckoutAction(vitrineId: string, _prev: FormState, formData: FormData): Promise<FormState> {
@@ -149,17 +153,21 @@ export async function updateCheckoutAction(vitrineId: string, _prev: FormState, 
     .from('checkout_settings')
     .update({
       name_mode: input.nameMode,
+      phone_mode: input.phoneMode,
       fulfillment_mode: input.fulfillmentMode,
+      allow_pickup: input.allowPickup,
+      allow_delivery: input.allowDelivery,
       payment_mode: input.paymentMode,
       schedule_mode: input.scheduleMode,
       notes_mode: input.notesMode,
       payment_options: input.paymentOptions,
+      extra_note: input.extraNote,
     })
     .eq('vitrine_id', vitrineId)
   if (error) return { error: mapDbError(error), values: fields }
 
   revalidateVitrine(vitrine.subdomain)
-  return { success: 'Mensagens salvas.', values: fields }
+  return { success: 'Configurações de pedido salvas.', values: fields }
 }
 
 export async function updateAppearanceAction(vitrineId: string, _prev: FormState, formData: FormData): Promise<FormState> {

@@ -58,7 +58,7 @@ test('o painel tem o manifesto do aplicativo do profissional, aberto sem sessão
   expect(response.status()).toBe(200)
   expect(response.headers()['content-type']).toContain('application/manifest+json')
   const manifest = await response.json()
-  expect(manifest.name).toBe('Agenn')
+  expect(manifest.name).toBe('Vitrimove')
   expect(manifest.start_url).toBe('/painel')
   expect(manifest.shortcuts.map((atalho: { url: string }) => atalho.url)).toEqual(['/painel', '/painel/agenda'])
   expect((await request.get(`${APP_URL}/sw.js`)).status()).toBe(200)

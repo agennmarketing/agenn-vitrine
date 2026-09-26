@@ -44,7 +44,11 @@ export function isIsoDate(value: unknown): value is string {
   return typeof value === 'string' && DATE.test(value) && !Number.isNaN(new Date(`${value}T12:00:00Z`).getTime())
 }
 
-export type BookingRequest = { itemId: string; date: string; time: string } & BookingContactValue
+export function isTime(value: unknown): value is string {
+  return typeof value === 'string' && TIME.test(value)
+}
+
+export type BookingRequest = { itemId: string; date: string; time: string; professionalId: string | null } & BookingContactValue
 
 // Corpo do POST /api/agendamentos.
 export function parseBookingRequest(
@@ -55,5 +59,6 @@ export function parseBookingRequest(
   if (!isUuid(raw.itemId) || !isIsoDate(raw.date) || !TIME.test(text('time'))) return { ok: false, errors: {} }
   const contact = validateBookingContact({ name: text('name'), whatsapp: text('whatsapp'), notes: text('notes') })
   if (!contact.ok) return contact
-  return { ok: true, value: { itemId: raw.itemId, date: raw.date, time: text('time'), ...contact.value } }
+  const professionalId = isUuid(raw.professionalId) ? raw.professionalId : null
+  return { ok: true, value: { itemId: raw.itemId, date: raw.date, time: text('time'), professionalId, ...contact.value } }
 }

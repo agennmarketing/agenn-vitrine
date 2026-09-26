@@ -3,8 +3,8 @@ import { DEFAULT_BUTTON_TEXT, SAMPLE_CATEGORIES, VITRINE_TYPES, WIZARD_VITRINE_T
 
 it('padrões por tipo de vitrine', () => {
   expect(VITRINE_TYPES).toEqual(['produtos', 'servicos', 'comida'])
-  // O assistente só cria serviços; 'produtos' e 'comida' seguem válidos no banco.
-  expect(WIZARD_VITRINE_TYPES).toEqual(['servicos'])
+  // O assistente cria serviços e produtos; 'comida' segue válido no banco.
+  expect(WIZARD_VITRINE_TYPES).toEqual(['servicos', 'produtos'])
   expect(DEFAULT_BUTTON_TEXT).toEqual({ produtos: 'Adicionar à sacola', servicos: 'Agendar horário', comida: 'Pedir' })
   expect(SAMPLE_CATEGORIES.produtos).toEqual(['Destaques', 'Novidades'])
   expect(SAMPLE_CATEGORIES.servicos).toEqual(['Serviços', 'Pacotes'])

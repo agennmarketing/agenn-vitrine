@@ -1,6 +1,6 @@
 # Fase 5 — Infraestrutura (Stripe)
 
-Desde 2026-09-22 existe um plano só: **Plano Essencial, R$ 79,90 por mês** (o teste grátis de
+Desde 2026-09-22 existe um plano só: **Plano Essencial, R$ 69,90 por mês** (o teste grátis de
 7 dias é nosso, sem cartão, e não usa o Stripe). Os antigos Gratuito e Pro saíram. Falta ligar o
 resto. Faça tudo primeiro em **modo de teste** (nos painéis novos, *sandbox*) e repita em
 **modo ao vivo** antes do lançamento — chaves, ids de preço e segredo do webhook são
@@ -13,7 +13,7 @@ Para o Essencial, crie o preço novo (seção 1), troque `STRIPE_PRICE_MONTH` e 
 ## 1. Ids dos preços
 
 Painel do Stripe → Catálogo de produtos → crie (ou renomeie) o produto **Plano Essencial** com
-um preço recorrente **mensal de R$ 79,90 em BRL** e copie o id que começa com `price_`. Se o
+um preço recorrente **mensal de R$ 69,90 em BRL** e copie o id que começa com `price_`. Se o
 produto só existir em um dos modos, crie o equivalente no outro. Arquive os preços antigos do Pro.
 
 ## 2. Webhook
@@ -65,7 +65,7 @@ Painel → Configurações → Faturamento → Portal do cliente:
 |---|---|---|---|
 | `STRIPE_SECRET_KEY` | `sk_test_...` / `sk_live_...` | Secret | Production e Preview |
 | `STRIPE_WEBHOOK_SECRET` | `whsec_...` do destino criado na seção 2 | Secret | Production e Preview |
-| `STRIPE_PRICE_MONTH` | `price_...` do mensal do Essencial (R$ 79,90) | Config | Production e Preview |
+| `STRIPE_PRICE_MONTH` | `price_...` do mensal do Essencial (R$ 69,90) | Config | Production e Preview |
 
 `BILLING_DRIVER` não precisa ser criada: sem ela o padrão já é `stripe`. O valor `fake` é
 recusado pelo próprio código quando `VERCEL_ENV=production`. Depois de salvar, faça um

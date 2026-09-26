@@ -1,18 +1,24 @@
 import { parseBRLToCents } from '@/lib/money/money'
+import { normalizePhone } from '@/lib/whatsapp/phone'
 
 export type FieldMode = 'off' | 'optional' | 'required'
 
 export type CheckoutSettings = {
   nameMode: FieldMode
+  phoneMode: FieldMode
   fulfillmentMode: FieldMode
+  allowPickup: boolean
+  allowDelivery: boolean
   paymentMode: FieldMode
   scheduleMode: FieldMode
   notesMode: FieldMode
   paymentOptions: string[]
+  extraNote: string | null
 }
 
 export type CheckoutInput = {
   name: string
+  phone: string
   fulfillment: string
   address: string
   payment: string
@@ -24,6 +30,7 @@ export type CheckoutInput = {
 
 export type CheckoutValue = {
   name: string | null
+  phone: string | null
   fulfillment: 'retirada' | 'entrega' | null
   address: string | null
   payment: string | null
@@ -33,7 +40,15 @@ export type CheckoutValue = {
 }
 
 export const EMPTY_CHECKOUT_INPUT: CheckoutInput = {
-  name: '', fulfillment: '', address: '', payment: '', changeFor: '', date: '', time: '', notes: '',
+  name: '', phone: '', fulfillment: '', address: '', payment: '', changeFor: '', date: '', time: '', notes: '',
+}
+
+/** Retirada e entrega que o negócio aceita, na ordem em que aparecem. */
+export function fulfillmentOptions(settings: CheckoutSettings): ('retirada' | 'entrega')[] {
+  const options: ('retirada' | 'entrega')[] = []
+  if (settings.allowPickup) options.push('retirada')
+  if (settings.allowDelivery) options.push('entrega')
+  return options
 }
 
 export const CASH_OPTION = 'Dinheiro'
@@ -49,7 +64,7 @@ export function validateCheckout(
 ): { ok: true; value: CheckoutValue } | { ok: false; errors: Partial<Record<keyof CheckoutInput, string>> } {
   const errors: Partial<Record<keyof CheckoutInput, string>> = {}
   const value: CheckoutValue = {
-    name: null, fulfillment: null, address: null, payment: null, changeForCents: null, schedule: null, notes: null,
+    name: null, phone: null, fulfillment: null, address: null, payment: null, changeForCents: null, schedule: null, notes: null,
   }
 
   if (settings.nameMode !== 'off') {
@@ -59,10 +74,24 @@ export function validateCheckout(
     else value.name = name || null
   }
 
+  if (settings.phoneMode !== 'off') {
+    const phone = input.phone.trim()
+    if (!phone) {
+      if (settings.phoneMode === 'required') errors.phone = 'Informe seu telefone.'
+    } else {
+      const normalized = normalizePhone(phone)
+      if (!normalized) errors.phone = 'Informe um telefone válido com DDD.'
+      else value.phone = normalized
+    }
+  }
+
   if (settings.fulfillmentMode !== 'off') {
+    const allowed = fulfillmentOptions(settings)
     const fulfillment = input.fulfillment
     if (fulfillment !== 'retirada' && fulfillment !== 'entrega') {
       if (settings.fulfillmentMode === 'required') errors.fulfillment = 'Escolha retirada ou entrega.'
+    } else if (!allowed.includes(fulfillment)) {
+      errors.fulfillment = 'Escolha uma opção disponível.'
     } else {
       value.fulfillment = fulfillment
       if (fulfillment === 'entrega') {
