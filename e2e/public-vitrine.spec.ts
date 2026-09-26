@@ -33,6 +33,8 @@ test('endereço passa de 404 para a vitrine assim que ela é criada no painel', 
   const user = await createConfirmedUser('nasce')
   await signIn(page, user.email, user.password)
   await page.goto('/painel/vitrines/nova')
+  await page.getByLabel('Serviços e Agendamentos').check()
+  await page.getByRole('button', { name: 'Continuar' }).click()
   await page.getByLabel('Barbearia').check()
   await page.getByRole('button', { name: 'Continuar' }).click()
   await page.getByLabel('Nome do negócio').fill('Barbearia Nova')

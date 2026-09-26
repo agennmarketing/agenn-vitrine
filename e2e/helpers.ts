@@ -355,7 +355,7 @@ export async function setVitrineStatus(vitrineId: string, status: 'active' | 'fr
 export async function vitrineBySubdomain(subdomain: string) {
   const { data } = await createAdminClient()
     .from('vitrines')
-    .select('type, service_segment, instagram, address, business_hours, theme')
+    .select('type, service_segment, instagram, address, business_hours, theme, cart_enabled')
     .eq('subdomain', subdomain)
     .single()
     .throwOnError()
