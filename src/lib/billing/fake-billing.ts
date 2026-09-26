@@ -15,7 +15,7 @@ const ID = /^[a-z]+_fake_[0-9a-f-]{36}$/
 
 export const FAKE_PRICE_MONTH = 'price_fake_mes'
 
-const FAKE_PRICES: BillingPrice[] = [{ id: FAKE_PRICE_MONTH, interval: 'month', amountCents: 7990 }]
+const FAKE_PRICES: BillingPrice[] = [{ id: FAKE_PRICE_MONTH, interval: 'month', amountCents: 6990 }]
 
 export type FakeCheckoutSession = {
   id: string

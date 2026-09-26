@@ -119,7 +119,7 @@ test('teste vencido tira a vitrine do ar; assinar devolve tudo na hora; cancelar
 
   // Assinar pela própria tela de assinatura.
   await page.goto(`/painel/vitrines/${vitrine.id}/itens`)
-  await page.getByRole('button', { name: /Assinar por R\$.?79,90 por mês/ }).click()
+  await page.getByRole('button', { name: /Assinar por R\$.?69,90 por mês/ }).click()
   await page.waitForURL(/\/painel\/plano\?assinatura=ok$/)
   await expect(page.getByRole('heading', { name: 'Plano Essencial — Ativo' })).toBeVisible()
 

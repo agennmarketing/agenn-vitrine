@@ -24,7 +24,7 @@ export const TERMS: LegalSection[] = [
     paragraphs: [
       'Existe um único plano, o Plano Essencial. Os limites dele estão descritos no painel e podem mudar; mudanças que reduzam limites de um plano já contratado são avisadas com antecedência.',
       'Toda conta nova começa com um teste grátis de 7 dias, com todas as funções do Plano Essencial. Não pedimos cartão para começar o teste, e ele não vira cobrança sozinho.',
-      'O Plano Essencial custa R$ 79,90 por mês, com renovação automática ao fim de cada mês, até que você cancele. O pagamento é feito com cartão de crédito, processado pela Stripe; não temos acesso ao número do seu cartão.',
+      'O Plano Essencial custa R$ 69,90 por mês, com renovação automática ao fim de cada mês, até que você cancele. O pagamento é feito com cartão de crédito, processado pela Stripe; não temos acesso ao número do seu cartão.',
       'Reajustes de preço são avisados por e-mail com pelo menos 30 dias de antecedência e valem a partir da renovação seguinte.',
       'Se a cobrança falhar, tentamos novamente por até 7 dias. Nesse período a assinatura continua valendo. Sem sucesso, a assinatura é cancelada e o acesso fica pausado, como descrito a seguir.',
     ],

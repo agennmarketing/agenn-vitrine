@@ -17,7 +17,7 @@ function useBillingRedirect(url: string | undefined) {
 
 const EMPTY: BillingRedirectState = {}
 
-// Um plano, uma cobrança: o botão já diz o preço ("Assinar por R$ 79,90 por mês"), a não ser que venha outro rótulo.
+// Um plano, uma cobrança: o botão já diz o preço ("Assinar por R$ 69,90 por mês"), a não ser que venha outro rótulo.
 export function SubscribeForm({
   priceLabel,
   label,

@@ -2,7 +2,7 @@
 // textos legais não estão prontos para o lançamento.
 export const COMPANY = {
   legalName: 'A PREENCHER — razão social',
-  tradeName: 'Agenn',
+  tradeName: 'Vitrimove',
   cnpj: 'A PREENCHER — 00.000.000/0001-00',
   address: 'A PREENCHER — endereço completo',
   contactEmail: 'suporte@agenn.com.br',
@@ -10,7 +10,7 @@ export const COMPANY = {
 }
 
 // Mudou o texto? Mude a data. É ela que aparece como "Última atualização".
-export const LEGAL_VERSION = '2026-09-20'
+export const LEGAL_VERSION = '2026-09-25'
 
 const [ano, mes, dia] = LEGAL_VERSION.split('-')
 export const LEGAL_VERSION_LABEL = `${dia}/${mes}/${ano}`

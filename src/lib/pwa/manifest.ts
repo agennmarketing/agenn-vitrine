@@ -67,8 +67,8 @@ export function vitrineManifest(vitrine: {
 export function painelManifest(): MetadataRoute.Manifest {
   return {
     id: '/painel',
-    name: 'Agenn',
-    short_name: 'Agenn',
+    name: 'Vitrimove',
+    short_name: 'Vitrimove',
     description: 'Cuide da sua vitrine e da sua agenda pelo celular.',
     // Abre direto no painel; quem não está logado cai na tela de entrar, que está no escopo.
     start_url: '/painel',

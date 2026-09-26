@@ -10,8 +10,8 @@ import { APP_URL } from '../playwright.config'
 const MAILPIT_URL = process.env.MAILPIT_URL ?? 'http://127.0.0.1:54324'
 
 const SUBJECT_BY_TYPE: Record<'email' | 'recovery', string> = {
-  email: 'Confirme seu e-mail no Agenn',
-  recovery: 'Redefina sua senha do Agenn',
+  email: 'Confirme seu e-mail no Vitrimove',
+  recovery: 'Redefina sua senha do Vitrimove',
 }
 
 export function createAdminClient() {

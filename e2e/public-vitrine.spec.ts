@@ -64,7 +64,7 @@ test('catálogo, tela do item com variação e mensagem com código de pedido', 
   await expect(page.getByRole('heading', { name: 'Destaques' })).toBeVisible()
   await expect(page.getByText('R$ 25,90')).toBeVisible()
   await expect(page.getByText('A partir de R$ 39,90')).toBeVisible()
-  await expect(page.getByText('Feito com Agenn')).toHaveCount(0)
+  await expect(page.getByText('Feito com Vitrimove')).toHaveCount(0)
 
   await page.getByRole('button', { name: 'Camiseta' }).click()
   await expect(page).toHaveURL(new RegExp(`\\?item=${withVariations.code}$`))

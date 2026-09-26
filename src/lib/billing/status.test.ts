@@ -136,14 +136,14 @@ describe('trialNotice', () => {
 
   it('só aparece nos 3 últimos dias', () => {
     expect(notice('2026-09-21T12:00:00.000Z')).toBeNull()
-    expect(notice('2026-09-20T12:00:00.000Z')).toBe('Seu teste grátis termina em 3 dias. Assine para continuar usando o Agenn.')
-    expect(notice('2026-09-19T12:00:00.000Z')).toBe('Seu teste grátis termina em 2 dias. Assine para continuar usando o Agenn.')
+    expect(notice('2026-09-20T12:00:00.000Z')).toBe('Seu teste grátis termina em 3 dias. Assine para continuar usando o Vitrimove.')
+    expect(notice('2026-09-19T12:00:00.000Z')).toBe('Seu teste grátis termina em 2 dias. Assine para continuar usando o Vitrimove.')
   })
 
   it('faltando 1 dia e no último dia', () => {
-    expect(notice('2026-09-18T12:00:00.000Z')).toBe('Seu teste grátis termina amanhã. Assine para continuar usando o Agenn.')
+    expect(notice('2026-09-18T12:00:00.000Z')).toBe('Seu teste grátis termina amanhã. Assine para continuar usando o Vitrimove.')
     // 23:30 de Brasília ainda é hoje, embora já seja o dia 18 em UTC.
-    expect(notice('2026-09-18T02:30:00.000Z')).toBe('Seu teste grátis termina hoje. Assine para continuar usando o Agenn.')
+    expect(notice('2026-09-18T02:30:00.000Z')).toBe('Seu teste grátis termina hoje. Assine para continuar usando o Vitrimove.')
   })
 
   it('não aparece para quem assinou', () => {
@@ -171,13 +171,13 @@ describe('describeSubscription', () => {
       NOW,
     )
     expect([summary.title, summary.showSubscribe, summary.showPortal]).toEqual(['Teste grátis — 7 dias restantes', true, false])
-    expect(summary.detail).toBe('Vai até 24/09/2026. Assine para continuar usando o Agenn depois disso.')
+    expect(summary.detail).toBe('Vai até 24/09/2026. Assine para continuar usando o Vitrimove depois disso.')
   })
 
   it('teste encerrado lembra que os dados continuam guardados', () => {
     const summary = describeSubscription({ ...base, ...unpaid, subscription_status: 'expired' }, NOW)
     expect([summary.access.status, summary.title, summary.showSubscribe]).toEqual(['expired', 'Seu teste terminou', true])
-    expect(summary.detail).toBe('Seus dados continuam guardados: assine para voltar a usar o Agenn.')
+    expect(summary.detail).toBe('Seus dados continuam guardados: assine para voltar a usar o Vitrimove.')
   })
 
   it('checkout começado e não concluído não mostra o portal', () => {
@@ -200,7 +200,7 @@ describe('describeSubscription', () => {
     const summary = describeSubscription({ ...base, status: 'past_due', grace_until: '2026-09-24T12:00:00.000Z' }, NOW)
     expect(summary.access.hasAccess).toBe(true)
     expect(summary.detail).toBe(
-      'Não conseguimos cobrar seu cartão. Atualize o pagamento até 24/09/2026 para continuar usando o Agenn.',
+      'Não conseguimos cobrar seu cartão. Atualize o pagamento até 24/09/2026 para continuar usando o Vitrimove.',
     )
   })
 
@@ -212,7 +212,7 @@ describe('describeSubscription', () => {
     expect([summary.access.status, summary.showSubscribe, summary.showPortal]).toEqual(['canceled', true, true])
     expect([summary.title, summary.detail]).toEqual([
       'Sua assinatura terminou',
-      'Seus dados continuam guardados: assine para voltar a usar o Agenn.',
+      'Seus dados continuam guardados: assine para voltar a usar o Vitrimove.',
     ])
   })
 })
