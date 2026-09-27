@@ -23,10 +23,10 @@ export function parseHost(rawHost: string | null, config: HostConfig): HostResol
     }
   }
 
-  // Prévias da Vercel não têm subdomínio de vitrine: servem para testar o painel.
+  // Prévias da hospedagem (Vercel ou Netlify) não têm subdomínio de vitrine: abrem
+  // direto a área do painel.
   const withoutPort = host.split(':')[0]
-  // Prévias da hospedagem (Vercel ou Cloudflare) abrem direto a área do painel.
-  for (const previewDomain of ['vercel.app', 'workers.dev', 'pages.dev']) {
+  for (const previewDomain of ['vercel.app', 'netlify.app']) {
     if (withoutPort === previewDomain || withoutPort.endsWith(`.${previewDomain}`)) return { type: 'app' }
   }
 

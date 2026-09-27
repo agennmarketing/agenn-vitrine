@@ -13,7 +13,7 @@ import type { NextConfig } from 'next'
 const hasSentryDsn = Boolean(process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN)
 
 // Produção é produção em qualquer hospedagem: a Vercel informa VERCEL_ENV, e nas
-// outras (Cloudflare) a gente define APP_ENV.
+// outras (Netlify) a gente define APP_ENV.
 const isProduction = (process.env.APP_ENV ?? process.env.VERCEL_ENV) === 'production'
 
 // SENTRY_DSN / NEXT_PUBLIC_SENTRY_DSN precisam estar disponíveis em tempo de

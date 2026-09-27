@@ -1,5 +1,5 @@
 /*
- * Service worker do Agenn, servido na raiz de cada host: o painel em app.agenn.com.br e
+ * Service worker do Agenn, servido na raiz de cada host: o painel em app.vitrimove.site e
  * cada vitrine no seu subdomínio. Como a origem muda, cada um tem o seu próprio cache.
  *
  * A estratégia é curta de propósito:

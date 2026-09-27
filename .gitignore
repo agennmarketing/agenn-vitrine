@@ -57,7 +57,5 @@ e2e/fixtures/*.webm
 .impeccable/build/
 .impeccable/questions/
 
-# cloudflare (build e tipos do wrangler)
-.open-next/
-.wrangler/
-worker-configuration.d.ts
+# netlify (build local da CLI)
+.netlify/

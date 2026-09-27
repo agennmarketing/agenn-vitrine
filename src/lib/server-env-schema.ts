@@ -4,7 +4,7 @@ type Source = Record<string, string | undefined>
 
 /*
  * Em produção nenhum driver falso é aceito. A Vercel informa isso em VERCEL_ENV;
- * em qualquer outra hospedagem (Cloudflare, por exemplo) vale APP_ENV, que a gente
+ * em qualquer outra hospedagem (Netlify, por exemplo) vale APP_ENV, que a gente
  * define nas variáveis do ambiente.
  */
 const inProduction = (value: { APP_ENV?: string; VERCEL_ENV?: string }) =>

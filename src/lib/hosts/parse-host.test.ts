@@ -33,8 +33,14 @@ describe('parseHost', () => {
     expect(parseHost('agenn-vitrine-v1.vercel.app', prod)).toEqual({ type: 'app' })
   })
 
+  it('prévia da Netlify vale como painel', () => {
+    expect(parseHost('vitrimove.netlify.app', prod)).toEqual({ type: 'app' })
+    expect(parseHost('deploy-preview-64--vitrimove.netlify.app', prod)).toEqual({ type: 'app' })
+  })
+
   it('não confunde um domínio que só termina parecido', () => {
     expect(parseHost('vercel.app.golpe.com', prod)).toEqual({ type: 'invalid' })
+    expect(parseHost('netlify.app.golpe.com', prod)).toEqual({ type: 'invalid' })
   })
 
   it('hosts inválidos', () => {

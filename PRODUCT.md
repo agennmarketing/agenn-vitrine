@@ -26,7 +26,7 @@ Vitrine bonita e venda de verdade no mesmo link: o cliente vê o serviço e já 
 
 ## Operating Context
 
-- Três áreas: Acesso (`app.agenn.com.br`: cadastro, login, senha), Painel (`app.agenn.com.br/painel`) e Vitrine pública (`{subdominio}.agenn.com.br`).
+- Três áreas: Acesso (`app.vitrimove.site`: cadastro, login, senha), Painel (`app.vitrimove.site/painel`) e Vitrine pública (`{subdominio}.vitrimove.site`).
 - Uma vitrine por conta. O assistente começa perguntando o tipo (**Serviços e Agendamentos** ou **Produtos**). Serviços: tipo → segmento → nome e endereço da vitrine → WhatsApp, Instagram e endereço (opcionais) → horários de atendimento e aparência. Produtos: sem segmento e sem horários (4 passos). Vitrines criadas antes disso são todas de serviços.
 - O segmento (nail, cabelo, lash, sobrancelha, barbearia, estética, outro) só personaliza textos e exemplos; o sistema é o mesmo para todos.
 - Painel, barra lateral: **Vitrine, Agenda, Plano, Conta**.
@@ -45,7 +45,7 @@ Vitrine bonita e venda de verdade no mesmo link: o cliente vê o serviço e já 
 
 ## Capabilities and Constraints
 
-- Stack: Next.js 16 (App Router), Tailwind 4, Supabase (nuvem), Bunny Storage (imagens), Mux Video (vídeos antigos; o painel não envia mais vídeo), Stripe, Vercel (migração para Cloudflare Workers preparada em docs/setup/cloudflare-migracao.md). Repositório em drive FAT32; sem Docker.
+- Stack: Next.js 16 (App Router), Tailwind 4, Supabase (nuvem), Bunny Storage (imagens), Mux Video (vídeos antigos; o painel não envia mais vídeo), Stripe, Netlify Free (subdomínios de vitrine cadastrados um a um; guia em docs/setup/netlify.md). Repositório em drive FAT32; sem Docker.
 - Plano único: **Essencial, R$ 69,90/mês**, com 7 dias de teste grátis sem cartão para toda conta nova. Sem Gratuito nem Pro.
 - Teste vencido ou assinatura encerrada: o painel mostra só a tela de assinar (Plano e Conta continuam abertos), a vitrine pública sai do ar e novos agendamentos são recusados. Nada é apagado; ao assinar, tudo volta na hora.
 - Aviso no painel nos 3 últimos dias do teste.
@@ -57,7 +57,7 @@ Vitrine bonita e venda de verdade no mesmo link: o cliente vê o serviço e já 
 
 ## Brand Commitments
 
-- Nome: **Vitrimove** ("o Vitrimove", masculino). Domínio `agenn.com.br` (o domínio não mudou com o nome). Tabelas, colunas, arquivos e o projeto na hospedagem continuam com os nomes antigos de propósito.
+- Nome: **Vitrimove** ("o Vitrimove", masculino). Domínio `vitrimove.site` (desde 2026-09-26; antes `agenn.com.br`). Tabelas, colunas, arquivos e o projeto na hospedagem continuam com os nomes antigos de propósito.
 - Painel claro. Cor da marca: roxo **#673DE6** (ações principais, texto branco); verde só para confirmação; dourado para o plano e a assinatura. Nunito no painel, Figtree na vitrine.
 - O visual do painel e das vitrines mergeado em 2026-09-18 (PRs #44 e #45) foi aprovado pelo usuário; mudanças futuras refinam, não recomeçam.
 - O painel deve lembrar o Duolingo: simples de usar, passos claros, forte na entrega e no retorno ao usuário.
