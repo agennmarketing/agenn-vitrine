@@ -16,7 +16,8 @@ export const PRIVACY: LegalSection[] = [
       'Da pessoa que cria a conta: nome, e-mail e senha (guardada apenas de forma criptografada pelo Supabase). Se você entra com o Google, recebemos nome e e-mail da sua conta Google.',
       'Do uso do serviço: vitrines, itens, fotos, vídeos, textos e configurações que você cria, além de registros técnicos como data de acesso e erros.',
       'De pagamento: a assinatura é processada pela Stripe. Guardamos apenas identificadores da assinatura e do cliente, o status, o intervalo e a data de renovação. Não guardamos número de cartão.',
-      'Do visitante da vitrine: não guardamos nome, telefone, endereço nem forma de pagamento. Esses dados são digitados no navegador do visitante e seguem direto na mensagem do WhatsApp para você. O que fica salvo é o resumo do pedido (itens, quantidades e preços do momento), sem dados pessoais.',
+      'Do visitante da vitrine que faz um pedido: não guardamos nome, telefone, endereço nem forma de pagamento. Esses dados são digitados no navegador do visitante e seguem direto na mensagem do WhatsApp para você. O que fica salvo é o resumo do pedido (itens, quantidades e preços do momento), sem dados pessoais.',
+      'Do cliente que agenda um horário na vitrine: guardamos nome, telefone, observação (se escrita), o serviço, o profissional e o horário escolhidos, para que o agendamento apareça na sua agenda. Esses dados ficam visíveis apenas para você, dono da vitrine. Em relação a eles, você é o controlador e nós tratamos os dados em seu nome.',
       'Para limitar abuso, guardamos o endereço IP do visitante apenas em forma de código embaralhado (hash), que não permite voltar ao IP original, por até 2 dias.',
     ],
   },
@@ -38,7 +39,7 @@ export const PRIVACY: LegalSection[] = [
   {
     title: '5. Com quem compartilhamos',
     paragraphs: [
-      'Usamos empresas que nos ajudam a operar o serviço, cada uma com acesso apenas ao necessário: Supabase (banco de dados e autenticação), Vercel (hospedagem do site), Bunny (armazenamento e entrega de imagens), Mux (armazenamento e entrega de vídeos), Stripe (pagamentos), Resend (envio de e-mails), Cloudflare (proteção contra robôs e DNS) e Google (apenas se você escolher entrar com o Google).',
+      'Usamos empresas que nos ajudam a operar o serviço, cada uma com acesso apenas ao necessário: Supabase (banco de dados e autenticação), Netlify (hospedagem do site), Bunny (armazenamento e entrega de imagens), Mux (armazenamento e entrega de vídeos), Stripe (pagamentos), Resend (envio de e-mails), Cloudflare (proteção contra robôs e DNS) e Google (apenas se você escolher entrar com o Google).',
       'Parte desses serviços fica fora do Brasil, então pode haver transferência internacional de dados, feita com as garantias previstas na LGPD.',
       'Não vendemos seus dados nem os de seus clientes.',
     ],
@@ -48,6 +49,7 @@ export const PRIVACY: LegalSection[] = [
     paragraphs: [
       'Dados da conta e conteúdo publicado: enquanto a conta existir.',
       'Resumos de pedido do simulador: 90 dias, depois são apagados automaticamente.',
+      'Agendamentos: enquanto a conta existir, para formar o histórico da sua agenda.',
       'Conta com o teste grátis encerrado ou a assinatura cancelada: os dados continuam guardados até você excluir a conta.',
       'Registros fiscais e de cobrança: pelo prazo exigido pela legislação, mesmo após a exclusão da conta.',
     ],

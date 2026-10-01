@@ -41,14 +41,15 @@ describe('termos de uso', () => {
 describe('política de privacidade', () => {
   it('lista os operadores e os direitos da LGPD', () => {
     const texto = PRIVACY.flatMap((section) => section.paragraphs).join(' ')
-    for (const parceiro of ['Supabase', 'Vercel', 'Bunny', 'Mux', 'Stripe', 'Resend', 'Cloudflare']) {
+    for (const parceiro of ['Supabase', 'Netlify', 'Bunny', 'Mux', 'Stripe', 'Resend', 'Cloudflare']) {
       expect(texto).toContain(parceiro)
     }
     expect(texto).toContain('LGPD')
   })
 
-  it('deixa claro que não guardamos dados do cliente final nem cartão', () => {
+  it('diz o que fica guardado do cliente final: nada no pedido, nome e telefone no agendamento', () => {
     const texto = PRIVACY.flatMap((section) => section.paragraphs).join(' ')
     expect(texto).toContain('não guardamos')
+    expect(texto).toContain('agenda um horário')
   })
 })
