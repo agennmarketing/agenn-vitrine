@@ -14,6 +14,7 @@ import { InstallApp } from './install-app'
 import { BottomNav, SideNav } from './painel-nav'
 import { TrialBanner } from './trial-banner'
 import { LogoMark, Wordmark } from '@/components/brand/logo'
+import { WhatsAppHelp } from '@/components/support/whatsapp-help'
 
 const BADGE: Record<Access['status'], { label: string; tone: 'sun' | 'neutral' | 'danger' }> = {
   active: { label: 'Plano Essencial', tone: 'sun' },
@@ -95,7 +96,7 @@ export default async function PainelLayout({ children }: { children: ReactNode }
         </div>
       </aside>
 
-      <main className="flex min-w-0 flex-col pb-40 group-has-[[data-focus-mode]]/shell:pb-10 lg:pb-16">
+      <main className="flex min-w-0 flex-col pb-40 group-has-[[data-focus-mode]]/shell:pb-24 lg:pb-16">
         {notice ? <TrialBanner message={notice} /> : null}
         <InstallApp />
         <AccessGate blocked={!access.hasAccess} wall={<AccessWall status={access.status} priceLabel={priceLabel} />}>
@@ -104,6 +105,7 @@ export default async function PainelLayout({ children }: { children: ReactNode }
       </main>
 
       <BottomNav showAgenda={showAgenda} />
+      <WhatsAppHelp area="painel" />
     </div>
   )
 }

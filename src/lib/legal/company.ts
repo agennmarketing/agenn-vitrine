@@ -6,6 +6,8 @@ export const COMPANY = {
   address: 'Av. Paulista, 1106, Sala 01, Andar 16, Bela Vista, São Paulo/SP, CEP 01310-914',
   contactEmail: 'suporte@vitrimove.site',
   privacyEmail: 'privacidade@vitrimove.site',
+  // Atendimento do botão "Tirar dúvida no WhatsApp" (site e painel; a vitrine não mostra).
+  supportWhatsApp: '+5519992088644',
 }
 
 // Mudou o texto? Mude a data. É ela que aparece como "Última atualização".

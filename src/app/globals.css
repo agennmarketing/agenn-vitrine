@@ -50,6 +50,9 @@
   --color-danger-soft: #fdecea;
   --color-success: #15803d;
   --color-success-soft: #e4f8ea;
+  /* Verde do botão de atendimento no WhatsApp (texto branco, contraste acima de 5:1). */
+  --color-whatsapp: #0e7a3e;
+  --color-whatsapp-hover: #0b6634;
 
   /* Cores dos três tipos de vitrine: só em ícones e marcadores, nunca em áreas grandes. */
   --color-type-comida: #ff6b2c;
