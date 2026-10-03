@@ -10,6 +10,9 @@ const files = {
   'vitri-cabeleireira': 'Vitri vestido de Cabeleireira.png',
   'vitri-produtos': 'Vitri vestido de vendedor de produtos.png',
   'vitri-afiliado': 'Vitri vestido de afiliado.png',
+  'vitri-barbeiro': 'Vitri vestido de barbeiro.png',
+  'vitri-lash': 'Vitri vestido lash designer.png',
+  'vitri-esteticista': 'Vitri vestido de esteticista.png',
 }
 for (const [name, file] of Object.entries(files)) {
   const { data, info } = await sharp(dir + file).ensureAlpha().raw().toBuffer({ resolveWithObject: true })

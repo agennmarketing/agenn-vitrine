@@ -148,7 +148,7 @@ export const PERSONAS: Persona[] = [
     label: 'Barbearia',
     audience: 'barbearias',
     group: 'servicos',
-    vitri: '/site/vitri-cabeleireira.webp',
+    vitri: '/site/vitri-barbeiro.webp',
     title: 'O cliente marca o corte sozinho. Você só corta.',
     pitch:
       'Corte, barba e combo com preço e duração. O cliente escolhe o barbeiro e o horário livre, e o agendamento cai confirmado na sua agenda.',
@@ -200,7 +200,7 @@ export const PERSONAS: Persona[] = [
     label: 'Lash designer',
     audience: 'lash designers',
     group: 'servicos',
-    vitri: '/site/vitri.webp',
+    vitri: '/site/vitri-lash.webp',
     title: 'Sua agenda de cílios organizada, do volume à manutenção.',
     pitch:
       'Cada técnica com foto, preço e a duração certa. A cliente escolhe um horário livre que cabe no procedimento e já sai confirmada.',
@@ -302,7 +302,7 @@ export const PERSONAS: Persona[] = [
     label: 'Estética e massagem',
     audience: 'clínicas de estética e massoterapeutas',
     group: 'servicos',
-    vitri: '/site/vitri.webp',
+    vitri: '/site/vitri-esteticista.webp',
     title: 'Seus procedimentos com hora marcada e cara de clínica.',
     pitch:
       'Limpeza de pele, drenagem, massagem: cada procedimento com preço e duração. A cliente escolhe o horário livre e já sai confirmada.',
