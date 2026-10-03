@@ -6,6 +6,7 @@ const base: CatalogRows = {
     id: 'v1', subdomain: 'loja', type: 'produtos', name: 'Loja', description: '', theme: 'light', status: 'active',
     show_prices: true, show_media: true, default_button_text: 'Solicitar orçamento', brand_color: '#ff0000',
     banner_enabled: true, cart_enabled: true, cart_button_text: 'Enviar pedido', logo_media_id: 'logo', banner_media_id: 'banner', primary_whatsapp_id: 'w1',
+    instagram: null, address: null, business_hours: null,
   },
   plan: { max_items_per_vitrine: 2, max_videos_per_vitrine: 1, allow_branding: false, show_watermark: true },
   overQuota: false,
@@ -80,6 +81,17 @@ describe('buildPublicCatalog', () => {
     expect(first.cover?.small).toBe('https://cdn/a-480.webp')
     expect(first.variations.map((v) => v.name)).toEqual(['P', 'G'])
     expect(buildPublicCatalog(base, 'https://cdn', 'https://vz').primaryPhone).toBe('+5511900000001')
+  })
+
+  it('Instagram, endereço e horários do negócio', () => {
+    const hours = [{ day: 1, open: '09:00', close: '18:00' }]
+    const contact = { instagram: 'studio.ana', address: 'Rua A, 10', business_hours: hours }
+    const servicos = buildPublicCatalog({ ...base, vitrine: { ...base.vitrine, ...contact, type: 'servicos' } }, 'https://cdn', 'https://vz')
+    expect([servicos.instagram, servicos.address, servicos.businessHours]).toEqual(['studio.ana', 'Rua A, 10', hours])
+    // Horários só fazem sentido na vitrine com agenda.
+    const produtos = buildPublicCatalog({ ...base, vitrine: { ...base.vitrine, ...contact } }, 'https://cdn', 'https://vz')
+    expect(produtos.businessHours).toBeNull()
+    expect(buildPublicCatalog(base, 'https://cdn', 'https://vz')).toMatchObject({ instagram: null, address: null, businessHours: null })
   })
 })
 

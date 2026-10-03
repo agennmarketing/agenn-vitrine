@@ -141,10 +141,18 @@ export const createVitrineSchema = z
     }
   })
 
+/*
+ * Configurações da vitrine. O bloco de contato repete os campos do assistente; o
+ * WhatsApp só vem da vitrine de serviços (as outras têm a aba própria), e a action
+ * é quem exige o número nela.
+ */
 export const vitrineSettingsSchema = z.object({
   name: vitrineName,
   description: z.string().trim().max(300, 'Use até 300 caracteres.'),
   subdomain: subdomainField,
+  instagram,
+  address: optionalText(200),
+  whatsappPhone: optionalPhone,
 })
 
 export const appearanceSchema = z.object({

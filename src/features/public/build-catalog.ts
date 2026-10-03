@@ -2,6 +2,8 @@ import type { CheckoutSettings, FieldMode } from '@/lib/cart/checkout'
 import { imageSources } from '@/lib/media/urls'
 import { videoPlaylistUrl } from '@/lib/video/urls'
 import type { PriceType } from '@/lib/pricing/price'
+import { readBusinessHours } from '@/lib/vitrines/business-hours'
+import type { BusinessHours } from '@/lib/vitrines/service-segments'
 import type { VitrineType } from '@/lib/vitrines/vitrine-types'
 
 export type CatalogRows = {
@@ -9,6 +11,7 @@ export type CatalogRows = {
     id: string; subdomain: string; type: string; name: string; description: string; theme: string; status: string
     show_prices: boolean; show_media: boolean; default_button_text: string; brand_color: string | null
     banner_enabled: boolean; cart_enabled: boolean; cart_button_text: string; logo_media_id: string | null; banner_media_id: string | null; primary_whatsapp_id: string | null
+    instagram: string | null; address: string | null; business_hours: unknown
   }
   plan: { max_items_per_vitrine: number; max_videos_per_vitrine: number; allow_branding: boolean; show_watermark: boolean }
   overQuota: boolean
@@ -62,6 +65,8 @@ export type PublicVitrine = {
   id: string; subdomain: string; type: VitrineType; name: string; description: string; theme: 'light' | 'dark'
   status: 'active' | 'frozen'; showPrices: boolean; showMedia: boolean; defaultButtonText: string
   primaryPhone: string | null; logo: PublicImage | null; brandColor: string | null; banner: PublicImage | null
+  /** Usuário do Instagram (sem @), endereço de atendimento e horários (só serviços). */
+  instagram: string | null; address: string | null; businessHours: BusinessHours | null
   bannerVideo: PublicVideo | null
   cartEnabled: boolean; cartButtonText: string; checkout: CheckoutSettings
   professionals: PublicProfessional[]
@@ -154,6 +159,8 @@ export function buildPublicCatalog(rows: CatalogRows, mediaBaseUrl: string, vide
   const bannerRow = vitrine.banner_media_id ? mediaById.get(vitrine.banner_media_id) : undefined
   const bannerAllowed = branding && vitrine.banner_enabled && bannerRow !== undefined
   const bannerIsVideo = bannerRow?.kind === 'video' && Boolean(bannerRow.mux_playback_id)
+  // Horários só na vitrine com agenda; são os mesmos que valem para marcar.
+  const hours = vitrine.type === 'servicos' ? readBusinessHours(vitrine.business_hours) : []
   return {
     id: vitrine.id,
     subdomain: vitrine.subdomain,
@@ -169,6 +176,9 @@ export function buildPublicCatalog(rows: CatalogRows, mediaBaseUrl: string, vide
     showMedia: vitrine.show_media,
     defaultButtonText: vitrine.default_button_text,
     primaryPhone: vitrine.primary_whatsapp_id ? (phoneById.get(vitrine.primary_whatsapp_id) ?? null) : null,
+    instagram: vitrine.instagram,
+    address: vitrine.address,
+    businessHours: hours.length ? hours : null,
     logo: branding && vitrine.logo_media_id ? image(mediaById.get(vitrine.logo_media_id)?.storage_paths) : null,
     brandColor: branding ? vitrine.brand_color : null,
     banner: bannerAllowed && !bannerIsVideo ? image(bannerRow!.storage_paths) : null,

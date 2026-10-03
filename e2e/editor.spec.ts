@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { createConfirmedUser, seedVitrine, signIn, uniqueSubdomain } from './helpers'
+import { createAdminClient, createConfirmedUser, openAgenda, seedItem, seedVitrine, signIn, uniqueSubdomain } from './helpers'
 
 test('abas do editor por tipo de vitrine', async ({ page }) => {
   const user = await createConfirmedUser('abas')
@@ -24,6 +24,42 @@ test('abas do editor por tipo de vitrine', async ({ page }) => {
   await signIn(page, lojista.email, lojista.password)
   await page.goto(`/painel/vitrines/${loja.id}/itens`)
   await expect(abas.getByRole('link')).toHaveText(['Produtos', 'Aparência', 'WhatsApp', 'Sacola e mensagens', 'Configurações', 'Compartilhar'])
+})
+
+test('serviços: contato nas configurações aparece na vitrine', async ({ page }) => {
+  const user = await createConfirmedUser('contato')
+  const vitrine = await seedVitrine(user.id, { type: 'servicos' })
+  await seedItem(vitrine, user.id, { name: 'Corte' })
+  await openAgenda(vitrine.id, { business_hours: [{ day: 1, open: '09:00', close: '18:00' }] })
+  await signIn(page, user.email, user.password)
+
+  await page.goto(`/painel/vitrines/${vitrine.id}/configuracoes`)
+  const whatsapp = page.getByLabel('WhatsApp')
+  await expect(whatsapp).toHaveValue('+55 11 98765 4321')
+  await whatsapp.fill('')
+  await page.getByRole('button', { name: 'Salvar configurações' }).click()
+  await expect(page.getByText('Informe um WhatsApp válido com DDD.')).toBeVisible()
+
+  await whatsapp.fill('(21) 99876-5432')
+  await page.getByLabel('Instagram (opcional)').fill('https://instagram.com/Studio.Ana')
+  await page.getByLabel('Endereço de atendimento (opcional)').fill('Rua das Flores, 120 - Centro')
+  await page.getByRole('button', { name: 'Salvar configurações' }).click()
+  await expect(page.getByText('Configurações salvas.')).toBeVisible()
+  const { data: contact } = await createAdminClient()
+    .from('whatsapp_contacts')
+    .select('phone_e164')
+    .eq('id', vitrine.contactId)
+    .single()
+    .throwOnError()
+  expect(contact.phone_e164).toBe('+5521998765432')
+
+  await page.goto(`http://${vitrine.subdomain}.localhost:3000/`)
+  await expect(page.getByRole('link', { name: '@studio.ana' })).toHaveAttribute('href', 'https://instagram.com/studio.ana')
+  await expect(page.getByRole('link', { name: 'Rua das Flores, 120 - Centro' })).toHaveAttribute('href', /google\.com\/maps/)
+  const horarios = page.getByRole('button', { name: /^(Hoje: 9h–18h|Fechado hoje)$/ })
+  await horarios.click()
+  await expect(page.getByText('Segunda', { exact: true })).toBeVisible()
+  await expect(page.getByText('9h–18h', { exact: true })).toBeVisible()
 })
 
 test('configurações, mensagens e WhatsApp', async ({ page }) => {

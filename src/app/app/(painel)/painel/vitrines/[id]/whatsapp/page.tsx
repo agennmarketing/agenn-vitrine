@@ -10,8 +10,8 @@ export const metadata = { title: 'WhatsApp' }
 export default async function WhatsAppPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const vitrine = await getMyVitrine(id)
-  // Na vitrine de serviços o lugar do WhatsApp é dos Profissionais.
-  if (vitrine.type === 'servicos') redirect(`/painel/vitrines/${id}/profissionais`)
+  // Na vitrine de serviços o número principal se troca nas Configurações.
+  if (vitrine.type === 'servicos') redirect(`/painel/vitrines/${id}/configuracoes`)
   // Afiliado não usa WhatsApp: cada produto leva ao próprio link.
   if (isAffiliateVitrine(vitrine)) redirect(`/painel/vitrines/${id}/itens`)
   const { supabase } = await getPanelSession()

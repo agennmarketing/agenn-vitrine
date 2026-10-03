@@ -9,7 +9,7 @@ async function fetchCatalog(subdomain: string): Promise<PublicVitrine | null> {
   const admin = createSupabaseAdminClient()
   const { data: vitrine, error } = await admin
     .from('vitrines')
-    .select('id, owner_id, subdomain, type, name, description, theme, status, show_prices, show_media, default_button_text, brand_color, banner_enabled, cart_enabled, cart_button_text, logo_media_id, banner_media_id, primary_whatsapp_id')
+    .select('id, owner_id, subdomain, type, name, description, theme, status, show_prices, show_media, default_button_text, brand_color, banner_enabled, cart_enabled, cart_button_text, logo_media_id, banner_media_id, primary_whatsapp_id, instagram, address, business_hours')
     .eq('subdomain', subdomain)
     .maybeSingle()
   if (error) throw error

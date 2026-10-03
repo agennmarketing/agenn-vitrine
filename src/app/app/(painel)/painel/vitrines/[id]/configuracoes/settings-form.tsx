@@ -1,6 +1,7 @@
 'use client'
 
 import { TriangleAlert } from 'lucide-react'
+import Link from 'next/link'
 import { useActionState, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { ConfigBlock, SaveBar } from '@/components/ui/config-section'
@@ -14,9 +15,22 @@ import { fetchAvailability } from '@/lib/forms/availability'
 import { filterSubdomainField } from '@/lib/forms/subdomain-field'
 import type { FormState } from '@/lib/forms/form-state'
 
-type Values = { name: string; description: string; subdomain: string }
+type Values = { name: string; description: string; subdomain: string; instagram: string; address: string; whatsappPhone: string }
 
-export function SettingsForm({ vitrineId, rootDomain, initial }: { vitrineId: string; rootDomain: string; initial: Values }) {
+/** Campos de contato que esta vitrine mostra: WhatsApp e horários só em serviços, endereço fora do afiliado. */
+type ContactFields = { whatsapp: boolean; address: boolean; hours: boolean }
+
+export function SettingsForm({
+  vitrineId,
+  rootDomain,
+  contact,
+  initial,
+}: {
+  vitrineId: string
+  rootDomain: string
+  contact: ContactFields
+  initial: Values
+}) {
   const [savedSubdomain, setSavedSubdomain] = useState(initial.subdomain)
   const [typedSubdomain, setTypedSubdomain] = useState(initial.subdomain)
   const [state, formAction, pending] = useActionState(async (prev: FormState, formData: FormData) => {
@@ -76,6 +90,72 @@ export function SettingsForm({ vitrineId, rootDomain, initial }: { vitrineId: st
               invalid={!!errors.description}
             />
           </Field>
+        </ConfigBlock>
+
+        <ConfigBlock title="Contato" description="Aparecem no topo da vitrine para o cliente falar com você e te encontrar.">
+          {contact.whatsapp ? (
+            <Field
+              label="WhatsApp"
+              htmlFor="whatsappPhone"
+              error={errors.whatsappPhone}
+              hint="Recebe os avisos dos clientes depois que eles agendam."
+            >
+              <Input
+                id="whatsappPhone"
+                name="whatsappPhone"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                placeholder="(11) 98765-4321"
+                defaultValue={values.whatsappPhone}
+                invalid={!!errors.whatsappPhone}
+              />
+            </Field>
+          ) : null}
+          <Field label="Instagram (opcional)" htmlFor="instagram" error={errors.instagram}>
+            <div className="flex items-stretch overflow-hidden rounded-control border-2 border-line-strong bg-surface focus-within:border-go-strong has-[[aria-invalid]]:border-danger">
+              <span className="flex shrink-0 items-center bg-subtle px-3 text-sm font-extrabold text-ink-muted">@</span>
+              <Input
+                id="instagram"
+                name="instagram"
+                defaultValue={values.instagram}
+                maxLength={80}
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                placeholder="seuestudio"
+                invalid={!!errors.instagram}
+                className="rounded-none border-0 bg-transparent"
+              />
+            </div>
+          </Field>
+          {contact.address ? (
+            <Field
+              label="Endereço de atendimento (opcional)"
+              htmlFor="address"
+              error={errors.address}
+              hint="Rua, número e bairro. Deixe em branco se atende a domicílio."
+            >
+              <Input
+                id="address"
+                name="address"
+                maxLength={200}
+                autoComplete="street-address"
+                placeholder="Ex.: Rua das Flores, 120 - Centro"
+                defaultValue={values.address}
+                invalid={!!errors.address}
+              />
+            </Field>
+          ) : null}
+          {contact.hours ? (
+            <p className="text-sm leading-5 text-ink-muted">
+              Os horários de atendimento que aparecem na vitrine são os da{' '}
+              <Link href="/painel/agenda?secao=configurar" className="font-extrabold text-go-strong underline underline-offset-2">
+                Agenda
+              </Link>
+              .
+            </p>
+          ) : null}
         </ConfigBlock>
 
         <ConfigBlock title="Endereço" description="O link que você divulga para os clientes.">

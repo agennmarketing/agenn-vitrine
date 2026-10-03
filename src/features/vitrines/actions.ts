@@ -18,7 +18,7 @@ import {
   vitrineSettingsSchema,
 } from '@/lib/vitrines/schemas'
 import { SEGMENT_COPY } from '@/lib/vitrines/service-segments'
-import { AFFILIATE_BUTTON_TEXT, DEFAULT_BUTTON_TEXT, SAMPLE_CATEGORIES } from '@/lib/vitrines/vitrine-types'
+import { AFFILIATE_BUTTON_TEXT, DEFAULT_BUTTON_TEXT, isAffiliateVitrine, SAMPLE_CATEGORIES } from '@/lib/vitrines/vitrine-types'
 
 export async function createVitrineAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const fields = readFormFields(formData, [
@@ -75,19 +75,45 @@ async function loadOwnedVitrine(vitrineId: string) {
   const session = await requireActionUser()
   const { data: vitrine } = await session.supabase
     .from('vitrines')
-    .select('id, subdomain')
+    .select('id, subdomain, type, product_mode, primary_whatsapp_id')
     .eq('id', vitrineId)
     .maybeSingle()
   if (!vitrine) redirect('/painel')
   return { ...session, vitrine }
 }
 
+type OwnedVitrine = Awaited<ReturnType<typeof loadOwnedVitrine>>
+
+// Troca o número do contato principal; uma vitrine sem principal ganha um.
+async function savePrimaryPhone(supabase: OwnedVitrine['supabase'], vitrine: OwnedVitrine['vitrine'], phone: string) {
+  if (vitrine.primary_whatsapp_id) {
+    const { error } = await supabase
+      .from('whatsapp_contacts')
+      .update({ phone_e164: phone })
+      .eq('id', vitrine.primary_whatsapp_id)
+      .eq('vitrine_id', vitrine.id)
+    return error
+  }
+  const { data: contact, error } = await supabase
+    .from('whatsapp_contacts')
+    .insert({ vitrine_id: vitrine.id, label: 'Principal', phone_e164: phone })
+    .select('id')
+    .single()
+  if (error) return error
+  return (await supabase.from('vitrines').update({ primary_whatsapp_id: contact.id }).eq('id', vitrine.id)).error
+}
+
 export async function updateSettingsAction(vitrineId: string, _prev: FormState, formData: FormData): Promise<FormState> {
-  const fields = readFormFields(formData, ['name', 'description', 'subdomain'])
+  const fields = readFormFields(formData, ['name', 'description', 'subdomain', 'instagram', 'address', 'whatsappPhone'])
   const parsed = vitrineSettingsSchema.safeParse(fields)
   if (!parsed.success) return { fieldErrors: fieldErrorsFromZod(parsed.error), values: fields }
 
   const { supabase, vitrine } = await loadOwnedVitrine(vitrineId)
+  // Serviços não têm a aba WhatsApp: o número principal se troca aqui e é obrigatório.
+  const servicos = vitrine.type === 'servicos'
+  if (servicos && parsed.data.whatsappPhone === null) {
+    return { fieldErrors: { whatsappPhone: 'Informe um WhatsApp válido com DDD.' }, values: fields }
+  }
   const changingSubdomain = parsed.data.subdomain !== vitrine.subdomain
   if (changingSubdomain && formData.get('confirmSubdomainChange') !== 'on') {
     return {
@@ -98,14 +124,24 @@ export async function updateSettingsAction(vitrineId: string, _prev: FormState, 
 
   const { error } = await supabase
     .from('vitrines')
-    .update({ name: parsed.data.name, description: parsed.data.description, subdomain: parsed.data.subdomain })
+    .update({
+      name: parsed.data.name,
+      description: parsed.data.description,
+      subdomain: parsed.data.subdomain,
+      instagram: parsed.data.instagram,
+      // Afiliado não atende em endereço nenhum (o assistente também não pergunta).
+      address: isAffiliateVitrine(vitrine) ? null : parsed.data.address,
+    })
     .eq('id', vitrineId)
   if (error) {
     if (error.code === '23505') return { fieldErrors: { subdomain: SUBDOMAIN_TAKEN_MESSAGE }, values: fields }
     return { error: mapDbError(error), values: fields }
   }
+  const contactError = servicos ? await savePrimaryPhone(supabase, vitrine, parsed.data.whatsappPhone!) : null
+  // O resto já foi salvo: a vitrine se atualiza mesmo se o número falhar.
   revalidateVitrine(vitrine.subdomain, parsed.data.subdomain)
   if (changingSubdomain) scheduleDomainSync()
+  if (contactError) return { error: mapDbError(contactError), values: fields }
   return { success: 'Configurações salvas.', values: { ...fields, subdomain: parsed.data.subdomain } }
 }
 
