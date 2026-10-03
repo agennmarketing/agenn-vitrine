@@ -79,6 +79,7 @@ test('excluir vitrine pede o endereço', async ({ page }) => {
   await expect(page.getByText('Digite o endereço da vitrine para confirmar.').last()).toBeVisible()
   await page.getByLabel('Digite o endereço da vitrine para confirmar').fill(vitrine.subdomain)
   await page.getByRole('button', { name: 'Excluir definitivamente' }).click()
-  await expect(page).toHaveURL(/\/painel$/)
-  await expect(page.getByText('Você ainda não tem vitrine')).toBeVisible()
+  // Sem vitrine, o painel leva direto ao assistente.
+  await expect(page).toHaveURL(/\/painel\/vitrines\/nova$/)
+  await expect(page.getByRole('heading', { name: 'Que tipo de vitrine você quer criar?' })).toBeVisible()
 })

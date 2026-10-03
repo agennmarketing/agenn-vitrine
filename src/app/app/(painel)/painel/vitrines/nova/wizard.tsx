@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowLeft, ArrowRight, Brush, CalendarClock, Eye, Hand, Moon, Scissors, ShoppingBag, Sparkles, Store, Sun, X } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Brush, CalendarClock, Eye, Hand, Link2, Moon, Scissors, ShoppingBag, Sparkles, Store, Sun, X } from 'lucide-react'
 import Link from 'next/link'
 import { useActionState, useEffect, useRef, useState } from 'react'
 import { BusinessHoursEditor } from '@/components/ui/business-hours-editor'
@@ -13,6 +13,7 @@ import { ProgressBar } from '@/components/ui/progress'
 import { Spinner } from '@/components/ui/submit-button'
 import { createVitrineAction } from '@/features/vitrines/actions'
 import { fetchAvailability } from '@/lib/forms/availability'
+import { filterSubdomainField } from '@/lib/forms/subdomain-field'
 import { initialFormState, type FormState } from '@/lib/forms/form-state'
 import {
   DEFAULT_BUSINESS_HOURS,
@@ -22,23 +23,29 @@ import {
   type BusinessHours,
   type ServiceSegment,
 } from '@/lib/vitrines/service-segments'
-import { WIZARD_TYPE_COPY, WIZARD_VITRINE_TYPES } from '@/lib/vitrines/vitrine-types'
+import { PRODUCT_MODE_COPY, PRODUCT_MODES, WIZARD_TYPE_COPY, WIZARD_VITRINE_TYPES, type ProductMode } from '@/lib/vitrines/vitrine-types'
+import type { WizardPreset } from '@/lib/vitrines/wizard-preset'
 
 /*
  * A trilha começa pelo tipo da vitrine. Serviços continua igual (segmento do negócio,
  * horários de atendimento); produtos pula esses dois passos, que só existem para quem
- * trabalha com hora marcada.
+ * trabalha com hora marcada, e pergunta como vende: produtos próprios ou afiliado.
  */
-type StepKey = 'tipo' | 'segmento' | 'negocio' | 'contato' | 'final'
+type StepKey = 'tipo' | 'venda' | 'segmento' | 'negocio' | 'contato' | 'final'
 
 const SERVICE_STEPS: StepKey[] = ['tipo', 'segmento', 'negocio', 'contato', 'final']
-const PRODUCT_STEPS: StepKey[] = ['tipo', 'negocio', 'contato', 'final']
+const PRODUCT_STEPS: StepKey[] = ['tipo', 'venda', 'negocio', 'contato', 'final']
 
 const STEP_COPY: Record<StepKey, { label: string; question: string; help: string }> = {
   tipo: {
     label: 'Tipo de vitrine',
     question: 'Que tipo de vitrine você quer criar?',
     help: 'É isso que define como o cliente compra: marcando um horário ou pedindo um produto.',
+  },
+  venda: {
+    label: 'Como você vende',
+    question: 'Como você vende seus produtos?',
+    help: 'Isso define o que acontece quando o cliente toca em comprar.',
   },
   segmento: { label: 'Tipo de negócio', question: 'Qual é o seu tipo de negócio?', help: 'Assim a vitrine já vem com exemplos do seu ramo.' },
   negocio: { label: 'Seu negócio', question: 'Como o seu negócio se chama?', help: 'O endereço é o link que você vai divulgar para os clientes.' },
@@ -48,14 +55,21 @@ const STEP_COPY: Record<StepKey, { label: string; question: string; help: string
 
 const PRODUCT_FINAL = { label: 'Aparência', question: 'Como a vitrine vai aparecer?', help: 'Escolha o tema; o resto você ajusta depois.' }
 
+// Afiliado não tem WhatsApp nem endereço: o passo de contato fica só com o Instagram.
+const AFFILIATE_CONTACT = { label: 'Redes', question: 'Onde as pessoas te encontram?', help: 'Seu Instagram aparece na vitrine. É opcional.' }
+
+const MODE_ICON: Record<ProductMode, typeof Scissors> = {
+  proprios: ShoppingBag,
+  afiliado: Link2,
+}
+
 const TYPE_ICON: Record<(typeof WIZARD_VITRINE_TYPES)[number], typeof Scissors> = {
   servicos: CalendarClock,
   produtos: ShoppingBag,
 }
 
 // Mesmo quadrado do SegmentIcon, com o ícone do tipo de vitrine.
-function TypeIcon({ type }: { type: (typeof WIZARD_VITRINE_TYPES)[number] }) {
-  const Icon = TYPE_ICON[type]
+function TypeIcon({ Icon }: { Icon: typeof Scissors }) {
   return (
     <span
       aria-hidden="true"
@@ -92,16 +106,20 @@ function SegmentIcon({ segment }: { segment: ServiceSegment }) {
 function stepKeyForErrors(errors: FormState['fieldErrors']): StepKey | null {
   if (!errors) return null
   if (errors.type) return 'tipo'
+  if (errors.productMode) return 'venda'
   if (errors.serviceSegment) return 'segmento'
   if (errors.name || errors.subdomain) return 'negocio'
   if (errors.whatsappPhone || errors.whatsappLabel || errors.instagram || errors.address) return 'contato'
   return 'final'
 }
 
-export function VitrineWizard({ rootDomain }: { rootDomain: string }) {
+// preset: quem veio da página de um negócio já encontra o tipo e o ramo marcados.
+export function VitrineWizard({ rootDomain, preset }: { rootDomain: string; preset: WizardPreset | null }) {
   const [step, setStep] = useState(0)
-  const [type, setType] = useState<(typeof WIZARD_VITRINE_TYPES)[number]>('servicos')
-  const [segment, setSegment] = useState<ServiceSegment | null>(null)
+  const [type, setType] = useState<(typeof WIZARD_VITRINE_TYPES)[number]>(preset?.type ?? 'servicos')
+  const [productMode, setProductMode] = useState<ProductMode>(preset?.type === 'produtos' ? preset.productMode : 'proprios')
+  const affiliate = type === 'produtos' && productMode === 'afiliado'
+  const [segment, setSegment] = useState<ServiceSegment | null>(preset?.type === 'servicos' ? preset.segment : null)
   const [hours, setHours] = useState<BusinessHours>(DEFAULT_BUSINESS_HOURS)
   const steps = type === 'servicos' ? SERVICE_STEPS : PRODUCT_STEPS
   const [state, formAction, pending] = useActionState(async (prev: FormState, formData: FormData) => {
@@ -143,16 +161,22 @@ export function VitrineWizard({ rootDomain }: { rootDomain: string }) {
   const chosenSegment = segment ?? (isServiceSegment(values.serviceSegment) ? values.serviceSegment : null)
   const copy = SEGMENT_COPY[chosenSegment ?? 'outro']
   const stepKey = steps[step]
-  const current = stepKey === 'final' && type === 'produtos' ? PRODUCT_FINAL : STEP_COPY[stepKey]
+  const current =
+    stepKey === 'final' && type === 'produtos'
+      ? PRODUCT_FINAL
+      : stepKey === 'contato' && affiliate
+        ? AFFILIATE_CONTACT
+        : STEP_COPY[stepKey]
   const last = step === steps.length - 1
 
   return (
     // data-focus-mode: o layout do painel esconde cabeçalho e navegação enquanto a trilha está aberta.
     <div data-focus-mode="" className="mx-auto flex w-full max-w-xl flex-col gap-7 pt-2 sm:pt-6">
       <div className="flex items-center gap-3">
+        {/* Sem vitrine, o painel volta para cá: a saída leva à Conta (plano, sair, excluir conta). */}
         <Link
-          href="/painel"
-          aria-label="Cancelar e voltar ao painel"
+          href="/painel/conta"
+          aria-label="Sair do assistente e ir para a conta"
           className="-ml-2 flex size-10 shrink-0 items-center justify-center rounded-full text-ink-muted hover:bg-subtle hover:text-ink"
         >
           <X aria-hidden="true" className="size-6" strokeWidth={3} />
@@ -187,10 +211,28 @@ export function VitrineWizard({ rootDomain }: { rootDomain: string }) {
               aria-label={WIZARD_TYPE_COPY[value].title}
               title={WIZARD_TYPE_COPY[value].title}
               description={WIZARD_TYPE_COPY[value].description}
-              icon={<TypeIcon type={value} />}
+              icon={<TypeIcon Icon={TYPE_ICON[value]} />}
             />
           ))}
           <FormMessage error={errors.type} />
+        </fieldset>
+
+        <fieldset hidden={stepKey !== 'venda'} className="flex flex-col gap-3.5">
+          <legend className="sr-only">Como você vende</legend>
+          {PRODUCT_MODES.map((value) => (
+            <ChoiceCard
+              key={value}
+              name="productMode"
+              value={value}
+              checked={productMode === value}
+              onChange={() => setProductMode(value)}
+              aria-label={PRODUCT_MODE_COPY[value].title}
+              title={PRODUCT_MODE_COPY[value].title}
+              description={PRODUCT_MODE_COPY[value].description}
+              icon={<TypeIcon Icon={MODE_ICON[value]} />}
+            />
+          ))}
+          <FormMessage error={errors.productMode} />
         </fieldset>
 
         <fieldset hidden={stepKey !== 'segmento'} className="flex flex-col gap-3.5">
@@ -200,7 +242,7 @@ export function VitrineWizard({ rootDomain }: { rootDomain: string }) {
               key={value}
               name="serviceSegment"
               value={value}
-              defaultChecked={values.serviceSegment === value}
+              defaultChecked={chosenSegment === value}
               onChange={() => setSegment(value)}
               aria-label={SEGMENT_COPY[value].label}
               title={SEGMENT_COPY[value].label}
@@ -235,7 +277,7 @@ export function VitrineWizard({ rootDomain }: { rootDomain: string }) {
                 placeholder={copy.subdomain}
                 invalid={!!errors.subdomain}
                 className="rounded-none border-0 bg-transparent"
-                onChange={(event) => onSubdomainChange(event.target.value)}
+                onChange={(event) => onSubdomainChange(filterSubdomainField(event.target))}
               />
               <span className="flex shrink-0 items-center bg-subtle px-3 text-sm font-extrabold text-ink-muted">.{rootDomain}</span>
             </div>
@@ -252,18 +294,20 @@ export function VitrineWizard({ rootDomain }: { rootDomain: string }) {
 
         <fieldset hidden={stepKey !== 'contato'} className="flex flex-col gap-5">
           <legend className="sr-only">Contato</legend>
-          <Field label="WhatsApp" htmlFor="whatsappPhone" error={errors.whatsappPhone}>
-            <Input
-              id="whatsappPhone"
-              name="whatsappPhone"
-              type="tel"
-              inputMode="tel"
-              autoComplete="tel"
-              placeholder="(11) 98765-4321"
-              defaultValue={values.whatsappPhone}
-              invalid={!!errors.whatsappPhone}
-            />
-          </Field>
+          <div hidden={affiliate}>
+            <Field label="WhatsApp" htmlFor="whatsappPhone" error={errors.whatsappPhone}>
+              <Input
+                id="whatsappPhone"
+                name="whatsappPhone"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                placeholder="(11) 98765-4321"
+                defaultValue={values.whatsappPhone}
+                invalid={!!errors.whatsappPhone}
+              />
+            </Field>
+          </div>
           <Field label="Instagram (opcional)" htmlFor="instagram" error={errors.instagram}>
             <div className="flex items-stretch overflow-hidden rounded-control border-2 border-line-strong bg-surface focus-within:border-go-strong has-[[aria-invalid]]:border-danger">
               <span className="flex shrink-0 items-center bg-subtle px-3 text-sm font-extrabold text-ink-muted">@</span>
@@ -281,22 +325,24 @@ export function VitrineWizard({ rootDomain }: { rootDomain: string }) {
               />
             </div>
           </Field>
-          <Field
-            label="Endereço de atendimento (opcional)"
-            htmlFor="address"
-            error={errors.address}
-            hint="Rua, número e bairro. Deixe em branco se atende a domicílio."
-          >
-            <Input
-              id="address"
-              name="address"
-              maxLength={200}
-              autoComplete="street-address"
-              placeholder="Ex.: Rua das Flores, 120 - Centro"
-              defaultValue={values.address}
-              invalid={!!errors.address}
-            />
-          </Field>
+          <div hidden={affiliate}>
+            <Field
+              label="Endereço de atendimento (opcional)"
+              htmlFor="address"
+              error={errors.address}
+              hint="Rua, número e bairro. Deixe em branco se atende a domicílio."
+            >
+              <Input
+                id="address"
+                name="address"
+                maxLength={200}
+                autoComplete="street-address"
+                placeholder="Ex.: Rua das Flores, 120 - Centro"
+                defaultValue={values.address}
+                invalid={!!errors.address}
+              />
+            </Field>
+          </div>
         </fieldset>
 
         <fieldset hidden={stepKey !== 'final' || type !== 'servicos'} className="flex flex-col gap-3.5">

@@ -4,6 +4,7 @@ import {
   parseCronSecret,
   parseEmailEnv,
   parseMediaStorageEnv,
+  parseNetlifyDomainsEnv,
   parseOrderRateLimit,
   parseRateLimitSalt,
   parseSupabaseSecretKey,
@@ -21,3 +22,4 @@ export const getWebhookSecret = () => parseWebhookSecret(process.env)
 export const getCronSecret = () => parseCronSecret(process.env)
 export const getEmailEnv = () => parseEmailEnv(process.env)
 export const getBillingEnv = () => parseBillingEnv(process.env)
+export const getNetlifyDomainsEnv = () => parseNetlifyDomainsEnv(process.env)

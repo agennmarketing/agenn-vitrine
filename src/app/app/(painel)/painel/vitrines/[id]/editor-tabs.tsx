@@ -7,7 +7,7 @@ import { editorSections } from '@/lib/vitrines/editor-sections'
 import type { VitrineType } from '@/lib/vitrines/vitrine-types'
 
 // Seções do editor como pílulas: a ativa ganha borda e texto roxos. No celular a fileira rola de lado.
-export function EditorTabs({ vitrineId, type }: { vitrineId: string; type: VitrineType }) {
+export function EditorTabs({ vitrineId, type, affiliate }: { vitrineId: string; type: VitrineType; affiliate: boolean }) {
   const pathname = usePathname()
   const listRef = useRef<HTMLUListElement>(null)
 
@@ -29,7 +29,7 @@ export function EditorTabs({ vitrineId, type }: { vitrineId: string; type: Vitri
         ref={listRef}
         className="relative flex gap-2 overflow-x-auto px-4 pb-1.5 pt-0.5 [scrollbar-width:none] [mask-image:linear-gradient(to_right,#000_calc(100%-2.5rem),transparent)] lg:flex-wrap lg:[mask-image:none] lg:overflow-visible lg:px-0 [&::-webkit-scrollbar]:hidden"
       >
-        {editorSections(type).map(({ slug, label, Icon }) => {
+        {editorSections(type, affiliate).map(({ slug, label, Icon }) => {
           const href = `/painel/vitrines/${vitrineId}/${slug}`
           const active = pathname === href || pathname.startsWith(`${href}/`)
           return (

@@ -21,6 +21,7 @@ describe('createVitrineSchema', () => {
   it('normaliza subdomínio, telefone e Instagram', () => {
     expect(createVitrineSchema.parse(servico)).toEqual({
       type: 'servicos',
+      productMode: null,
       serviceSegment: 'nail',
       name: 'Studio Ana',
       subdomain: 'studio-ana',
@@ -44,6 +45,22 @@ describe('createVitrineSchema', () => {
     })
     expect(parsed.serviceSegment).toBeNull()
     expect(parsed.businessHours).toBeNull()
+    expect(parsed.productMode).toBe('proprios')
+  })
+
+  it('produtos próprios exigem WhatsApp; afiliado não guarda WhatsApp nem endereço', () => {
+    const produtos = { ...servico, type: 'produtos', serviceSegment: '', businessHours: '[]' }
+    const semWhatsApp = createVitrineSchema.safeParse({ ...produtos, productMode: 'proprios', whatsappPhone: '' })
+    expect(semWhatsApp.error?.issues.map((issue) => issue.path[0])).toEqual(['whatsappPhone'])
+
+    const afiliado = createVitrineSchema.parse({ ...produtos, productMode: 'afiliado', whatsappPhone: '', address: 'Rua A, 1' })
+    expect(afiliado).toMatchObject({ productMode: 'afiliado', whatsappPhone: null, address: null })
+  })
+
+  it('serviços não têm modo de produto e continuam exigindo WhatsApp', () => {
+    const parsed = createVitrineSchema.safeParse({ ...servico, productMode: 'afiliado', whatsappPhone: '' })
+    expect(parsed.error?.issues.map((issue) => issue.path[0])).toEqual(['whatsappPhone'])
+    expect(createVitrineSchema.parse({ ...servico, productMode: 'afiliado' }).productMode).toBeNull()
   })
 
   it('serviços exigem segmento e pelo menos um dia de atendimento', () => {

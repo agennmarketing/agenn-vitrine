@@ -4,6 +4,7 @@ import * as Sentry from '@sentry/nextjs'
 import { redirect } from 'next/navigation'
 import { requireActionUser } from '@/lib/auth/action-user'
 import { fieldErrorsFromZod, readFormFields, type FormState } from '@/lib/forms/form-state'
+import { scheduleDomainSync } from '@/lib/hosts/sync-domains'
 import { removeStoredFiles, removeVideoAssets } from '@/lib/media/remove-media'
 import { storagePathList } from '@/lib/media/urls'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
@@ -17,11 +18,12 @@ import {
   vitrineSettingsSchema,
 } from '@/lib/vitrines/schemas'
 import { SEGMENT_COPY } from '@/lib/vitrines/service-segments'
-import { DEFAULT_BUTTON_TEXT, SAMPLE_CATEGORIES } from '@/lib/vitrines/vitrine-types'
+import { AFFILIATE_BUTTON_TEXT, DEFAULT_BUTTON_TEXT, SAMPLE_CATEGORIES } from '@/lib/vitrines/vitrine-types'
 
 export async function createVitrineAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const fields = readFormFields(formData, [
     'type',
+    'productMode',
     'serviceSegment',
     'name',
     'subdomain',
@@ -42,9 +44,10 @@ export async function createVitrineAction(_prev: FormState, formData: FormData):
     p_subdomain: input.subdomain,
     p_name: input.name,
     p_theme: input.theme,
-    p_default_button_text: DEFAULT_BUTTON_TEXT[input.type],
+    p_default_button_text: input.productMode === 'afiliado' ? AFFILIATE_BUTTON_TEXT : DEFAULT_BUTTON_TEXT[input.type],
     p_whatsapp_label: input.whatsappLabel,
-    p_whatsapp_phone: input.whatsappPhone,
+    // Nulo no afiliado (o banco aceita); o gerador de tipos não marca parâmetro que aceita nulo.
+    p_whatsapp_phone: input.whatsappPhone as string,
     // Serviços: as categorias de exemplo seguem o segmento, que só muda textos.
     // Produtos: as categorias de exemplo do tipo.
     p_categories: input.serviceSegment
@@ -54,6 +57,7 @@ export async function createVitrineAction(_prev: FormState, formData: FormData):
     p_instagram: input.instagram ?? undefined,
     p_address: input.address ?? undefined,
     p_business_hours: input.businessHours ?? undefined,
+    p_product_mode: input.productMode ?? undefined,
   })
   if (error) {
     if (error.code === '23505') return { fieldErrors: { subdomain: SUBDOMAIN_TAKEN_MESSAGE }, values: fields }
@@ -62,6 +66,7 @@ export async function createVitrineAction(_prev: FormState, formData: FormData):
 
   // Limpa um eventual "Vitrine não encontrada" em cache para este endereço.
   revalidateVitrine(input.subdomain)
+  scheduleDomainSync()
   // ?criada=1: a lista de itens comemora a vitrine nova e aponta o próximo passo.
   redirect(`/painel/vitrines/${vitrineId}/itens?criada=1`)
 }
@@ -100,6 +105,7 @@ export async function updateSettingsAction(vitrineId: string, _prev: FormState, 
     return { error: mapDbError(error), values: fields }
   }
   revalidateVitrine(vitrine.subdomain, parsed.data.subdomain)
+  if (changingSubdomain) scheduleDomainSync()
   return { success: 'Configurações salvas.', values: { ...fields, subdomain: parsed.data.subdomain } }
 }
 
@@ -127,6 +133,7 @@ export async function deleteVitrineAction(vitrineId: string, _prev: FormState, f
   if (error) return { error: mapDbError(error) }
   await Promise.all([removeStoredFiles(paths), removeVideoAssets(videos)])
   revalidateVitrine(vitrine.subdomain)
+  scheduleDomainSync()
   redirect('/painel')
 }
 

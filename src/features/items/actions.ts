@@ -10,6 +10,7 @@ import { revalidateVitrine } from '@/lib/vitrines/cache'
 import { mapDbError } from '@/lib/vitrines/db-errors'
 import { isSameIdSet, moveInList, REORDER_STALE_MESSAGE } from '@/lib/vitrines/reorder'
 import { itemSchema, type ItemInput } from '@/lib/vitrines/schemas'
+import { isAffiliateVitrine } from '@/lib/vitrines/vitrine-types'
 
 const ITEM_FIELDS = [
   'name', 'description', 'categoryId', 'code', 'priceType', 'price', 'promoPrice', 'durationMinutes', 'tags',
@@ -30,8 +31,13 @@ export async function saveItemAction(
   const keepValues = { values: fields }
 
   const { supabase, user } = await requireActionUser()
-  const { data: vitrine } = await supabase.from('vitrines').select('id, type, subdomain').eq('id', vitrineId).maybeSingle()
+  const { data: vitrine } = await supabase.from('vitrines').select('id, type, subdomain, product_mode').eq('id', vitrineId).maybeSingle()
   if (!vitrine) redirect('/painel')
+  // Afiliado: todo produto leva ao link de afiliado, nunca à sacola nem ao WhatsApp.
+  const affiliate = isAffiliateVitrine(vitrine)
+  if (affiliate && input.externalUrl === null) {
+    return { fieldErrors: { externalUrl: 'Informe o link de afiliado do produto.' }, ...keepValues }
+  }
   // Serviços viram agendamento: sem duração não dá para reservar o horário.
   const servico = vitrine.type === 'servicos'
   if (servico && input.durationMinutes === null) {
@@ -63,11 +69,11 @@ export async function saveItemAction(
     tags: input.tags,
     sold_out: input.soldOut,
     // Forma de venda é coisa de vitrine com sacola; serviço sempre vende agendando.
-    sale_mode: servico ? 'whatsapp' : input.saleMode,
+    sale_mode: affiliate ? 'link' : servico ? 'whatsapp' : input.saleMode,
     external_url: servico ? null : input.externalUrl,
-    whatsapp_id: input.whatsappId,
+    whatsapp_id: affiliate ? null : input.whatsappId,
     button_text: input.buttonText,
-    custom_message: input.customMessage,
+    custom_message: affiliate ? null : input.customMessage,
     notice: servico ? input.notice : null,
   }
 

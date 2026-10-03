@@ -1,6 +1,7 @@
 import * as Sentry from '@sentry/nextjs'
 import { NextResponse } from 'next/server'
 import { reconcileSubscriptions } from '@/features/billing/reconcile'
+import { syncDomainAliases } from '@/lib/hosts/sync-domains'
 import { deleteMediaRows } from '@/lib/media/remove-media'
 import { getCronSecret } from '@/lib/server-env'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
@@ -10,7 +11,8 @@ const BATCH = 100
 
 // Spec 6.4: mídias órfãs e falhas, pedidos expirados, limites antigos, revalidação de
 // quem estourou a franquia, conferência das assinaturas com o Stripe e fim dos testes
-// grátis sem assinatura (vitrine sai do ar, nada é apagado).
+// grátis sem assinatura (vitrine sai do ar, nada é apagado) e os subdomínios cadastrados
+// na Netlify, para o caso de uma sincronização feita na hora ter falhado.
 export async function GET(request: Request) {
   let secret: string
   try {
@@ -45,6 +47,12 @@ export async function GET(request: Request) {
     if (trialsError) throw trialsError
     revalidateVitrine(...(expiredTrials ?? []))
 
+    // Falha aqui não derruba o resto da tarefa: vai para o Sentry e tenta de novo amanhã.
+    const domains = await syncDomainAliases().catch((error) => {
+      Sentry.captureException(error)
+      return 'erro' as const
+    })
+
     return NextResponse.json({
       media: rows.length,
       orders: expired?.[0]?.orders_deleted ?? 0,
@@ -52,6 +60,7 @@ export async function GET(request: Request) {
       revalidated: subdomains?.length ?? 0,
       subscriptions,
       blockedVitrines: expiredTrials?.length ?? 0,
+      domains,
     })
   } catch (error) {
     Sentry.captureException(error)

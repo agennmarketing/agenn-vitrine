@@ -48,7 +48,7 @@ const PRICE_TYPES = [
 // Os passos do popup, no molde da criação de vitrine: uma pergunta por tela.
 // Vitrine de produtos: o produto tem um preço só, e as variações são tamanho ou cor.
 // Vitrine de serviços: o mesmo cadastro, falando de serviço e com duração.
-function steps(produto: boolean, servico: boolean) {
+function steps(produto: boolean, servico: boolean, affiliate: boolean) {
   return [
     {
       label: 'Fotos',
@@ -65,13 +65,19 @@ function steps(produto: boolean, servico: boolean) {
     {
       label: 'Preço',
       question: 'Quanto custa?',
-      help: produto
+      help: affiliate
+        ? 'O link de afiliado e o preço do produto. Variações, como tamanho ou cor, são opcionais.'
+        : produto
         ? 'O preço do produto. Variações, como tamanho ou cor, são opcionais.'
         : servico
           ? 'Preço fixo, a partir de ou sob consulta. Variações, como pacotes, são opcionais.'
           : 'Escolha o tipo de preço. Variações, como tamanhos ou modelos, são opcionais.',
     },
-    { label: 'Extras', question: 'Algo a mais?', help: 'Tudo aqui é opcional: WhatsApp do item, texto do botão e mensagem.' },
+    {
+      label: 'Extras',
+      question: 'Algo a mais?',
+      help: affiliate ? 'Opcional: o texto do botão.' : 'Tudo aqui é opcional: WhatsApp do item, texto do botão e mensagem.',
+    },
   ]
 }
 const STEP_COUNT = 4
@@ -209,6 +215,8 @@ export function NoCategoryStep() {
 export function ItemForm(props: {
   vitrineId: string
   vitrineType: string
+  /** Vitrine de afiliado: todo produto leva ao link de afiliado, sem sacola e sem WhatsApp. */
+  affiliate?: boolean
   serviceSegment?: string | null
   defaultButtonText: string
   categories: { id: string; name: string }[]
@@ -220,7 +228,8 @@ export function ItemForm(props: {
   // Produtos: preço fixo, sem duração e sem etiquetas — só o que a spec do produto pede.
   const produto = props.vitrineType === 'produtos'
   const servico = props.vitrineType === 'servicos'
-  const stepList = steps(produto, servico)
+  const affiliate = produto && Boolean(props.affiliate)
+  const stepList = steps(produto, servico, affiliate)
   // O segmento do negócio só troca o exemplo do nome do serviço.
   const serviceExample = isServiceSegment(props.serviceSegment) ? SEGMENT_COPY[props.serviceSegment].serviceExample : 'Corte de cabelo'
   const [step, setStep] = useState(0)
@@ -229,7 +238,6 @@ export function ItemForm(props: {
   const videoId = item?.video?.id ?? ''
   const [galleryIds, setGalleryIds] = useState<(string | null)[]>([item?.gallery[0]?.id ?? null, item?.gallery[1]?.id ?? null])
   const [priceType, setPriceType] = useState<string>(produto ? 'fixed' : (item?.price_type ?? 'fixed'))
-  const [saleMode, setSaleMode] = useState<string>(item?.sale_mode ?? 'whatsapp')
   const [variations, setVariations] = useState<VariationRow[]>(
     (item?.variations ?? []).map((v) => ({
       key: v.id,
@@ -503,44 +511,14 @@ export function ItemForm(props: {
             {/* Passo 3: forma de venda (produtos), preço, esgotado e variações. */}
             <div hidden={step !== 2} className="flex flex-col gap-7">
               <FormSection>
-                {produto ? (
-                  <fieldset className="flex min-w-0 flex-col gap-2">
-                    <legend className="mb-2 text-[0.9375rem] font-extrabold leading-5 text-ink">Como o cliente compra</legend>
-                    <div className="grid grid-cols-2 gap-2">
-                      {(
-                        [
-                          ['whatsapp', 'Pedido pelo WhatsApp'],
-                          ['link', 'Link externo'],
-                        ] as const
-                      ).map(([value, label]) => (
-                        <label key={value} className={CHOICE_CARD}>
-                          <input
-                            type="radio"
-                            name="saleMode"
-                            value={value}
-                            checked={saleMode === value}
-                            onChange={(event) => setSaleMode(event.target.value)}
-                            className="absolute inset-0 m-0 size-full cursor-pointer appearance-none rounded-control opacity-0"
-                          />
-                          {label}
-                        </label>
-                      ))}
-                    </div>
-                    <p className="text-sm font-semibold leading-5 text-ink-muted">
-                      {saleMode === 'link'
-                        ? 'O produto mostra "Comprar agora" e abre o site que você informar. Ele não entra na sacola.'
-                        : 'O produto entra na sacola e o pedido vai para o seu WhatsApp.'}
-                    </p>
-                  </fieldset>
-                ) : (
-                  <input type="hidden" name="saleMode" value="whatsapp" />
-                )}
-                {produto && saleMode === 'link' ? (
+                {/* Produtos próprios entram na sacola e vão pelo WhatsApp; afiliado sempre leva ao link. */}
+                <input type="hidden" name="saleMode" value={affiliate ? 'link' : 'whatsapp'} />
+                {affiliate ? (
                   <Field
-                    label="Link do produto"
+                    label="Link de afiliado"
                     htmlFor="externalUrl"
                     error={errors.externalUrl}
-                    hint="Mercado Livre, Shopee, seu site…"
+                    hint='O botão "Comprar agora" do produto abre este link.'
                   >
                     <Input
                       id="externalUrl"
@@ -759,7 +737,9 @@ export function ItemForm(props: {
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-card p-5 [&::-webkit-details-marker]:hidden">
                   <span className="flex flex-col gap-0.5">
                     <span className="text-lg font-black leading-snug tracking-[-0.02em] text-ink">Avançado</span>
-                    <span className="text-sm font-semibold text-ink-muted">WhatsApp do item, texto do botão e mensagem.</span>
+                    <span className="text-sm font-semibold text-ink-muted">
+                      {affiliate ? 'Texto do botão.' : 'WhatsApp do item, texto do botão e mensagem.'}
+                    </span>
                   </span>
                   <ChevronDown
                     aria-hidden="true"
@@ -768,21 +748,23 @@ export function ItemForm(props: {
                   />
                 </summary>
                 <div className="flex flex-col gap-5 border-t border-line p-5">
-                  <Field label="WhatsApp do item" htmlFor="whatsappId" error={errors.whatsappId}>
-                    <Select
-                      id="whatsappId"
-                      name="whatsappId"
-                      defaultValue={values?.whatsappId ?? item?.whatsapp_id ?? ''}
-                      invalid={!!errors.whatsappId}
-                    >
-                      <option value="">Usar o principal</option>
-                      {props.contacts.map((contact) => (
-                        <option key={contact.id} value={contact.id}>
-                          {contact.label}
-                        </option>
-                      ))}
-                    </Select>
-                  </Field>
+                  {affiliate ? null : (
+                    <Field label="WhatsApp do item" htmlFor="whatsappId" error={errors.whatsappId}>
+                      <Select
+                        id="whatsappId"
+                        name="whatsappId"
+                        defaultValue={values?.whatsappId ?? item?.whatsapp_id ?? ''}
+                        invalid={!!errors.whatsappId}
+                      >
+                        <option value="">Usar o principal</option>
+                        {props.contacts.map((contact) => (
+                          <option key={contact.id} value={contact.id}>
+                            {contact.label}
+                          </option>
+                        ))}
+                      </Select>
+                    </Field>
+                  )}
                   <Field label="Texto do botão" htmlFor="buttonText" error={errors.buttonText}>
                     <Input
                       id="buttonText"
@@ -793,21 +775,23 @@ export function ItemForm(props: {
                       invalid={!!errors.buttonText}
                     />
                   </Field>
-                  <Field
-                    label="Mensagem personalizada"
-                    htmlFor="customMessage"
-                    error={errors.customMessage}
-                    hint="Variáveis: {item}, {codigo}, {variacao}, {vitrine}, {pedido}"
-                  >
-                    <Textarea
-                      id="customMessage"
-                      name="customMessage"
-                      rows={3}
-                      maxLength={500}
-                      defaultValue={values?.customMessage ?? item?.custom_message ?? ''}
-                      invalid={!!errors.customMessage}
-                    />
-                  </Field>
+                  {affiliate ? null : (
+                    <Field
+                      label="Mensagem personalizada"
+                      htmlFor="customMessage"
+                      error={errors.customMessage}
+                      hint="Variáveis: {item}, {codigo}, {variacao}, {vitrine}, {pedido}"
+                    >
+                      <Textarea
+                        id="customMessage"
+                        name="customMessage"
+                        rows={3}
+                        maxLength={500}
+                        defaultValue={values?.customMessage ?? item?.custom_message ?? ''}
+                        invalid={!!errors.customMessage}
+                      />
+                    </Field>
+                  )}
                 </div>
               </details>
             </div>

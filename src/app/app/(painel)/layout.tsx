@@ -38,10 +38,10 @@ export default async function PainelLayout({ children }: { children: ReactNode }
       .select('status, grace_until, trial_ends_at, subscription_status')
       .eq('user_id', userId)
       .maybeSingle(),
-    // Só o tipo: a barra lateral esconde a Agenda nas vitrines de produtos.
+    // Só o tipo: a Agenda só aparece para quem já tem vitrine de serviços.
     supabase.from('vitrines').select('type').order('created_at').limit(1).maybeSingle(),
   ])
-  const showAgenda = vitrine?.type !== 'produtos'
+  const showAgenda = vitrine?.type === 'servicos'
   const displayName = profile?.name || email
   const access = accessFor(subscription, new Date())
   const notice = trialNotice(access)

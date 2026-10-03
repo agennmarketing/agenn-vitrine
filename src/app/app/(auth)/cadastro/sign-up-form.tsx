@@ -11,14 +11,16 @@ import { SubmitButton } from '@/components/ui/submit-button'
 import { signUpAction } from '@/features/auth/actions'
 import { initialFormState } from '@/lib/forms/form-state'
 
-export function SignUpForm() {
+// perfil: o negócio da página de vendas de onde a pessoa veio (manicure, loja...).
+export function SignUpForm({ perfil }: { perfil: string | null }) {
   const [state, formAction] = useActionState(signUpAction, initialFormState)
   const errors = state.fieldErrors ?? {}
 
   return (
     <div className="flex flex-col gap-6">
-      <GoogleButton />
+      <GoogleButton next={perfil ? `/painel/vitrines/nova?perfil=${perfil}` : undefined} />
       <form action={formAction} noValidate className="flex flex-col gap-4">
+        {perfil ? <input type="hidden" name="perfil" value={perfil} /> : null}
         <Field label="Nome" htmlFor="name" error={errors.name}>
           <Input id="name" name="name" autoComplete="name" defaultValue={state.values?.name} invalid={!!errors.name} />
         </Field>

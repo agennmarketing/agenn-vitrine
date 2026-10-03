@@ -11,6 +11,7 @@ import { Spinner } from '@/components/ui/submit-button'
 import { UnsavedChangesGuard } from '@/components/ui/unsaved-changes'
 import { updateSettingsAction } from '@/features/vitrines/actions'
 import { fetchAvailability } from '@/lib/forms/availability'
+import { filterSubdomainField } from '@/lib/forms/subdomain-field'
 import type { FormState } from '@/lib/forms/form-state'
 
 type Values = { name: string; description: string; subdomain: string }
@@ -90,7 +91,7 @@ export function SettingsForm({ vitrineId, rootDomain, initial }: { vitrineId: st
                 spellCheck={false}
                 invalid={!!errors.subdomain}
                 className="rounded-none border-0 bg-transparent"
-                onChange={(event) => onSubdomainChange(event.target.value)}
+                onChange={(event) => onSubdomainChange(filterSubdomainField(event.target))}
               />
               <span className="flex max-w-[45%] shrink-0 items-center truncate bg-subtle px-3 text-sm font-extrabold text-ink-muted">
                 .{rootDomain}

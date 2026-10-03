@@ -6,7 +6,6 @@ test('cria vitrine pelo assistente e respeita a vitrine única da conta', async 
   const user = await createConfirmedUser('assistente')
   await signIn(page, user.email, user.password)
 
-  await page.getByRole('link', { name: 'Criar minha vitrine' }).click()
   // Primeiro passo: o tipo da vitrine. Comida não é oferecida.
   await expect(page.getByRole('heading', { name: 'Que tipo de vitrine você quer criar?' })).toBeVisible()
   await expect(page.getByLabel('Comida')).toHaveCount(0)
@@ -71,12 +70,18 @@ test('assistente cria vitrine de produtos, sem segmento nem horários', async ({
   await page.getByLabel('Produtos').check()
   await page.getByRole('button', { name: 'Continuar' }).click()
 
-  // Produtos pula o segmento: o passo seguinte já é o nome do negócio.
+  // Produtos pula o segmento e pergunta como vende: produtos próprios é o padrão.
+  await expect(page.getByRole('heading', { name: 'Como você vende seus produtos?' })).toBeVisible()
+  await expect(page.getByText('Passo 2 de 5')).toBeVisible()
+  await expect(page.getByLabel('Produtos próprios')).toBeChecked()
+  await page.getByRole('button', { name: 'Continuar' }).click()
+
   await expect(page.getByRole('heading', { name: 'Como o seu negócio se chama?' })).toBeVisible()
-  await expect(page.getByText('Passo 2 de 4')).toBeVisible()
   const subdomain = uniqueSubdomain('loja')
   await page.getByLabel('Nome do negócio').fill('Loja Teste')
-  await page.getByLabel('Endereço da vitrine').fill(subdomain)
+  // O endereço não aceita espaço, símbolo nem maiúscula: some na digitação.
+  await page.getByLabel('Endereço da vitrine').fill(`${subdomain.toUpperCase()} !@#`)
+  await expect(page.getByLabel('Endereço da vitrine')).toHaveValue(subdomain)
   await page.getByRole('button', { name: 'Continuar' }).click()
   await page.getByLabel('WhatsApp', { exact: true }).fill('(11) 98765-4321')
   await page.getByRole('button', { name: 'Continuar' }).click()
@@ -88,13 +93,42 @@ test('assistente cria vitrine de produtos, sem segmento nem horários', async ({
 
   await expect(page).toHaveURL(/\/painel\/vitrines\/[0-9a-f-]+\/itens(\?criada=1)?$/)
   const saved = await vitrineBySubdomain(subdomain)
-  expect(saved).toMatchObject({ type: 'produtos', service_segment: null, business_hours: null, cart_enabled: true })
+  expect(saved).toMatchObject({ type: 'produtos', product_mode: 'proprios', service_segment: null, business_hours: null, cart_enabled: true })
 
   // A vitrine de produtos tem sacola e WhatsApp; Agenda não aparece na navegação.
   const abas = page.getByRole('navigation', { name: 'Seções da vitrine' })
   await expect(abas.getByRole('link')).toHaveText(['Produtos', 'Aparência', 'WhatsApp', 'Sacola e mensagens', 'Configurações', 'Compartilhar'])
   const principal = page.getByRole('navigation', { name: 'Principal' }).filter({ visible: true })
   await expect(principal.getByRole('link')).toHaveText(['Vitrine', 'Plano', 'Conta'])
+})
+
+test('assistente cria vitrine de afiliado, sem WhatsApp e sem sacola', async ({ page }) => {
+  const user = await createConfirmedUser('assistente-afiliado')
+  await signIn(page, user.email, user.password)
+
+  await page.goto('/painel/vitrines/nova')
+  await page.getByLabel('Produtos').check()
+  await page.getByRole('button', { name: 'Continuar' }).click()
+  await page.getByLabel('Sou afiliado').check()
+  await page.getByRole('button', { name: 'Continuar' }).click()
+  const subdomain = uniqueSubdomain('achados')
+  await page.getByLabel('Nome do negócio').fill('Achados')
+  await page.getByLabel('Endereço da vitrine').fill(subdomain)
+  await page.getByRole('button', { name: 'Continuar' }).click()
+
+  // Afiliado não informa WhatsApp: o passo de contato fica só com o Instagram.
+  await expect(page.getByRole('heading', { name: 'Onde as pessoas te encontram?' })).toBeVisible()
+  await expect(page.getByLabel('WhatsApp', { exact: true })).toBeHidden()
+  await page.getByRole('button', { name: 'Continuar' }).click()
+  await page.getByRole('button', { name: 'Criar vitrine' }).click()
+
+  await expect(page).toHaveURL(/\/painel\/vitrines\/[0-9a-f-]+\/itens(\?criada=1)?$/)
+  const saved = await vitrineBySubdomain(subdomain)
+  expect(saved).toMatchObject({ type: 'produtos', product_mode: 'afiliado', cart_enabled: false, primary_whatsapp_id: null })
+
+  // Sem WhatsApp e sem sacola no editor.
+  const abas = page.getByRole('navigation', { name: 'Seções da vitrine' })
+  await expect(abas.getByRole('link')).toHaveText(['Produtos', 'Aparência', 'Configurações', 'Compartilhar'])
 })
 
 test('telefone inválido volta ao passo do WhatsApp; endereço em uso é avisado', async ({ page }) => {

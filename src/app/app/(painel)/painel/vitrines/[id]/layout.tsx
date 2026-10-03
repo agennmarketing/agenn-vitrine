@@ -7,7 +7,7 @@ import { TypeIcon } from '@/components/ui/type-icon'
 import { getMyVitrine, getVideoUsage } from '@/features/vitrines/queries'
 import { env } from '@/lib/env'
 import { buildVitrineUrl } from '@/lib/hosts/urls'
-import type { VitrineType } from '@/lib/vitrines/vitrine-types'
+import { isAffiliateVitrine, type VitrineType } from '@/lib/vitrines/vitrine-types'
 import { EditorTabs } from './editor-tabs'
 
 export default async function VitrineEditorLayout({
@@ -57,7 +57,7 @@ export default async function VitrineEditorLayout({
             A franquia de vídeo deste mês acabou. Os vídeos voltam no próximo mês.
           </p>
         ) : null}
-        <EditorTabs vitrineId={id} type={vitrine.type as VitrineType} />
+        <EditorTabs vitrineId={id} type={vitrine.type as VitrineType} affiliate={isAffiliateVitrine(vitrine)} />
         {children}
       </PanelBody>
       {modal}

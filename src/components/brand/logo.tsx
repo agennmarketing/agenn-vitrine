@@ -1,16 +1,22 @@
 import Image from 'next/image'
 
-// Símbolo do Vitrimove (a lojinha com as linhas de velocidade), fundo transparente.
+// Proporção da logo original (assets/brand/vitrimove-logo.svg, 2711×1672).
+const LOGO_RATIO = 1672 / 2711
+
+// Logo do Vitrimove (o mascote da lojinha com as linhas de velocidade), fundo transparente.
+// `size` é a largura; a altura segue a proporção da logo.
 export function LogoMark({ size = 40, alt = '', priority = false, className = '' }: { size?: number; alt?: string; priority?: boolean; className?: string }) {
+  const height = Math.round(size * LOGO_RATIO)
   return (
     <Image
-      src="/brand/vitrimove-marca-512.png"
+      src="/brand/vitrimove-logo.svg"
       alt={alt}
       width={size}
-      height={size}
+      height={height}
       priority={priority}
+      unoptimized
       className={`shrink-0 ${className}`}
-      style={{ width: size, height: size }}
+      style={{ width: size, height }}
     />
   )
 }

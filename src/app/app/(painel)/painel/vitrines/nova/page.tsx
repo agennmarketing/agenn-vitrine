@@ -2,13 +2,14 @@ import { Store } from 'lucide-react'
 import Link from 'next/link'
 import { buttonClasses } from '@/components/ui/button'
 import { PanelBody, PanelTopBar } from '@/components/ui/panel-page'
-import { listMyVitrines } from '@/features/vitrines/queries'
+import { getPanelSession, listMyVitrines } from '@/features/vitrines/queries'
 import { env } from '@/lib/env'
+import { wizardPresetFor } from '@/lib/vitrines/wizard-preset'
 import { VitrineWizard } from './wizard'
 
 export const metadata = { title: 'Nova vitrine' }
 
-export default async function NovaVitrinePage() {
+export default async function NovaVitrinePage({ searchParams }: { searchParams: Promise<{ perfil?: string }> }) {
   const vitrines = await listMyVitrines()
   // Uma vitrine por conta: quem já tem a sua volta para o painel.
   if (vitrines.length > 0) {
@@ -33,9 +34,13 @@ export default async function NovaVitrinePage() {
       </>
     )
   }
+  // A página de vendas de onde a pessoa veio: pelo ?perfil= (Google) ou guardado na conta (e-mail).
+  const { supabase } = await getPanelSession()
+  const [{ perfil }, { data }] = await Promise.all([searchParams, supabase.auth.getClaims()])
+  const preset = wizardPresetFor(perfil) ?? wizardPresetFor(data?.claims?.user_metadata?.perfil)
   return (
     <PanelBody>
-      <VitrineWizard rootDomain={env.NEXT_PUBLIC_ROOT_DOMAIN} />
+      <VitrineWizard rootDomain={env.NEXT_PUBLIC_ROOT_DOMAIN} preset={preset} />
     </PanelBody>
   )
 }

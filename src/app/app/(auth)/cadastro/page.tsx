@@ -1,10 +1,12 @@
 import Link from 'next/link'
 import { AuthShell } from '@/components/auth/auth-shell'
+import { validPerfil } from '@/lib/vitrines/wizard-preset'
 import { SignUpForm } from './sign-up-form'
 
 export const metadata = { title: 'Criar conta' }
 
-export default function SignUpPage() {
+export default async function SignUpPage({ searchParams }: { searchParams: Promise<{ perfil?: string }> }) {
+  const perfil = validPerfil((await searchParams).perfil)
   return (
     <AuthShell
       title="Criar conta"
@@ -18,7 +20,7 @@ export default function SignUpPage() {
         </>
       }
     >
-      <SignUpForm />
+      <SignUpForm perfil={perfil} />
     </AuthShell>
   )
 }

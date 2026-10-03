@@ -1,5 +1,6 @@
 import { getItemForEdit, getItemFormOptions } from '@/features/items/queries'
 import { getMyVitrine } from '@/features/vitrines/queries'
+import { isAffiliateVitrine } from '@/lib/vitrines/vitrine-types'
 import { ItemDialog } from './item-dialog'
 import { ItemForm, NoCategoryStep } from './item-form'
 
@@ -14,6 +15,7 @@ export async function NewItemDialog({ id, intercepted = false }: { id: string; i
         <ItemForm
           vitrineId={id}
           vitrineType={options.vitrine.type}
+          affiliate={isAffiliateVitrine(vitrine)}
           serviceSegment={vitrine.service_segment}
           defaultButtonText={vitrine.default_button_text}
           categories={options.categories}
@@ -38,6 +40,7 @@ export async function EditItemDialog({ id, itemId, intercepted = false }: { id: 
         key={item.updated_at}
         vitrineId={id}
         vitrineType={options.vitrine.type}
+        affiliate={isAffiliateVitrine(vitrine)}
         serviceSegment={vitrine.service_segment}
         defaultButtonText={vitrine.default_button_text}
         categories={options.categories}

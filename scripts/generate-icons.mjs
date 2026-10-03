@@ -1,21 +1,32 @@
-// Gera os ícones do app a partir do logo original (assets/brand/logo-icone.png, fora de public/ para não ser publicado).
-// Rodar de novo quando o logo mudar:  node scripts/generate-icons.mjs
+// Gera os ícones e a logo publicada a partir dos originais em assets/brand/ (fora de public/ para não serem publicados).
+// Rodar de novo quando a marca mudar:  node scripts/generate-icons.mjs
 //
 // Saídas:
-//   src/app/icon.png                (192×192)  convenção de arquivo do Next
-//   src/app/apple-icon.png          (180×180)  convenção de arquivo do Next
-//   src/app/favicon.ico             ICO com PNGs 32×32 e 48×48
-//   public/brand/logo-icone-512.png (512×512)  uso dentro do app (next/image)
-import { writeFile } from 'node:fs/promises'
+//   src/app/icon.png                    (192×192)  convenção de arquivo do Next (painel e site)
+//   src/app/apple-icon.png              (180×180)  convenção de arquivo do Next, fundo branco (o iOS pinta a transparência de preto)
+//   public/favicon.ico                  ICO com PNGs 32×32 e 48×48 (fica em public/, não em app/: ver o favicon por vitrine)
+//   public/brand/vitrimove-marca-512.png (512×512) ícone do PWA do painel
+//   public/brand/vitrimove-logo.svg     logo completa (mascote com as linhas de velocidade), usada pelo LogoMark
+import { copyFile, writeFile } from 'node:fs/promises'
 import sharp from 'sharp'
 
-const SOURCE = 'assets/brand/logo-icone.png'
+const FAVICON = 'assets/brand/vitrimove-favicon.png'
+const LOGO = 'assets/brand/vitrimove-logo.svg'
+const TRANSPARENT = { r: 0, g: 0, b: 0, alpha: 0 }
+const WHITE = { r: 255, g: 255, b: 255, alpha: 1 }
 
-function png(size) {
-  return sharp(SOURCE)
-    .resize(size, size, { fit: 'cover' })
-    .png({ compressionLevel: 9, palette: true, quality: 90, effort: 10 })
+// O mascote não é quadrado: centraliza num quadrado, com uma margem em volta.
+function square(size, { padding = 0, background = TRANSPARENT } = {}) {
+  const inner = Math.round(size * (1 - 2 * padding))
+  return sharp(FAVICON)
+    .resize(inner, inner, { fit: 'contain', background: TRANSPARENT })
     .toBuffer()
+    .then((buffer) =>
+      sharp({ create: { width: size, height: size, channels: 4, background } })
+        .composite([{ input: buffer, gravity: 'center' }])
+        .png({ compressionLevel: 9 })
+        .toBuffer(),
+    )
 }
 
 // ICO: ICONDIR (6 bytes) + ICONDIRENTRY (16 bytes cada) + imagens PNG (em RGBA: o decodificador do Next exige).
@@ -44,19 +55,15 @@ function buildIco(images) {
 }
 
 const outputs = [
-  ['src/app/icon.png', await png(192)],
-  ['src/app/apple-icon.png', await png(180)],
-  ['public/brand/logo-icone-512.png', await png(512)],
-  [
-    'src/app/favicon.ico',
-    buildIco([
-      { size: 32, data: await sharp(SOURCE).resize(32, 32).ensureAlpha().png({ compressionLevel: 9 }).toBuffer() },
-      { size: 48, data: await sharp(SOURCE).resize(48, 48).ensureAlpha().png({ compressionLevel: 9 }).toBuffer() },
-    ]),
-  ],
+  ['src/app/icon.png', await square(192, { padding: 0.04 })],
+  ['src/app/apple-icon.png', await square(180, { padding: 0.12, background: WHITE })],
+  ['public/brand/vitrimove-marca-512.png', await square(512, { padding: 0.1 })],
+  ['public/favicon.ico', buildIco([{ size: 32, data: await square(32) }, { size: 48, data: await square(48) }])],
 ]
 
 for (const [path, data] of outputs) {
   await writeFile(path, data)
   console.log(`${path}  ${data.length} bytes`)
 }
+await copyFile(LOGO, 'public/brand/vitrimove-logo.svg')
+console.log('public/brand/vitrimove-logo.svg  copiada')

@@ -73,8 +73,8 @@ export async function signIn(page: Page, email: string, password: string) {
   await page.getByLabel('E-mail').fill(email)
   await page.getByLabel('Senha', { exact: true }).fill(password)
   await page.getByRole('button', { name: 'Entrar', exact: true }).click()
-  // Quem já tem vitrine cai direto no editor dela; quem não tem fica no convite para criar.
-  await expect(page).toHaveURL(/\/painel(\/vitrines\/[0-9a-f-]+\/itens)?$/)
+  // Quem já tem vitrine cai direto no editor dela; quem não tem cai direto no assistente.
+  await expect(page).toHaveURL(/\/painel\/vitrines\/(nova|[0-9a-f-]+\/itens)$/)
 }
 export function uniqueSubdomain(prefix: string) {
   return `${prefix}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`.slice(0, 30)
@@ -355,7 +355,7 @@ export async function setVitrineStatus(vitrineId: string, status: 'active' | 'fr
 export async function vitrineBySubdomain(subdomain: string) {
   const { data } = await createAdminClient()
     .from('vitrines')
-    .select('type, service_segment, instagram, address, business_hours, theme, cart_enabled')
+    .select('type, product_mode, service_segment, instagram, address, business_hours, theme, cart_enabled, primary_whatsapp_id')
     .eq('subdomain', subdomain)
     .single()
     .throwOnError()

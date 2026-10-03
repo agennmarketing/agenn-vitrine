@@ -1,60 +1,86 @@
-import { ArrowRight } from 'lucide-react'
+import { Brush, ChevronRight, Eye, Flower2, Link2, Paintbrush, Scissors, ShoppingBag, Wind, type LucideIcon } from 'lucide-react'
+import type { Metadata } from 'next'
+import Image from 'next/image'
 import Link from 'next/link'
-import { buttonClasses } from '@/components/ui/button'
-import { TypeIcon } from '@/components/ui/type-icon'
-import { env } from '@/lib/env'
-import { buildAppUrl } from '@/lib/hosts/urls'
-import { LogoMark, Wordmark } from '@/components/brand/logo'
+import { SiteFooter, SiteHeader } from './_vendas/chrome'
+import { PERSONAS, type Persona } from './_vendas/personas'
+import styles from './_vendas/vendas.module.css'
+
+export const metadata: Metadata = {
+  title: { absolute: 'Vitrimove · Vitrine on-line com agenda e pedidos no WhatsApp' },
+  description:
+    'Vitrine on-line feita para o seu negócio: agenda para manicure, salão, barbearia, lash, sobrancelha e estética, ou catálogo com pedido no WhatsApp e links de afiliado. 7 dias grátis, sem cartão.',
+}
+
+const ICONS: Record<string, LucideIcon> = {
+  manicure: Paintbrush,
+  cabeleireiro: Wind,
+  barbearia: Scissors,
+  lash: Eye,
+  sobrancelha: Brush,
+  estetica: Flower2,
+  loja: ShoppingBag,
+  afiliado: Link2,
+}
+
+function Choice({ persona }: { persona: Persona }) {
+  const Icon = ICONS[persona.slug] ?? ShoppingBag
+  return (
+    <li>
+      <Link href={`/${persona.slug}`} className={styles.choice}>
+        <span className={styles.choiceIcon} aria-hidden="true">
+          <Icon className="size-6" strokeWidth={2.5} />
+        </span>
+        <span className="flex-1">{persona.label}</span>
+        <ChevronRight aria-hidden="true" className="size-5 shrink-0 text-ink-muted" strokeWidth={3} />
+      </Link>
+    </li>
+  )
+}
 
 export default function MarketingHome() {
+  const services = PERSONAS.filter((persona) => persona.group === 'servicos')
+  const products = PERSONAS.filter((persona) => persona.group === 'produtos')
+
   return (
     <div className="flex min-h-dvh flex-col bg-canvas">
-      <header className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-4 py-5 sm:px-6">
-        <div className="flex items-center gap-2.5">
-          <LogoMark size={44} priority />
-          <h1>
-            <Wordmark className="text-xl" />
-          </h1>
-        </div>
-        <Link href={buildAppUrl('/entrar', env.NEXT_PUBLIC_ROOT_DOMAIN)} className={buttonClasses('ghost', '', 'sm')}>
-          Entrar
-        </Link>
-      </header>
+      <SiteHeader />
 
-      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center gap-8 px-4 py-12 sm:px-6">
-        <div aria-hidden="true" className="flex items-end gap-2">
-          <span className="-rotate-6">
-            <TypeIcon type="servicos" size="lg" />
-          </span>
-        </div>
-        <div className="flex max-w-2xl flex-col gap-4">
-          <p className="text-[2.5rem] font-black leading-[1.05] tracking-[-0.03em] text-ink sm:text-[3.5rem]">
-            Sua vitrine com vídeo e <span className="text-go-strong">agenda online</span>.
-          </p>
-          <p className="max-w-xl text-lg font-semibold leading-relaxed text-ink-muted">
-            Para manicures, salões, lash e sobrancelhas, barbearias e estética. Monte pelo celular, divulgue o link e
-            o cliente escolhe um horário livre e agenda sozinho, sem dupla reserva.
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 pb-20 pt-10 sm:px-6 sm:pt-14">
+        <div className="flex flex-col items-center text-center">
+          <Image src="/site/vitri.webp" alt="" width={900} height={776} priority unoptimized className={styles.chooserVitri} />
+          <h1 className={`${styles.display} mt-5`}>
+            <span className="sr-only">Vitrimove: </span>O que você faz?
+          </h1>
+          <p className="mt-4 max-w-md text-lg font-semibold leading-relaxed text-ink-muted">
+            Escolha o seu negócio e veja a vitrine feita para ele.
           </p>
         </div>
-        <Link
-          href={buildAppUrl('/cadastro', env.NEXT_PUBLIC_ROOT_DOMAIN)}
-          className={buttonClasses('primary', 'w-full sm:w-fit', 'lg')}
-        >
-          Criar minha vitrine
-          <ArrowRight aria-hidden="true" className="size-5" strokeWidth={3} />
-        </Link>
+
+        <section aria-labelledby="grupo-produtos" className="mt-12">
+          <h2 id="grupo-produtos" className="text-[1.0625rem] font-black tracking-[-0.01em] text-ink">
+            Vendo produtos
+          </h2>
+          <ul className="mt-3 grid gap-3 sm:grid-cols-2">
+            {products.map((persona) => (
+              <Choice key={persona.slug} persona={persona} />
+            ))}
+          </ul>
+        </section>
+
+        <section aria-labelledby="grupo-servicos" className="mt-10">
+          <h2 id="grupo-servicos" className="text-[1.0625rem] font-black tracking-[-0.01em] text-ink">
+            Atendo com hora marcada
+          </h2>
+          <ul className="mt-3 grid gap-3 sm:grid-cols-2">
+            {services.map((persona) => (
+              <Choice key={persona.slug} persona={persona} />
+            ))}
+          </ul>
+        </section>
       </main>
 
-      <footer className="border-t-2 border-line">
-        <div className="mx-auto flex max-w-5xl flex-wrap gap-x-6 gap-y-2 px-4 py-6 text-sm font-bold text-ink-muted sm:px-6">
-          <Link href="/termos" className="hover:text-ink">
-            Termos de uso
-          </Link>
-          <Link href="/privacidade" className="hover:text-ink">
-            Política de privacidade
-          </Link>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   )
 }
