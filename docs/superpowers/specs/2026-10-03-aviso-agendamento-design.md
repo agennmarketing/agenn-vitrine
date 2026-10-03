@@ -74,7 +74,7 @@ Fora (não fazer agora):
 ## Service worker (`public/sw.js`)
 
 - `push`: lê o JSON `{ title, body, url, tag }` e chama `showNotification` com o ícone do painel
-  (`/icon.png` / ícone 192 do manifesto), `badge`, `tag` e `data.url`.
+  (`/brand/vitrimove-marca-512.png`, o ícone do manifesto do painel), `badge`, `tag` e `data.url`.
 - `notificationclick`: fecha a notificação; foca uma janela do mesmo host já aberta e navega para
   `data.url`; senão `clients.openWindow(data.url)`.
 - As vitrines usam o mesmo arquivo, mas nunca se inscrevem — nada muda para a cliente.
@@ -88,7 +88,7 @@ Só aparece se o dono tem vitrine do tipo serviços.
   - *sem suporte* (sem `serviceWorker`/`PushManager`/`Notification`): "Este navegador não recebe
     notificações. Os e-mails continuam chegando.";
   - *iPhone/iPad fora do app instalado* (iOS sem `display-mode: standalone`): "Para receber no iPhone,
-    adicione o Agenn à tela de início e abra por lá.";
+    adicione o Vitrimove à tela de início e abra por lá.";
   - *permissão negada*: explica como liberar nas configurações do navegador;
   - *desligado*: botão "Ativar neste aparelho" → `Notification.requestPermission()` →
     `pushManager.subscribe({ userVisibleOnly: true, applicationServerKey })` → server action salva;
