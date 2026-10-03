@@ -19,6 +19,10 @@ describe('wizardPresetFor', () => {
     }
   })
 
+  it('o nome antigo da página de cabeleireira continua valendo', () => {
+    expect(wizardPresetFor('cabeleireiro')).toEqual(wizardPresetFor('cabeleireira'))
+  })
+
   it('ignora perfis desconhecidos e valores que não são texto', () => {
     expect(wizardPresetFor('qualquer')).toBeNull()
     expect(wizardPresetFor('toString')).toBeNull()

@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 const ICONS: Record<string, LucideIcon> = {
   manicure: Paintbrush,
-  cabeleireiro: Wind,
+  cabeleireira: Wind,
   barbearia: Scissors,
   lash: Eye,
   sobrancelha: Brush,

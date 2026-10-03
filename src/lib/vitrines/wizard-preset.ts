@@ -12,6 +12,8 @@ export type WizardPreset =
 
 const PRESETS: Record<string, WizardPreset> = {
   manicure: { type: 'servicos', segment: 'nail' },
+  cabeleireira: { type: 'servicos', segment: 'cabelo' },
+  // Nome antigo da página de cabeleireira: pode estar guardado em contas criadas antes da troca.
   cabeleireiro: { type: 'servicos', segment: 'cabelo' },
   barbearia: { type: 'servicos', segment: 'barbearia' },
   lash: { type: 'servicos', segment: 'lash' },

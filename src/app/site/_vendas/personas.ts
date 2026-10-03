@@ -92,9 +92,9 @@ export const PERSONAS: Persona[] = [
     },
   },
   {
-    slug: 'cabeleireiro',
-    label: 'Cabeleireiro e salão',
-    audience: 'cabeleireiros e salões',
+    slug: 'cabeleireira',
+    label: 'Cabeleireira e salão',
+    audience: 'cabeleireiras e salões',
     group: 'servicos',
     vitri: '/site/vitri-cabeleireira.webp',
     title: 'Seu salão com agenda on-line, cada profissional no seu horário.',
