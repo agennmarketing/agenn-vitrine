@@ -5,6 +5,7 @@ import { loadPublicVitrine } from '@/features/public/load-vitrine'
 import { env } from '@/lib/env'
 import { buildVitrineUrl, originFor } from '@/lib/hosts/urls'
 import { logoMetadataIcons } from '@/lib/pwa/icons'
+import { SHARE_IMAGE_SIZE, shareCardVersion } from '@/lib/public/share-card'
 import { shortName, VITRINE_MANIFEST_PATH } from '@/lib/pwa/manifest'
 import { Catalog } from './catalog'
 import { vitrineTheme } from './theme'
@@ -21,17 +22,26 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { subdomain } = await params
   const vitrine = await loadPublicVitrine(subdomain)
   if (!vitrine) return { title: 'Vitrine não encontrada' }
-  const image = vitrine.banner?.large ?? vitrine.logo?.large
-  const absoluteImage = image?.startsWith('http') ? image : undefined
+  // Prévia do link (WhatsApp etc.): card gerado em `/og`, leve e sempre no mesmo formato.
+  const version = shareCardVersion({
+    subdomain: vitrine.subdomain,
+    name: vitrine.name,
+    description: vitrine.description,
+    brandColor: vitrine.brandColor,
+    logoUrl: vitrine.logo?.large ?? null,
+  })
   return {
     title: vitrine.name,
     description: vitrine.description || undefined,
     metadataBase: new URL(buildVitrineUrl(vitrine.subdomain, env.NEXT_PUBLIC_ROOT_DOMAIN)),
     openGraph: {
+      type: 'website',
+      url: '/',
       title: vitrine.name,
       description: vitrine.description || undefined,
-      images: absoluteImage ? [absoluteImage] : undefined,
+      images: [{ url: `/og?v=${version}`, ...SHARE_IMAGE_SIZE, type: 'image/png', alt: vitrine.name }],
     },
+    twitter: { card: 'summary_large_image' },
     // A logo do lojista é o ícone da aba e o da tela de início; sem logo vale o do Agenn
     // (o `icon.png` da raiz, que o Next usa quando a página não declara ícone nenhum).
     icons: vitrine.logo ? logoMetadataIcons(vitrine.logo) : undefined,
