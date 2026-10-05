@@ -41,35 +41,6 @@ export function parseOrderRateLimit(source: Source): number {
   return z.coerce.number().int().min(1).default(20).parse(source.ORDER_RATE_LIMIT_PER_HOUR ?? undefined)
 }
 
-const videoServiceSchema = z
-  .object({
-    VIDEO_DRIVER: z.enum(['mux', 'fake']).default('mux'),
-    MUX_TOKEN_ID: z.string().default(''),
-    MUX_TOKEN_SECRET: z.string().default(''),
-    APP_ENV: z.string().optional(),
-    VERCEL_ENV: z.string().optional(),
-  })
-  .superRefine((value, ctx) => {
-    if (value.VIDEO_DRIVER === 'mux' && (!value.MUX_TOKEN_ID || !value.MUX_TOKEN_SECRET)) {
-      ctx.addIssue({ code: 'custom', message: 'MUX_TOKEN_ID e MUX_TOKEN_SECRET são obrigatórias com o driver mux.' })
-    }
-    if (value.VIDEO_DRIVER === 'fake' && inProduction(value)) {
-      ctx.addIssue({ code: 'custom', message: 'VIDEO_DRIVER=fake não pode ser usado em produção.' })
-    }
-  })
-
-export type VideoServiceEnv = { driver: 'fake' } | { driver: 'mux'; tokenId: string; tokenSecret: string }
-
-export function parseVideoServiceEnv(source: Source): VideoServiceEnv {
-  const value = videoServiceSchema.parse(source)
-  if (value.VIDEO_DRIVER === 'fake') return { driver: 'fake' }
-  return { driver: 'mux', tokenId: value.MUX_TOKEN_ID, tokenSecret: value.MUX_TOKEN_SECRET }
-}
-
-export function parseWebhookSecret(source: Source): string {
-  return z.string().min(8, 'MUX_WEBHOOK_SECRET não configurada.').parse(source.MUX_WEBHOOK_SECRET)
-}
-
 export function parseCronSecret(source: Source): string {
   return z.string().min(16, 'CRON_SECRET precisa de pelo menos 16 caracteres.').parse(source.CRON_SECRET)
 }

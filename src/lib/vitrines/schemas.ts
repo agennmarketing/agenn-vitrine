@@ -270,10 +270,6 @@ export const itemSchema = z
     variations: jsonArray(variationInput, 20),
     coverMediaId: z.uuid('Envie a imagem de capa.'),
     galleryMediaIds: jsonArray(z.uuid(), 2),
-    videoMediaId: z
-      .union([z.uuid(), z.literal('')])
-      .default('')
-      .transform((value) => value || null),
   })
   .superRefine((data, ctx) => {
     if (data.saleMode === 'link' && data.externalUrl === null) {
@@ -328,7 +324,6 @@ export const itemSchema = z
       })),
       coverMediaId: data.coverMediaId,
       galleryMediaIds: data.galleryMediaIds,
-      videoMediaId: data.videoMediaId,
     }
   })
 

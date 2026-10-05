@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { buttonClasses } from '@/components/ui/button'
 import { PanelBody, PanelTopBar } from '@/components/ui/panel-page'
 import { TypeIcon } from '@/components/ui/type-icon'
-import { getMyVitrine, getVideoUsage } from '@/features/vitrines/queries'
+import { getMyVitrine } from '@/features/vitrines/queries'
 import { env } from '@/lib/env'
 import { buildVitrineUrl } from '@/lib/hosts/urls'
 import { isAffiliateVitrine, type VitrineType } from '@/lib/vitrines/vitrine-types'
@@ -21,7 +21,7 @@ export default async function VitrineEditorLayout({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const [vitrine, usage] = await Promise.all([getMyVitrine(id), getVideoUsage()])
+  const vitrine = await getMyVitrine(id)
   const url = buildVitrineUrl(vitrine.subdomain, env.NEXT_PUBLIC_ROOT_DOMAIN)
   const active = vitrine.status === 'active'
 
@@ -52,11 +52,6 @@ export default async function VitrineEditorLayout({
         }
       />
       <PanelBody className="flex flex-col gap-6">
-        {usage.overQuota ? (
-          <p role="status" className="rounded-card border border-danger/30 bg-danger-soft px-5 py-4 font-bold text-danger">
-            A franquia de vídeo deste mês acabou. Os vídeos voltam no próximo mês.
-          </p>
-        ) : null}
         <EditorTabs vitrineId={id} type={vitrine.type as VitrineType} affiliate={isAffiliateVitrine(vitrine)} />
         {children}
       </PanelBody>

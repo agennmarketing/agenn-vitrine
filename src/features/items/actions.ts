@@ -15,7 +15,7 @@ import { isAffiliateVitrine } from '@/lib/vitrines/vitrine-types'
 const ITEM_FIELDS = [
   'name', 'description', 'categoryId', 'code', 'priceType', 'price', 'promoPrice', 'durationMinutes', 'tags',
   'soldOut', 'saleMode', 'externalUrl', 'whatsappId', 'buttonText', 'customMessage', 'notice', 'variations',
-  'coverMediaId', 'galleryMediaIds', 'videoMediaId',
+  'coverMediaId', 'galleryMediaIds',
 ] as const
 
 export async function saveItemAction(
@@ -152,7 +152,6 @@ async function linkPendingMedia(
   const wanted = [
     { id: args.input.coverMediaId, role: 'cover' as const, position: 0 },
     ...args.input.galleryMediaIds.map((id, index) => ({ id, role: 'gallery' as const, position: index + 1 })),
-    ...(args.input.videoMediaId ? [{ id: args.input.videoMediaId, role: 'video' as const, position: 0 }] : []),
   ]
   for (const slot of wanted) {
     const { data: pending } = await admin
@@ -165,7 +164,7 @@ async function linkPendingMedia(
       .is('item_id', null)
       .maybeSingle()
     if (!pending) continue
-    let occupied = admin.from('media').select('id, storage_paths, mux_upload_id, mux_asset_id').eq('item_id', args.itemId).eq('role', slot.role)
+    let occupied = admin.from('media').select('id, storage_paths').eq('item_id', args.itemId).eq('role', slot.role)
     if (slot.role === 'gallery') occupied = occupied.eq('position', slot.position)
     const { data: previous } = await occupied
     await deleteMediaRows(admin, previous ?? [])
@@ -251,7 +250,7 @@ export async function deleteItemAction(vitrineId: string, itemId: string): Promi
   const { error } = await supabase.from('items').update({ deleted_at: new Date().toISOString() }).eq('id', itemId)
   if (error) return { error: mapDbError(error) }
   const admin = createSupabaseAdminClient()
-  const { data: media } = await admin.from('media').select('id, storage_paths, mux_upload_id, mux_asset_id').eq('item_id', itemId).eq('owner_id', user.id)
+  const { data: media } = await admin.from('media').select('id, storage_paths').eq('item_id', itemId).eq('owner_id', user.id)
   await deleteMediaRows(admin, media ?? [])
   revalidateVitrine(subdomain)
   return { success: 'Item excluído.' }

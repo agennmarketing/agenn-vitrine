@@ -8,8 +8,7 @@ const base: CatalogRows = {
     banner_enabled: true, cart_enabled: true, cart_button_text: 'Enviar pedido', logo_media_id: 'logo', banner_media_id: 'banner', primary_whatsapp_id: 'w1',
     instagram: null, address: null, business_hours: null,
   },
-  plan: { max_items_per_vitrine: 2, max_videos_per_vitrine: 1, allow_branding: false, show_watermark: true },
-  overQuota: false,
+  plan: { max_items_per_vitrine: 2, allow_branding: false, show_watermark: true },
   contacts: [
     { id: 'w1', phone_e164: '+5511900000001' },
     { id: 'w2', phone_e164: '+5511900000002' },
@@ -35,11 +34,11 @@ const base: CatalogRows = {
   professionals: [],
   professionalItems: [],
   media: [
-    { id: 'm1', item_id: 'i2', professional_id: null, role: 'cover', kind: 'image', position: 0, storage_paths: { '480': 'a-480.webp', '1080': 'a-1080.webp' }, mux_playback_id: null, thumbnail_url: null, aspect: null },
-    { id: 'logo', item_id: null, professional_id: null, role: 'logo', kind: 'image', position: 0, storage_paths: { '128': 'l-128.webp', '512': 'l-512.webp' }, mux_playback_id: null, thumbnail_url: null, aspect: null },
-    { id: 'banner', item_id: null, professional_id: null, role: 'banner', kind: 'image', position: 0, storage_paths: { '960': 'b-960.webp', '1920': 'b-1920.webp' }, mux_playback_id: null, thumbnail_url: null, aspect: null },
-    { id: 'v-i2', item_id: 'i2', professional_id: null, role: 'video', kind: 'video', position: 0, storage_paths: null, mux_playback_id: 'g2', thumbnail_url: null, aspect: '9:16' },
-    { id: 'v-i1', item_id: 'i1', professional_id: null, role: 'video', kind: 'video', position: 0, storage_paths: null, mux_playback_id: 'g1', thumbnail_url: null, aspect: '16:9' },
+    { id: 'm1', item_id: 'i2', professional_id: null, role: 'cover', position: 0, storage_paths: { '480': 'a-480.webp', '1080': 'a-1080.webp' } },
+    { id: 'logo', item_id: null, professional_id: null, role: 'logo', position: 0, storage_paths: { '128': 'l-128.webp', '512': 'l-512.webp' } },
+    { id: 'banner', item_id: null, professional_id: null, role: 'banner', position: 0, storage_paths: { '960': 'b-960.webp', '1920': 'b-1920.webp' } },
+    // Vídeo antigo (a função saiu): fica no banco, mas não aparece.
+    { id: 'v-i2', item_id: 'i2', professional_id: null, role: 'video', position: 0, storage_paths: null },
   ],
 }
 
@@ -54,7 +53,7 @@ function item(id: string, categoryId: string | null, position: number, extra: Pa
 
 describe('buildPublicCatalog', () => {
   it('ordena por categoria e item e corta no limite do plano (4.7)', () => {
-    const catalog = buildPublicCatalog(base, 'https://cdn', 'https://vz')
+    const catalog = buildPublicCatalog(base, 'https://cdn')
     expect(catalog.categories.map((c) => [c.name, c.items.map((i) => i.id)])).toEqual([
       ['Primeira', ['i2', 'i1']],
       ['Segunda', []],
@@ -62,12 +61,12 @@ describe('buildPublicCatalog', () => {
   })
 
   it('ignora marca quando o plano não libera e mostra marca d’água', () => {
-    const catalog = buildPublicCatalog(base, 'https://cdn', 'https://vz')
+    const catalog = buildPublicCatalog(base, 'https://cdn')
     expect([catalog.logo, catalog.brandColor, catalog.banner, catalog.showWatermark]).toEqual([null, null, null, true])
   })
 
   it('usa marca quando o plano libera', () => {
-    const catalog = buildPublicCatalog({ ...base, plan: { max_items_per_vitrine: 300, max_videos_per_vitrine: 50, allow_branding: true, show_watermark: false } }, 'https://cdn', 'https://vz')
+    const catalog = buildPublicCatalog({ ...base, plan: { max_items_per_vitrine: 300, allow_branding: true, show_watermark: false } }, 'https://cdn')
     expect(catalog.logo?.small).toBe('https://cdn/l-128.webp')
     expect(catalog.banner?.large).toBe('https://cdn/b-1920.webp')
     expect(catalog.brandColor).toBe('#ff0000')
@@ -76,72 +75,54 @@ describe('buildPublicCatalog', () => {
   })
 
   it('telefones, imagens e variações do item', () => {
-    const [first] = buildPublicCatalog(base, 'https://cdn', 'https://vz').categories[0].items
+    const [first] = buildPublicCatalog(base, 'https://cdn').categories[0].items
     expect(first.whatsappPhone).toBe('+5511900000002')
     expect(first.cover?.small).toBe('https://cdn/a-480.webp')
     expect(first.variations.map((v) => v.name)).toEqual(['P', 'G'])
-    expect(buildPublicCatalog(base, 'https://cdn', 'https://vz').primaryPhone).toBe('+5511900000001')
+    expect(buildPublicCatalog(base, 'https://cdn').primaryPhone).toBe('+5511900000001')
   })
 
   it('Instagram, endereço e horários do negócio', () => {
     const hours = [{ day: 1, open: '09:00', close: '18:00' }]
     const contact = { instagram: 'studio.ana', address: 'Rua A, 10', business_hours: hours }
-    const servicos = buildPublicCatalog({ ...base, vitrine: { ...base.vitrine, ...contact, type: 'servicos' } }, 'https://cdn', 'https://vz')
+    const servicos = buildPublicCatalog({ ...base, vitrine: { ...base.vitrine, ...contact, type: 'servicos' } }, 'https://cdn')
     expect([servicos.instagram, servicos.address, servicos.businessHours]).toEqual(['studio.ana', 'Rua A, 10', hours])
     // Horários só fazem sentido na vitrine com agenda.
-    const produtos = buildPublicCatalog({ ...base, vitrine: { ...base.vitrine, ...contact } }, 'https://cdn', 'https://vz')
+    const produtos = buildPublicCatalog({ ...base, vitrine: { ...base.vitrine, ...contact } }, 'https://cdn')
     expect(produtos.businessHours).toBeNull()
-    expect(buildPublicCatalog(base, 'https://cdn', 'https://vz')).toMatchObject({ instagram: null, address: null, businessHours: null })
+    expect(buildPublicCatalog(base, 'https://cdn')).toMatchObject({ instagram: null, address: null, businessHours: null })
   })
 })
 
-describe('vídeos', () => {
-  it('limite de 1 vídeo mostra só o primeiro na ordem da vitrine', () => {
-    const [first, second] = buildPublicCatalog(base, 'https://cdn', 'https://vz').categories[0].items
-    expect(first.video).toEqual({ mediaId: 'v-i2', playlistUrl: 'https://vz/g2.m3u8', posterUrl: 'https://cdn/a-1080.webp', aspect: '9:16' })
-    expect(second.video).toBeNull()
+describe('vídeos antigos', () => {
+  it('o item mostra só as imagens', () => {
+    const [first] = buildPublicCatalog(base, 'https://cdn').categories[0].items
+    expect(first).not.toHaveProperty('video')
+    expect(first.gallery).toEqual([])
   })
 
-  it('sem limite baixo mostra todos', () => {
-    const catalog = buildPublicCatalog(
-      { ...base, plan: { max_items_per_vitrine: 300, max_videos_per_vitrine: 50, allow_branding: true, show_watermark: false } },
-      'https://cdn',
-      'https://vz',
-    )
-    expect(catalog.categories[0].items.map((i) => i.video?.mediaId)).toEqual(['v-i2', 'v-i1'])
-  })
-
-  it('franquia estourada: nenhum vídeo', () => {
-    const catalog = buildPublicCatalog({ ...base, overQuota: true }, 'https://cdn', 'https://vz')
-    expect(catalog.categories[0].items.every((i) => i.video === null)).toBe(true)
-  })
-
-  it('banner em vídeo só com marca liberada e sem franquia estourada', () => {
+  it('banner que era vídeo fica sem banner', () => {
     const rows: CatalogRows = {
       ...base,
-      plan: { max_items_per_vitrine: 300, max_videos_per_vitrine: 50, allow_branding: true, show_watermark: false },
+      plan: { max_items_per_vitrine: 300, allow_branding: true, show_watermark: false },
       media: [
         ...base.media.filter((m) => m.id !== 'banner'),
-        { id: 'banner', item_id: null, professional_id: null, role: 'banner', kind: 'video', position: 0, storage_paths: null, mux_playback_id: 'gb', thumbnail_url: 'https://image.mux.com/gb/thumbnail.jpg', aspect: '16:9' },
+        { id: 'banner', item_id: null, professional_id: null, role: 'banner', position: 0, storage_paths: null },
       ],
     }
-    const catalog = buildPublicCatalog(rows, 'https://cdn', 'https://vz')
-    expect(catalog.banner).toBeNull()
-    expect(catalog.bannerVideo).toEqual({ mediaId: 'banner', playlistUrl: 'https://vz/gb.m3u8', posterUrl: 'https://image.mux.com/gb/thumbnail.jpg', aspect: '16:9' })
-    expect(buildPublicCatalog({ ...rows, overQuota: true }, 'https://cdn', 'https://vz').bannerVideo).toBeNull()
-    expect(buildPublicCatalog(base, 'https://cdn', 'https://vz').bannerVideo).toBeNull()
+    expect(buildPublicCatalog(rows, 'https://cdn').banner).toBeNull()
   })
 })
 
 describe('sacola', () => {
   it('sacola e formulário da vitrine', () => {
-    const catalog = buildPublicCatalog(base, 'https://cdn', 'https://vz')
+    const catalog = buildPublicCatalog(base, 'https://cdn')
     expect([catalog.cartEnabled, catalog.cartButtonText]).toEqual([true, 'Enviar pedido'])
     expect(catalog.checkout).toEqual({
       nameMode: 'required', phoneMode: 'optional', fulfillmentMode: 'optional', allowPickup: true, allowDelivery: false,
       paymentMode: 'off', scheduleMode: 'off', notesMode: 'optional', paymentOptions: ['Pix'], extraNote: null,
     })
-    expect(buildPublicCatalog({ ...base, checkout: null }, 'https://cdn', 'https://vz').checkout).toEqual({
+    expect(buildPublicCatalog({ ...base, checkout: null }, 'https://cdn').checkout).toEqual({
       nameMode: 'optional', phoneMode: 'off', fulfillmentMode: 'off', allowPickup: true, allowDelivery: true,
       paymentMode: 'off', scheduleMode: 'off', notesMode: 'optional', paymentOptions: [], extraNote: null,
     })

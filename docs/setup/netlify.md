@@ -38,9 +38,6 @@ site pela API da Netlify (seção 5).
 | `NEXT_PUBLIC_GOOGLE_AUTH_ENABLED` | igual à Vercel (`false` hoje) |
 | `MEDIA_STORAGE_DRIVER` | `supabase` (imagens no bucket público `media`) |
 | `NEXT_PUBLIC_MEDIA_BASE_URL` | `https://<projeto>.supabase.co/storage/v1/object/public/media` |
-| `VIDEO_DRIVER` | `mux` |
-| `MUX_TOKEN_ID` | id do token do Mux |
-| `NEXT_PUBLIC_VIDEO_CDN_BASE_URL` | `https://stream.mux.com` |
 | `EMAIL_DRIVER` | igual à Vercel (`off` ou `resend`) |
 | `EMAIL_FROM` | `Vitrimove <nao-responda@vitrimove.site>` (domínio verificado no Resend) |
 | `BILLING_DRIVER` | `stripe` |
@@ -54,8 +51,6 @@ Secretas:
 | Variável | Valor |
 |---|---|
 | `SUPABASE_SECRET_KEY` | chave secreta do Supabase |
-| `MUX_TOKEN_SECRET` | segredo do token do Mux |
-| `MUX_WEBHOOK_SECRET` | segredo do webhook do Mux |
 | `STRIPE_SECRET_KEY` | `sk_...` |
 | `STRIPE_WEBHOOK_SECRET` | `whsec_...` do endpoint (seção 4) |
 | `RESEND_API_KEY` | se `EMAIL_DRIVER=resend` |
@@ -94,7 +89,7 @@ fica no Cloudflare. Todos os registros apontando para a Netlify ficam **DNS only
 
 O `agenn.com.br` deixa de ser usado pelo app. `LEGACY_DOMAINS` fica vazio.
 
-## 4. Supabase, Stripe, Mux, Resend e outros
+## 4. Supabase, Stripe, Resend e outros
 
 - **Supabase → Authentication → URL Configuration:** Site URL
   `https://app.vitrimove.site`; Redirect URLs `https://app.vitrimove.site/**`
@@ -110,8 +105,6 @@ O `agenn.com.br` deixa de ser usado pelo app. `LEGACY_DOMAINS` fica vazio.
   de retorno padrão para `https://app.vitrimove.site/painel/plano` e os links
   de termos/privacidade para `https://app.vitrimove.site/termos` e `/privacidade`.
   Em *Business details*, o site passa a ser `https://vitrimove.site`.
-- **Mux → Webhooks:** novo endpoint `https://app.vitrimove.site/api/webhooks/mux`;
-  o novo signing secret vai para `MUX_WEBHOOK_SECRET`.
 - **Resend:** adicione o domínio `vitrimove.site`, crie no Cloudflare os
   registros que o Resend mostrar (SPF/DKIM/MX) e troque `EMAIL_FROM`.
 - **E-mails de contato:** os textos legais citam `suporte@vitrimove.site` e
@@ -120,8 +113,6 @@ O `agenn.com.br` deixa de ser usado pelo app. `LEGACY_DOMAINS` fica vazio.
 - **Google (se ligado):** origem JavaScript autorizada
   `https://app.vitrimove.site`. O redirect continua sendo o do Supabase.
 - **Turnstile (se ligado):** hostnames `vitrimove.site` e `app.vitrimove.site`.
-- **Bunny:** se a Pull Zone tiver proteção de hotlink/referrer, inclua
-  `vitrimove.site` e `*.vitrimove.site`.
 
 Depois da virada, desligue o deploy automático na Vercel (ou apague o projeto)
 para o Vercel Cron não rodar a tarefa diária duas vezes.

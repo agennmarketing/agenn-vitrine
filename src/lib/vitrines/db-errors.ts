@@ -20,10 +20,6 @@ export function mapDbError(error: DbError): string {
       return 'Cada conta pode ter uma vitrine. Edite a que você já tem.'
     case 'plan_limit:items':
       return `Seu plano permite até ${limit} itens por vitrine.`
-    case 'plan_limit:videos_vitrine':
-      return `Seu plano permite até ${limit} ${limit === 1 ? 'vídeo' : 'vídeos'} por vitrine.`
-    case 'plan_limit:videos_account':
-      return `Seu plano permite até ${limit} ${limit === 1 ? 'vídeo' : 'vídeos'} na conta.`
     case 'item_code_taken':
       return ITEM_CODE_MESSAGES.taken
     case 'item_deleted':

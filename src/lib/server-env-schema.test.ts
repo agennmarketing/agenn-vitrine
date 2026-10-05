@@ -7,8 +7,6 @@ import {
   parseNetlifyDomainsEnv,
   parseOrderRateLimit,
   parseRateLimitSalt,
-  parseVideoServiceEnv,
-  parseWebhookSecret,
 } from './server-env-schema'
 
 describe('parseMediaStorageEnv', () => {
@@ -33,25 +31,7 @@ it('limite de pedidos por hora', () => {
   expect(parseOrderRateLimit({ ORDER_RATE_LIMIT_PER_HOUR: '1000' })).toBe(1000)
 })
 
-describe('parseVideoServiceEnv', () => {
-  it('mux exige os dois tokens', () => {
-    expect(() => parseVideoServiceEnv({})).toThrow(/MUX_TOKEN_ID/)
-    expect(parseVideoServiceEnv({ MUX_TOKEN_ID: 'id', MUX_TOKEN_SECRET: 's' })).toEqual({
-      driver: 'mux',
-      tokenId: 'id',
-      tokenSecret: 's',
-    })
-  })
-
-  it('fake só fora de produção', () => {
-    expect(parseVideoServiceEnv({ VIDEO_DRIVER: 'fake' })).toEqual({ driver: 'fake' })
-    expect(() => parseVideoServiceEnv({ VIDEO_DRIVER: 'fake', VERCEL_ENV: 'production' })).toThrow(/produção/)
-  })
-})
-
-it('segredos do webhook e do cron', () => {
-  expect(() => parseWebhookSecret({})).toThrow()
-  expect(parseWebhookSecret({ MUX_WEBHOOK_SECRET: 'ci-webhook-secret' })).toBe('ci-webhook-secret')
+it('segredo do cron', () => {
   expect(() => parseCronSecret({ CRON_SECRET: 'curto' })).toThrow()
   expect(parseCronSecret({ CRON_SECRET: 'ci-cron-secret-somente-para-testes' })).toBe('ci-cron-secret-somente-para-testes')
 })

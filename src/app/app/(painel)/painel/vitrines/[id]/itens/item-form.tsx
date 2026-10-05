@@ -84,7 +84,7 @@ const STEP_COUNT = 4
 
 // Campo com erro → passo onde ele mora (o popup volta para lá depois de salvar com erro).
 const STEP_FIELDS: string[][] = [
-  ['coverMediaId', 'galleryMediaIds', 'videoMediaId'],
+  ['coverMediaId', 'galleryMediaIds'],
   ['name', 'description', 'categoryId', 'code', 'durationMinutes', 'notice', 'tags'],
   ['saleMode', 'externalUrl', 'priceType', 'price', 'promoPrice', 'soldOut', 'variations'],
   [...ADVANCED_FIELDS],
@@ -234,8 +234,6 @@ export function ItemForm(props: {
   const serviceExample = isServiceSegment(props.serviceSegment) ? SEGMENT_COPY[props.serviceSegment].serviceExample : 'Corte de cabelo'
   const [step, setStep] = useState(0)
   const [coverId, setCoverId] = useState<string>(item?.cover?.id ?? '')
-  // Vídeo saiu do cadastro; um vídeo que o item já tenha continua ligado a ele.
-  const videoId = item?.video?.id ?? ''
   const [galleryIds, setGalleryIds] = useState<(string | null)[]>([item?.gallery[0]?.id ?? null, item?.gallery[1]?.id ?? null])
   const [priceType, setPriceType] = useState<string>(produto ? 'fixed' : (item?.price_type ?? 'fixed'))
   const [variations, setVariations] = useState<VariationRow[]>(
@@ -368,7 +366,6 @@ export function ItemForm(props: {
           <form id="item-form" action={formAction} noValidate className="flex flex-col gap-7">
             <input type="hidden" name="coverMediaId" value={coverId} />
             <input type="hidden" name="galleryMediaIds" value={JSON.stringify(galleryIds.filter(Boolean))} />
-            <input type="hidden" name="videoMediaId" value={videoId} />
             <input
               type="hidden"
               name="variations"

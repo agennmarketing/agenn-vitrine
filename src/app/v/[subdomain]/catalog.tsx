@@ -134,7 +134,7 @@ export function Catalog({ vitrine, siteUrl }: { vitrine: PublicVitrine; siteUrl:
   ) : null
 
   const bannerClass = 'aspect-[16/10] w-full object-cover sm:aspect-[5/2] lg:aspect-[16/5]'
-  const hasBanner = Boolean(vitrine.bannerVideo || vitrine.banner)
+  const hasBanner = Boolean(vitrine.banner)
 
   return (
     <div data-theme={vitrine.theme} style={style} className={`min-h-dvh bg-canvas text-ink ${vitrine.cartEnabled ? 'pb-24' : ''}`}>
@@ -142,17 +142,7 @@ export function Catalog({ vitrine, siteUrl }: { vitrine: PublicVitrine; siteUrl:
       <style>{`html,body{background:${canvas}}`}</style>
 
       <div className="relative mx-auto max-w-[1200px] lg:px-8 lg:pt-6">
-        {vitrine.bannerVideo ? (
-          <div className="overflow-hidden bg-subtle lg:rounded-[1.75rem]">
-            {/* Na listagem nenhum vídeo toca nem carrega: do banner em vídeo fica só a capa. */}
-            {vitrine.bannerVideo.posterUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={vitrine.bannerVideo.posterUrl} alt="" fetchPriority="high" className={bannerClass} />
-            ) : (
-              <div aria-hidden="true" className={bannerClass} />
-            )}
-          </div>
-        ) : vitrine.banner ? (
+        {vitrine.banner ? (
           <div className="overflow-hidden bg-subtle lg:rounded-[1.75rem]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img

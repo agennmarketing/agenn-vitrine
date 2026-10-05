@@ -9,10 +9,10 @@ import { revalidateVitrine } from '@/lib/vitrines/cache'
 
 const BATCH = 100
 
-// Spec 6.4: mídias órfãs e falhas, pedidos expirados, limites antigos, revalidação de
-// quem estourou a franquia, conferência das assinaturas com o Stripe e fim dos testes
-// grátis sem assinatura (vitrine sai do ar, nada é apagado) e os subdomínios cadastrados
-// na Netlify, para o caso de uma sincronização feita na hora ter falhado.
+// Spec 6.4: mídias órfãs e falhas, pedidos expirados, limites antigos, conferência das
+// assinaturas com o Stripe e fim dos testes grátis sem assinatura (vitrine sai do ar, nada
+// é apagado) e os subdomínios cadastrados na Netlify, para o caso de uma sincronização
+// feita na hora ter falhado.
 export async function GET(request: Request) {
   let secret: string
   try {
@@ -38,10 +38,6 @@ export async function GET(request: Request) {
     const { data: expired, error: expiredError } = await admin.rpc('cleanup_expired_rows')
     if (expiredError) throw expiredError
 
-    const { data: subdomains, error: subdomainsError } = await admin.rpc('subdomains_over_quota_last_month')
-    if (subdomainsError) throw subdomainsError
-    revalidateVitrine(...(subdomains ?? []))
-
     const subscriptions = await reconcileSubscriptions(admin)
     const { data: expiredTrials, error: trialsError } = await admin.rpc('expire_trials')
     if (trialsError) throw trialsError
@@ -57,7 +53,6 @@ export async function GET(request: Request) {
       media: rows.length,
       orders: expired?.[0]?.orders_deleted ?? 0,
       rateLimits: expired?.[0]?.rate_limits_deleted ?? 0,
-      revalidated: subdomains?.length ?? 0,
       subscriptions,
       blockedVitrines: expiredTrials?.length ?? 0,
       domains,

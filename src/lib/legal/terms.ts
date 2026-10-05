@@ -8,7 +8,7 @@ export const TERMS: LegalSection[] = [
     title: '1. Quem somos',
     paragraphs: [
       `O ${COMPANY.tradeName} é um serviço de ${COMPANY.legalName}, inscrita no CNPJ ${COMPANY.cnpj}, com endereço em ${COMPANY.address}.`,
-      `O serviço permite criar vitrines e catálogos na internet, com fotos e vídeos, receber agendamentos e receber pedidos e orçamentos pelo WhatsApp. Ao criar uma conta, você concorda com estes Termos de uso. Dúvidas: ${COMPANY.contactEmail}.`,
+      `O serviço permite criar vitrines e catálogos na internet, com fotos, receber agendamentos e receber pedidos e orçamentos pelo WhatsApp. Ao criar uma conta, você concorda com estes Termos de uso. Dúvidas: ${COMPANY.contactEmail}.`,
     ],
   },
   {
@@ -43,14 +43,14 @@ export const TERMS: LegalSection[] = [
     title: '5. O que acontece quando o teste ou a assinatura acaba',
     paragraphs: [
       'Se o teste grátis terminar sem assinatura, ou se a assinatura for cancelada, o acesso fica pausado: o painel mostra só a tela de assinatura, a vitrine sai do ar e deixa de receber agendamentos.',
-      'Nada é apagado. Sua vitrine, seus serviços, fotos, vídeos e sua agenda continuam guardados, e tudo volta a funcionar assim que você assinar o Plano Essencial. Para apagar seus dados, use Conta → Excluir conta.',
+      'Nada é apagado. Sua vitrine, seus serviços, fotos e sua agenda continuam guardados, e tudo volta a funcionar assim que você assinar o Plano Essencial. Para apagar seus dados, use Conta → Excluir conta.',
     ],
   },
   {
     title: '6. Seu conteúdo',
     paragraphs: [
       'O conteúdo que você publica é seu. Você nos concede apenas a autorização necessária para hospedar, converter e exibir esse conteúdo na sua vitrine enquanto sua conta existir.',
-      'Você é o único responsável pelo que publica: preços, descrições, fotos, vídeos, disponibilidade e pelo cumprimento do que oferece. Garante também que tem os direitos sobre as imagens e vídeos que envia.',
+      'Você é o único responsável pelo que publica: preços, descrições, fotos, disponibilidade e pelo cumprimento do que oferece. Garante também que tem os direitos sobre as imagens que envia.',
       'Não é permitido publicar conteúdo ilegal, enganoso, que viole direitos de terceiros, nem produtos e serviços proibidos por lei ou pelas regras dos serviços que usamos, incluindo armas, drogas, medicamentos controlados, conteúdo adulto e jogos de azar.',
     ],
   },

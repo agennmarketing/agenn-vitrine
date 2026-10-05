@@ -1,6 +1,5 @@
 import type { CheckoutSettings, FieldMode } from '@/lib/cart/checkout'
 import { imageSources } from '@/lib/media/urls'
-import { videoPlaylistUrl } from '@/lib/video/urls'
 import type { PriceType } from '@/lib/pricing/price'
 import { readBusinessHours } from '@/lib/vitrines/business-hours'
 import type { BusinessHours } from '@/lib/vitrines/service-segments'
@@ -13,8 +12,7 @@ export type CatalogRows = {
     banner_enabled: boolean; cart_enabled: boolean; cart_button_text: string; logo_media_id: string | null; banner_media_id: string | null; primary_whatsapp_id: string | null
     instagram: string | null; address: string | null; business_hours: unknown
   }
-  plan: { max_items_per_vitrine: number; max_videos_per_vitrine: number; allow_branding: boolean; show_watermark: boolean }
-  overQuota: boolean
+  plan: { max_items_per_vitrine: number; allow_branding: boolean; show_watermark: boolean }
   contacts: { id: string; phone_e164: string }[]
   categories: { id: string; name: string; position: number }[]
   items: {
@@ -35,16 +33,10 @@ export type CatalogRows = {
     item_id: string | null
     professional_id: string | null
     role: string
-    kind: string
     position: number
     storage_paths: unknown
-    mux_playback_id: string | null
-    thumbnail_url: string | null
-    aspect: string | null
   }[]
 }
-
-export type PublicVideo = { mediaId: string; playlistUrl: string; posterUrl: string | null; aspect: '9:16' | '16:9' }
 
 export type PublicImage = { small: string; large: string; smallWidth: number; largeWidth: number }
 
@@ -54,7 +46,7 @@ export type PublicItem = {
   whatsappPhone: string | null; buttonText: string | null; customMessage: string | null; notice: string | null
   /** 'link' vende fora da vitrine ("Comprar agora") e fica fora da sacola. */
   saleMode: 'whatsapp' | 'link'; externalUrl: string | null
-  cover: PublicImage | null; gallery: PublicImage[]; video: PublicVideo | null
+  cover: PublicImage | null; gallery: PublicImage[]
   variations: { id: string; name: string; priceCents: number; promoPriceCents: number | null; soldOut: boolean }[]
 }
 
@@ -67,13 +59,12 @@ export type PublicVitrine = {
   primaryPhone: string | null; logo: PublicImage | null; brandColor: string | null; banner: PublicImage | null
   /** Usuário do Instagram (sem @), endereço de atendimento e horários (só serviços). */
   instagram: string | null; address: string | null; businessHours: BusinessHours | null
-  bannerVideo: PublicVideo | null
   cartEnabled: boolean; cartButtonText: string; checkout: CheckoutSettings
   professionals: PublicProfessional[]
   showWatermark: boolean; categories: { id: string; name: string; items: PublicItem[] }[]
 }
 
-export function buildPublicCatalog(rows: CatalogRows, mediaBaseUrl: string, videoBaseUrl: string): PublicVitrine {
+export function buildPublicCatalog(rows: CatalogRows, mediaBaseUrl: string): PublicVitrine {
   const phoneById = new Map(rows.contacts.map((c) => [c.id, c.phone_e164]))
   const image = (paths: unknown) => imageSources(paths, mediaBaseUrl)
   const mediaById = new Map(rows.media.map((m) => [m.id, m]))
@@ -86,21 +77,8 @@ export function buildPublicCatalog(rows: CatalogRows, mediaBaseUrl: string, vide
     .sort((a, b) => categoryOrder.get(a.category_id!)! - categoryOrder.get(b.category_id!)! || a.position - b.position)
     .slice(0, rows.plan.max_items_per_vitrine)
 
-  // Só os primeiros vídeos até o limite do plano aparecem; com a franquia estourada, nenhum.
-  let videosLeft = rows.overQuota ? 0 : rows.plan.max_videos_per_vitrine
-  const videoByItem = new Map<string, CatalogRows['media'][number]>()
-  for (const item of visible) {
-    const video = rows.media.find((m) => m.item_id === item.id && m.role === 'video' && m.mux_playback_id)
-    if (video && videosLeft > 0) {
-      videoByItem.set(item.id, video)
-      videosLeft -= 1
-    }
-  }
-
   const toItem = (row: CatalogRows['items'][number]): PublicItem => {
     const media = rows.media.filter((m) => m.item_id === row.id)
-    const cover = image(media.find((m) => m.role === 'cover')?.storage_paths)
-    const videoRow = videoByItem.get(row.id)
     return {
       id: row.id,
       code: row.code,
@@ -118,7 +96,7 @@ export function buildPublicCatalog(rows: CatalogRows, mediaBaseUrl: string, vide
       notice: row.notice,
       saleMode: row.sale_mode === 'link' && row.external_url ? 'link' : 'whatsapp',
       externalUrl: row.sale_mode === 'link' ? row.external_url : null,
-      cover,
+      cover: image(media.find((m) => m.role === 'cover')?.storage_paths),
       gallery: media
         .filter((m) => m.role === 'gallery')
         .sort((a, b) => a.position - b.position)
@@ -128,14 +106,6 @@ export function buildPublicCatalog(rows: CatalogRows, mediaBaseUrl: string, vide
         .filter((v) => v.item_id === row.id)
         .sort((a, b) => a.position - b.position)
         .map((v) => ({ id: v.id, name: v.name, priceCents: v.price_cents, promoPriceCents: v.promo_price_cents, soldOut: v.sold_out })),
-      video: videoRow
-        ? {
-            mediaId: videoRow.id,
-            playlistUrl: videoPlaylistUrl(videoBaseUrl, videoRow.mux_playback_id!),
-            posterUrl: cover?.large ?? null,
-            aspect: videoRow.aspect === '16:9' ? '16:9' : '9:16',
-          }
-        : null,
     }
   }
 
@@ -158,7 +128,6 @@ export function buildPublicCatalog(rows: CatalogRows, mediaBaseUrl: string, vide
   const { vitrine } = rows
   const bannerRow = vitrine.banner_media_id ? mediaById.get(vitrine.banner_media_id) : undefined
   const bannerAllowed = branding && vitrine.banner_enabled && bannerRow !== undefined
-  const bannerIsVideo = bannerRow?.kind === 'video' && Boolean(bannerRow.mux_playback_id)
   // Horários só na vitrine com agenda; são os mesmos que valem para marcar.
   const hours = vitrine.type === 'servicos' ? readBusinessHours(vitrine.business_hours) : []
   return {
@@ -181,16 +150,8 @@ export function buildPublicCatalog(rows: CatalogRows, mediaBaseUrl: string, vide
     businessHours: hours.length ? hours : null,
     logo: branding && vitrine.logo_media_id ? image(mediaById.get(vitrine.logo_media_id)?.storage_paths) : null,
     brandColor: branding ? vitrine.brand_color : null,
-    banner: bannerAllowed && !bannerIsVideo ? image(bannerRow!.storage_paths) : null,
-    bannerVideo:
-      bannerAllowed && bannerIsVideo && !rows.overQuota
-        ? {
-            mediaId: bannerRow!.id,
-            playlistUrl: videoPlaylistUrl(videoBaseUrl, bannerRow!.mux_playback_id!),
-            posterUrl: bannerRow!.thumbnail_url,
-            aspect: '16:9',
-          }
-        : null,
+    // Banner antigo em vídeo não tem arquivo de imagem: fica sem banner.
+    banner: bannerAllowed ? image(bannerRow!.storage_paths) : null,
     showWatermark: rows.plan.show_watermark,
     // Só serviços que ainda aparecem na vitrine contam: um profissional sem serviço visível
     // não tem o que oferecer e fica de fora.

@@ -6,7 +6,6 @@ import {
   fakeSubscription,
   readSubscription,
   seedItem,
-  seedVideo,
   seedVitrine,
   setSubscription,
   vitrineStatuses,
@@ -62,8 +61,7 @@ test('tarefa diária exige o segredo e apaga envios órfãos antigos', async ({ 
 test('teste vencido sem assinatura: a tarefa diária tira a vitrine do ar sem apagar nada', async ({ request }) => {
   const user = await createConfirmedUser('cron-teste')
   const vitrine = await seedVitrine(user.id)
-  const item = await seedItem(vitrine, user.id, { name: 'Com vídeo' })
-  const video = await seedVideo(vitrine, user.id, item.id)
+  const item = await seedItem(vitrine, user.id, { name: 'Com capa' })
   await setSubscription(user.id, {
     status: 'none',
     trialEndsAt: new Date(Date.now() - DAY_MS).toISOString(),
@@ -79,8 +77,8 @@ test('teste vencido sem assinatura: a tarefa diária tira a vitrine do ar sem ap
   expect((await readSubscription(user.id))?.subscription_status).toBe('expired')
   expect(await vitrineStatuses(user.id)).toEqual([`${vitrine.subdomain}:frozen`])
   const admin = createAdminClient()
-  const { data: restantes } = await admin.from('media').select('id').eq('id', video.id)
-  expect((restantes ?? []).map((row) => row.id)).toEqual([video.id])
+  const { data: restantes } = await admin.from('media').select('role').eq('item_id', item.id)
+  expect((restantes ?? []).map((row) => row.role)).toEqual(['cover'])
 })
 
 test('a conferência diária corrige uma assinatura cancelada sem webhook', async ({ request }) => {

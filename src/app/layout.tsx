@@ -3,7 +3,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: { default: 'Vitrimove', template: '%s · Vitrimove' },
-  description: 'Vitrine de serviços com vídeo, com os pedidos de horário chegando no WhatsApp.',
+  description: 'Vitrine de serviços e produtos, com os pedidos chegando no WhatsApp.',
   applicationName: 'Vitrimove',
   openGraph: { locale: 'pt_BR', siteName: 'Vitrimove' },
 }

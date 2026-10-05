@@ -144,7 +144,7 @@ export function AppearanceForm({
               id="bannerEnabled"
               name="bannerEnabled"
               title="Mostrar banner"
-              description="A imagem ou o vídeo do banner aparece no topo."
+              description="A imagem do banner aparece no topo."
               key={String(bannerOn)}
               defaultChecked={bannerOn}
             />

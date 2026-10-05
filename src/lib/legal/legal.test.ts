@@ -41,7 +41,7 @@ describe('termos de uso', () => {
 describe('política de privacidade', () => {
   it('lista os operadores e os direitos da LGPD', () => {
     const texto = PRIVACY.flatMap((section) => section.paragraphs).join(' ')
-    for (const parceiro of ['Supabase', 'Netlify', 'Mux', 'Stripe', 'Resend', 'Cloudflare']) {
+    for (const parceiro of ['Supabase', 'Netlify', 'Stripe', 'Resend', 'Cloudflare']) {
       expect(texto).toContain(parceiro)
     }
     expect(texto).toContain('LGPD')

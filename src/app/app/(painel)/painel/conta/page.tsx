@@ -155,7 +155,7 @@ export default async function AccountPage() {
             description="Não dá para desfazer."
           >
             <p className="-mt-1 text-[0.9375rem] font-semibold leading-relaxed text-ink-muted">
-              Cancela sua assinatura e apaga suas vitrines, itens, fotos e vídeos. Os links das suas vitrines param de
+              Cancela sua assinatura e apaga suas vitrines, itens e fotos. Os links das suas vitrines param de
               funcionar na hora. Se você tem assinatura ativa, ela é encerrada na hora e o tempo restante do período já pago
               não é devolvido.
             </p>

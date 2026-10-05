@@ -13,11 +13,6 @@ describe('mapDbError', () => {
     expect(isPlanLimitError({ message: 'item_code_taken' })).toBe(false)
   })
 
-  it('limites de vídeo', () => {
-    expect(mapDbError({ message: 'plan_limit:videos_vitrine', hint: '1' })).toBe('Seu plano permite até 1 vídeo por vitrine.')
-    expect(mapDbError({ message: 'plan_limit:videos_account', hint: '50' })).toBe('Seu plano permite até 50 vídeos na conta.')
-  })
-
   it('limite zero é a conta sem acesso', () => {
     expect(mapDbError({ message: 'plan_limit:items', hint: '0' })).toBe(
       'Seu acesso está pausado. Assine o Plano Essencial para continuar usando o Vitrimove.',
