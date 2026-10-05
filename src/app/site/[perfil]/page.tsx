@@ -116,7 +116,7 @@ export default async function PersonaPage({ params }: Props) {
 
   return (
     <div className="flex min-h-dvh flex-col bg-surface">
-      <SiteHeader showCta />
+      <SiteHeader perfil={persona.slug} />
 
       <main className="flex-1">
         {/* Topo */}

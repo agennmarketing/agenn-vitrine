@@ -15,9 +15,13 @@ test('cadastro vindo da página de manicure cai no assistente com o ramo escolhi
   // O link de confirmação não carrega o ?perfil=: ele vem da conta.
   await page.goto(await waitForAuthLink(email, 'email'))
   await expect(page).toHaveURL(/\/painel\/vitrines\/nova$/)
-  await expect(page.getByLabel('Serviços e Agendamentos')).toBeChecked()
-  await page.getByRole('button', { name: 'Continuar' }).click()
+  // Tipo e ramo já vieram da página de vendas: começa no passo do nome.
+  await expect(page.getByText('Passo 3 de 5')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Como o seu negócio se chama?' })).toBeVisible()
+  await page.getByRole('button', { name: 'Voltar' }).click()
   await expect(page.getByLabel('Nail Designer / Manicure')).toBeChecked()
+  await page.getByRole('button', { name: 'Voltar' }).click()
+  await expect(page.getByLabel('Serviços e Agendamentos')).toBeChecked()
   // O nome fica na barra lateral (computador) e na página Conta (celular também).
   await page.goto('/painel/conta')
   await expect(page.getByRole('main').getByText('Maria Teste')).toBeVisible()

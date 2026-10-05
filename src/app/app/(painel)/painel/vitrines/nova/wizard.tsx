@@ -12,7 +12,7 @@ import { MaskedInput } from '@/components/ui/masked-input'
 import { ProgressBar } from '@/components/ui/progress'
 import { Spinner } from '@/components/ui/submit-button'
 import { createVitrineAction } from '@/features/vitrines/actions'
-import { fetchAvailability } from '@/lib/forms/availability'
+import { AVAILABILITY_ERROR_MESSAGE, fetchAvailability } from '@/lib/forms/availability'
 import { filterSubdomainField } from '@/lib/forms/subdomain-field'
 import { initialFormState, type FormState } from '@/lib/forms/form-state'
 import {
@@ -113,9 +113,10 @@ function stepKeyForErrors(errors: FormState['fieldErrors']): StepKey | null {
   return 'final'
 }
 
-// preset: quem veio da página de um negócio já encontra o tipo e o ramo marcados.
+// preset: quem veio da página de um negócio já tem o tipo e o ramo (ou o jeito de vender)
+// escolhidos, então começa no passo do nome; dá para voltar e trocar.
 export function VitrineWizard({ rootDomain, preset }: { rootDomain: string; preset: WizardPreset | null }) {
-  const [step, setStep] = useState(0)
+  const [step, setStep] = useState(() => (preset ? (preset.type === 'servicos' ? SERVICE_STEPS : PRODUCT_STEPS).indexOf('negocio') : 0))
   const [type, setType] = useState<(typeof WIZARD_VITRINE_TYPES)[number]>(preset?.type ?? 'servicos')
   const [productMode, setProductMode] = useState<ProductMode>(preset?.type === 'produtos' ? preset.productMode : 'proprios')
   const affiliate = type === 'produtos' && productMode === 'afiliado'
@@ -156,7 +157,50 @@ export function VitrineWizard({ rootDomain, preset }: { rootDomain: string; pres
     }, 400)
   }
 
-  const errors = state.fieldErrors ?? {}
+  /*
+   * O passo do endereço só avança com nome e um endereço livre: ocupado ou inválido
+   * prende a pessoa ali, em vez de só reclamar no final. Se a checagem ainda não
+   * voltou, confere na hora; se ela falhar (rede), deixa seguir e o servidor confere ao criar.
+   */
+  const formRef = useRef<HTMLFormElement>(null)
+  const [stepErrors, setStepErrors] = useState<{ name?: string; subdomain?: string }>({})
+  const [checking, setChecking] = useState(false)
+  const clearStepError = (key: 'name' | 'subdomain') =>
+    setStepErrors((current) => {
+      const rest = { ...current }
+      delete rest[key]
+      return rest
+    })
+  async function goNext() {
+    if (stepKey !== 'negocio') return setStep(step + 1)
+    const form = formRef.current
+    const data = new FormData(form ?? undefined)
+    const name = String(data.get('name') ?? '').trim()
+    const subdomain = String(data.get('subdomain') ?? '').trim()
+    const found: { name?: string; subdomain?: string } = {}
+    if (!name) found.name = 'Informe o nome do negócio.'
+    let result = availability
+    if (!subdomain) found.subdomain = 'Escolha o endereço da vitrine.'
+    else if (!result) {
+      clearTimeout(timer.current)
+      inFlight.current?.abort()
+      const controller = new AbortController()
+      inFlight.current = controller
+      setChecking(true)
+      result = await fetchAvailability(`/api/disponibilidade/subdominio?valor=${encodeURIComponent(subdomain)}`, controller.signal)
+      setChecking(false)
+      if (result) setAvailability(result)
+    }
+    if (subdomain && result && !result.ok && result.message !== AVAILABILITY_ERROR_MESSAGE) found.subdomain = result.message
+    setStepErrors(found)
+    if (found.name || found.subdomain) {
+      form?.querySelector<HTMLInputElement>(found.name ? '#name' : '#subdomain')?.focus()
+      return
+    }
+    setStep(step + 1)
+  }
+
+  const errors: Record<string, string | undefined> = { ...state.fieldErrors, ...stepErrors }
   const values = state.values ?? {}
   const chosenSegment = segment ?? (isServiceSegment(values.serviceSegment) ? values.serviceSegment : null)
   const copy = SEGMENT_COPY[chosenSegment ?? 'outro']
@@ -187,7 +231,7 @@ export function VitrineWizard({ rootDomain, preset }: { rootDomain: string; pres
         <p className="font-semibold text-ink-muted">{current.help}</p>
       </div>
 
-      <form action={formAction} noValidate className="flex flex-col gap-7">
+      <form ref={formRef} action={formAction} noValidate className="flex flex-col gap-7">
         <fieldset hidden={stepKey !== 'tipo'} className="flex flex-col gap-3.5">
           <legend className="sr-only">Tipo de vitrine</legend>
           {WIZARD_VITRINE_TYPES.map((value) => (
@@ -254,6 +298,7 @@ export function VitrineWizard({ rootDomain, preset }: { rootDomain: string; pres
               maxLength={60}
               placeholder={`Ex.: ${copy.businessName}`}
               invalid={!!errors.name}
+              onChange={() => clearStepError('name')}
             />
           </Field>
           <Field label="Endereço da vitrine" htmlFor="subdomain" error={errors.subdomain}>
@@ -269,12 +314,16 @@ export function VitrineWizard({ rootDomain, preset }: { rootDomain: string; pres
                 placeholder={copy.subdomain}
                 invalid={!!errors.subdomain}
                 className="rounded-none border-0 bg-transparent"
-                onChange={(event) => onSubdomainChange(filterSubdomainField(event.target))}
+                onChange={(event) => {
+                  clearStepError('subdomain')
+                  onSubdomainChange(filterSubdomainField(event.target))
+                }}
               />
               <span className="flex shrink-0 items-center bg-subtle px-3 text-sm font-extrabold text-ink-muted">.{rootDomain}</span>
             </div>
           </Field>
-          {availability ? (
+          {/* Com o erro no campo, a mesma frase não se repete aqui embaixo. */}
+          {availability && !errors.subdomain ? (
             <p
               className={`-mt-2 animate-rise text-sm font-extrabold ${availability.ok ? 'text-success' : 'text-danger'}`}
               aria-live="polite"
@@ -398,7 +447,8 @@ export function VitrineWizard({ rootDomain, preset }: { rootDomain: string; pres
           {/* Chaves diferentes: sem elas o React reaproveita o mesmo <button> e o troca
               para submit durante o clique em Continuar, enviando o formulário antes da hora. */}
           {!last ? (
-            <Button key="next" size="lg" className="w-full sm:w-auto sm:min-w-48" onClick={() => setStep(step + 1)}>
+            <Button key="next" size="lg" disabled={checking} aria-busy={checking} className="w-full sm:w-auto sm:min-w-48" onClick={goNext}>
+              {checking ? <Spinner /> : null}
               Continuar
               <ArrowRight aria-hidden="true" className="size-5" strokeWidth={3} />
             </Button>
