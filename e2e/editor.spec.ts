@@ -82,7 +82,7 @@ test('configurações, mensagens e WhatsApp', async ({ page }) => {
   await page.getByRole('button', { name: 'Salvar configurações de pedido' }).click()
   await expect(page.getByText('Configurações de pedido salvas.')).toBeVisible()
 
-  await page.getByRole('link', { name: 'WhatsApp' }).click()
+  await page.getByRole('link', { name: 'WhatsApp', exact: true }).click()
   await page.getByLabel('Nome do novo contato').fill('Loja 2')
   await page.getByLabel('Número do novo contato').fill('(21) 99876-5432')
   await page.getByRole('button', { name: 'Adicionar contato' }).click()

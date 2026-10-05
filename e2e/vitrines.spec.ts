@@ -67,7 +67,7 @@ test('assistente cria vitrine de produtos, sem segmento nem horários', async ({
   await signIn(page, user.email, user.password)
 
   await page.goto('/painel/vitrines/nova')
-  await page.getByLabel('Produtos').check()
+  await page.getByLabel('Produtos', { exact: true }).check()
   await page.getByRole('button', { name: 'Continuar' }).click()
 
   // Produtos pula o segmento e pergunta como vende: produtos próprios é o padrão.
@@ -107,7 +107,7 @@ test('assistente cria vitrine de afiliado, sem WhatsApp e sem sacola', async ({ 
   await signIn(page, user.email, user.password)
 
   await page.goto('/painel/vitrines/nova')
-  await page.getByLabel('Produtos').check()
+  await page.getByLabel('Produtos', { exact: true }).check()
   await page.getByRole('button', { name: 'Continuar' }).click()
   await page.getByLabel('Sou afiliado').check()
   await page.getByRole('button', { name: 'Continuar' }).click()

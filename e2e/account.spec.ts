@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { APP_URL } from '../playwright.config'
-import { createConfirmedUser, signIn } from './helpers'
+import { createConfirmedUser, seedVitrine, signIn } from './helpers'
 
 test('login em outro aparelho encerra a sessão anterior', async ({ browser }) => {
   const user = await createConfirmedUser('sessao')
@@ -25,6 +25,8 @@ test('login em outro aparelho encerra a sessão anterior', async ({ browser }) =
 
 test('conta: e-mail só leitura, alterar nome e trocar senha', async ({ page }) => {
   const user = await createConfirmedUser('conta')
+  // Sem vitrine o painel abre direto o assistente, que não tem navegação.
+  await seedVitrine(user.id)
   await signIn(page, user.email, user.password)
   // Pela navegação: barra lateral no computador, barra inferior no celular.
   await page.getByRole('link', { name: 'Conta', exact: true }).filter({ visible: true }).click()

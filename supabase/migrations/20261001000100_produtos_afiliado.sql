@@ -57,7 +57,8 @@ begin
   )
   values (
     p_type, p_subdomain, p_name, p_theme, p_default_button_text,
-    p_type = 'comida' or v_mode = 'proprios',
+    -- Serviços têm v_mode nulo: sem o coalesce, `false or null` daria nulo na coluna not null.
+    p_type = 'comida' or coalesce(v_mode = 'proprios', false),
     p_service_segment, p_instagram, p_address, p_business_hours, v_mode
   )
   returning id into v_vitrine_id;
