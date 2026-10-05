@@ -34,7 +34,7 @@ test('serviços: contato nas configurações aparece na vitrine', async ({ page 
   await signIn(page, user.email, user.password)
 
   await page.goto(`/painel/vitrines/${vitrine.id}/configuracoes`)
-  const whatsapp = page.getByLabel('WhatsApp')
+  const whatsapp = page.getByLabel('WhatsApp', { exact: true })
   await expect(whatsapp).toHaveValue('(11) 98765-4321')
   await whatsapp.fill('')
   await page.getByRole('button', { name: 'Salvar configurações' }).click()
