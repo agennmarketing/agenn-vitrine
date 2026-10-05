@@ -13,7 +13,12 @@ const inProduction = (value: { APP_ENV?: string; VERCEL_ENV?: string }) =>
 const mediaStorageSchema = z
   .object({
     // "bunny" era o driver antigo: quem ainda tem a variável assim passa a gravar no Supabase.
-    MEDIA_STORAGE_DRIVER: z.preprocess((value) => (value === 'bunny' ? 'supabase' : value), z.enum(['supabase', 'fake']).default('supabase')),
+    // Vazia (contexto da hospedagem sem valor) vale o padrão; espaço e maiúscula não quebram.
+    MEDIA_STORAGE_DRIVER: z.preprocess((value) => {
+      const driver = typeof value === 'string' ? value.trim().toLowerCase() : value
+      if (driver === '') return undefined
+      return driver === 'bunny' ? 'supabase' : driver
+    }, z.enum(['supabase', 'fake']).default('supabase')),
     APP_ENV: z.string().optional(),
     VERCEL_ENV: z.string().optional(),
   })
@@ -29,12 +34,13 @@ export function parseMediaStorageEnv(source: Source): MediaStorageEnv {
   return { driver: mediaStorageSchema.parse(source).MEDIA_STORAGE_DRIVER }
 }
 
+// Variável ausente cai na mesma mensagem da vazia: o log diz qual falta.
 export function parseRateLimitSalt(source: Source): string {
-  return z.string().min(16, 'RATE_LIMIT_SALT precisa de pelo menos 16 caracteres.').parse(source.RATE_LIMIT_SALT)
+  return z.string().min(16, 'RATE_LIMIT_SALT precisa de pelo menos 16 caracteres.').parse(source.RATE_LIMIT_SALT ?? '')
 }
 
 export function parseSupabaseSecretKey(source: Source): string {
-  return z.string().min(1, 'SUPABASE_SECRET_KEY não configurada.').parse(source.SUPABASE_SECRET_KEY)
+  return z.string().min(1, 'SUPABASE_SECRET_KEY não configurada.').parse(source.SUPABASE_SECRET_KEY ?? '')
 }
 
 export function parseOrderRateLimit(source: Source): number {
@@ -42,7 +48,7 @@ export function parseOrderRateLimit(source: Source): number {
 }
 
 export function parseCronSecret(source: Source): string {
-  return z.string().min(16, 'CRON_SECRET precisa de pelo menos 16 caracteres.').parse(source.CRON_SECRET)
+  return z.string().min(16, 'CRON_SECRET precisa de pelo menos 16 caracteres.').parse(source.CRON_SECRET ?? '')
 }
 
 const emailSchema = z
@@ -131,7 +137,9 @@ const netlifyDomainsSchema = z
 export type NetlifyDomainsEnv = { token: string; siteId: string } | null
 
 export function parseNetlifyDomainsEnv(source: Source): NetlifyDomainsEnv {
-  const value = netlifyDomainsSchema.parse(source)
+  // Na Netlify o SITE_ID já vem preenchido: com o token, basta ele.
+  const siteId = source.NETLIFY_SITE_ID || (source.NETLIFY_API_TOKEN ? source.SITE_ID : undefined)
+  const value = netlifyDomainsSchema.parse({ ...source, NETLIFY_SITE_ID: siteId })
   if (!value.NETLIFY_API_TOKEN) return null
   return { token: value.NETLIFY_API_TOKEN, siteId: value.NETLIFY_SITE_ID }
 }

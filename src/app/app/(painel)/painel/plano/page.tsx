@@ -1,25 +1,23 @@
 import { Check, Clock, Crown, Lock, PartyPopper } from 'lucide-react'
 import { PanelBody, PanelTopBar } from '@/components/ui/panel-page'
 import { getMySubscription, getPlanPrices } from '@/features/billing/queries'
+import { getPanelSession } from '@/features/vitrines/queries'
+import { planFeatures } from '@/lib/billing/plan-features'
 import { monthlyPriceLabel, monthlyPriceShort } from '@/lib/billing/prices'
 import { describeSubscription } from '@/lib/billing/status'
 import { PortalForm, SubscribeForm } from './subscribe-form'
 
 export const metadata = { title: 'Plano e assinatura' }
 
-// O que o Essencial inclui.
-const FEATURES = [
-  '1 vitrine',
-  'Serviços ilimitados',
-  'Fotos',
-  'Agenda online',
-  'Agendamentos',
-  'Personalização',
-  'Notificações do painel',
-]
-
 export default async function PlanoPage({ searchParams }: { searchParams: Promise<{ assinatura?: string }> }) {
-  const [{ assinatura }, subscription, prices] = await Promise.all([searchParams, getMySubscription(), getPlanPrices()])
+  const { supabase } = await getPanelSession()
+  const [{ assinatura }, subscription, prices, { data: vitrine }] = await Promise.all([
+    searchParams,
+    getMySubscription(),
+    getPlanPrices(),
+    // Uma vitrine por conta: a lista do plano fala a língua do negócio dela.
+    supabase.from('vitrines').select('type, product_mode').order('created_at').limit(1).maybeSingle(),
+  ])
 
   const summary = describeSubscription(subscription, new Date())
   const { access } = summary
@@ -77,7 +75,7 @@ export default async function PlanoPage({ searchParams }: { searchParams: Promis
             Essencial
           </h2>
           <ul className="flex flex-col gap-3">
-            {FEATURES.map((feature) => (
+            {planFeatures(vitrine).map((feature) => (
               <li key={feature} className="flex items-start gap-3 text-[0.9375rem] font-bold leading-snug text-ink">
                 <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-go text-go-ink">
                   <Check aria-hidden="true" className="size-3.5" strokeWidth={3.5} />

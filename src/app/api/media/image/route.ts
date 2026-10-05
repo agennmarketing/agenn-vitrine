@@ -101,6 +101,8 @@ export async function POST(request: Request) {
     storage = getMediaStorage()
     admin = createSupabaseAdminClient()
   } catch (error) {
+    // Configuração do servidor: o log diz qual variável falta ou está errada.
+    console.error('[imagens] armazenamento indisponível', error)
     Sentry.captureException(error)
     return fail(503, 'Envio de imagens indisponível no momento. Tente mais tarde.')
   }
@@ -108,6 +110,7 @@ export async function POST(request: Request) {
   try {
     await Promise.all(files.map((file) => storage.put(storagePaths[String(file.width)], file.bytes, file.contentType)))
   } catch (error) {
+    console.error('[imagens] falha ao gravar no Storage', error)
     Sentry.captureException(error)
     await removeStoredFiles(Object.values(storagePaths))
     return fail(502, 'Não foi possível enviar a imagem. Tente novamente.')

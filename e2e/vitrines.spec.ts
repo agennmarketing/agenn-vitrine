@@ -131,7 +131,7 @@ test('assistente cria vitrine de afiliado, sem WhatsApp e sem sacola', async ({ 
   await expect(abas.getByRole('link')).toHaveText(['Produtos', 'Aparência', 'Configurações', 'Compartilhar'])
 })
 
-test('telefone inválido volta ao passo do WhatsApp; endereço em uso é avisado', async ({ page }) => {
+test('telefone inválido volta ao passo do WhatsApp; endereço em uso não deixa continuar', async ({ page }) => {
   const other = await createConfirmedUser('dono-endereco')
   const taken = await seedVitrine(other.id)
   const user = await createConfirmedUser('conflito')
@@ -145,6 +145,9 @@ test('telefone inválido volta ao passo do WhatsApp; endereço em uso é avisado
   await page.getByLabel('Nome do negócio').fill('Clínica')
   await page.getByLabel('Endereço da vitrine').fill(taken.subdomain)
   await expect(page.getByText('Este endereço já está em uso. Escolha outro.')).toBeVisible()
+  await page.getByRole('button', { name: 'Continuar' }).click()
+  await expect(page.getByText('Passo 3 de 5')).toBeVisible()
+  await expect(page.getByLabel('Endereço da vitrine')).toBeFocused()
   await page.getByLabel('Endereço da vitrine').fill(uniqueSubdomain('clinica'))
   await page.getByRole('button', { name: 'Continuar' }).click()
   await expect(page.getByRole('heading', { name: 'Para onde vão as solicitações?' })).toBeVisible()

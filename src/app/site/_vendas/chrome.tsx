@@ -13,8 +13,11 @@ export function appLinks() {
   }
 }
 
-/** Cabeçalho fixo e claro. Na página de um perfil, mostra também o botão de criar a vitrine. */
-export function SiteHeader({ showCta = false }: { showCta?: boolean }) {
+/**
+ * Cabeçalho fixo e claro. Na página de um perfil, mostra também o botão de criar a vitrine,
+ * que leva o perfil junto (o assistente já abre com o tipo e o ramo do negócio).
+ */
+export function SiteHeader({ perfil }: { perfil?: string }) {
   const { signupUrl, loginUrl } = appLinks()
   return (
     <header className="sticky top-0 z-30 border-b-2 border-line bg-surface/95 backdrop-blur">
@@ -27,9 +30,9 @@ export function SiteHeader({ showCta = false }: { showCta?: boolean }) {
           <a href={loginUrl} className={buttonClasses('ghost', '', 'sm')}>
             Entrar
           </a>
-          {showCta ? (
+          {perfil ? (
             <span className="hidden sm:block">
-              <a href={signupUrl} className={buttonClasses('primary', '', 'sm')}>
+              <a href={`${signupUrl}?perfil=${perfil}`} className={buttonClasses('primary', '', 'sm')}>
                 Criar minha vitrine
               </a>
             </span>

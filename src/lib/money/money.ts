@@ -6,8 +6,9 @@ export function formatBRL(cents: number): string {
   return BRL.format(cents / 100)
 }
 
-const WITH_THOUSANDS = /^\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?$/
-const PLAIN = /^\d+(?:,\d{1,2})?$/
+// A vírgula sem centavos ("49,") é o que sobra quando a pessoa para de digitar no meio.
+const WITH_THOUSANDS = /^\d{1,3}(?:\.\d{3})+(?:,\d{0,2})?$/
+const PLAIN = /^\d+(?:,\d{0,2})?$/
 
 export function parseBRLToCents(input: string): number | null {
   const cleaned = input.replace(/R\$/i, '').replace(/\s/g, '')
@@ -19,5 +20,6 @@ export function parseBRLToCents(input: string): number | null {
 
 export function centsToInput(cents: number | null): string {
   if (cents == null) return ''
-  return `${Math.trunc(cents / 100)},${String(cents % 100).padStart(2, '0')}`
+  const whole = String(Math.trunc(cents / 100)).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+  return `${whole},${String(cents % 100).padStart(2, '0')}`
 }

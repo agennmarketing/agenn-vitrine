@@ -9,6 +9,7 @@ import { ConfigBlock } from '@/components/ui/config-section'
 import { Field } from '@/components/ui/field'
 import { FormMessage } from '@/components/ui/form-message'
 import { Input } from '@/components/ui/input'
+import { MaskedInput } from '@/components/ui/masked-input'
 import { Spinner } from '@/components/ui/submit-button'
 import {
   addContactAction,
@@ -153,11 +154,10 @@ function ContactForm({ vitrineId, contact }: { vitrineId: string; contact: Conta
           <Input id={`label-${contact.id}`} name="label" defaultValue={state.values?.label} invalid={!!errors.label} />
         </Field>
         <Field label="Número" htmlFor={`phone-${contact.id}`} error={errors.phone}>
-          <Input
+          <MaskedInput
+            mask="phone"
             id={`phone-${contact.id}`}
             name="phone"
-            type="tel"
-            inputMode="tel"
             className="numeric"
             defaultValue={state.values?.phone}
             invalid={!!errors.phone}
@@ -188,12 +188,10 @@ function NewContactForm({ vitrineId, onAdded }: { vitrineId: string; onAdded: ()
             <Input id="new-label" name="label" placeholder="Atendimento" defaultValue={state.values?.label} invalid={!!errors.label} />
           </Field>
           <Field label="Número do novo contato" htmlFor="new-phone" error={errors.phone}>
-            <Input
+            <MaskedInput
+              mask="phone"
               id="new-phone"
               name="phone"
-              type="tel"
-              inputMode="tel"
-              autoComplete="tel"
               placeholder="(11) 98765-4321"
               className="numeric"
               defaultValue={state.values?.phone}

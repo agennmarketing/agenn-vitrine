@@ -29,9 +29,17 @@ describe('parseEnv', () => {
     expect(parseEnv({ ...base, NEXT_PUBLIC_GOOGLE_AUTH_ENABLED: 'yes' }).NEXT_PUBLIC_GOOGLE_AUTH_ENABLED).toBe(false)
   })
 
-  it('URL base das mídias: vazia por padrão e sem barra final', () => {
-    expect(parseEnv(base).NEXT_PUBLIC_MEDIA_BASE_URL).toBe('')
+  it('URL base das mídias: sem barra final', () => {
     expect(parseEnv({ ...base, NEXT_PUBLIC_MEDIA_BASE_URL: 'https://cdn.exemplo.com/' }).NEXT_PUBLIC_MEDIA_BASE_URL).toBe('https://cdn.exemplo.com')
+    expect(parseEnv({ ...base, NEXT_PUBLIC_MEDIA_BASE_URL: '/api/dev-media' }).NEXT_PUBLIC_MEDIA_BASE_URL).toBe('/api/dev-media')
+  })
+
+  it('URL base das mídias: vazia ou do Bunny aposentado vira o bucket público do Supabase', () => {
+    const bucket = 'https://abc.supabase.co/storage/v1/object/public/media'
+    expect(parseEnv(base).NEXT_PUBLIC_MEDIA_BASE_URL).toBe(bucket)
+    expect(parseEnv({ ...base, NEXT_PUBLIC_MEDIA_BASE_URL: '  ' }).NEXT_PUBLIC_MEDIA_BASE_URL).toBe(bucket)
+    expect(parseEnv({ ...base, NEXT_PUBLIC_MEDIA_BASE_URL: 'https://agenn-vitrine-img.b-cdn.net' }).NEXT_PUBLIC_MEDIA_BASE_URL).toBe(bucket)
+    expect(parseEnv({ ...base, NEXT_PUBLIC_SUPABASE_URL: 'https://abc.supabase.co/' }).NEXT_PUBLIC_MEDIA_BASE_URL).toBe(bucket)
   })
 
   it('falha sem domínio raiz', () => {

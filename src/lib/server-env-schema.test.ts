@@ -7,12 +7,15 @@ import {
   parseNetlifyDomainsEnv,
   parseOrderRateLimit,
   parseRateLimitSalt,
+  parseSupabaseSecretKey,
 } from './server-env-schema'
 
 describe('parseMediaStorageEnv', () => {
   it('supabase é o padrão e o antigo bunny vira supabase', () => {
     expect(parseMediaStorageEnv({})).toEqual({ driver: 'supabase' })
     expect(parseMediaStorageEnv({ MEDIA_STORAGE_DRIVER: 'bunny' })).toEqual({ driver: 'supabase' })
+    expect(parseMediaStorageEnv({ MEDIA_STORAGE_DRIVER: '' })).toEqual({ driver: 'supabase' })
+    expect(parseMediaStorageEnv({ MEDIA_STORAGE_DRIVER: ' Supabase ' })).toEqual({ driver: 'supabase' })
   })
 
   it('fake só fora de produção', () => {
@@ -98,5 +101,19 @@ describe('parseNetlifyDomainsEnv', () => {
     expect(parseNetlifyDomainsEnv({ NETLIFY_API_TOKEN: 't', NETLIFY_SITE_ID: 's' })).toEqual({ token: 't', siteId: 's' })
     expect(() => parseNetlifyDomainsEnv({ NETLIFY_API_TOKEN: 't' })).toThrow(/juntas/)
     expect(() => parseNetlifyDomainsEnv({ NETLIFY_SITE_ID: 's' })).toThrow(/juntas/)
+  })
+
+  it('sem NETLIFY_SITE_ID usa o SITE_ID que a própria Netlify define', () => {
+    expect(parseNetlifyDomainsEnv({ NETLIFY_API_TOKEN: 't', SITE_ID: 'n' })).toEqual({ token: 't', siteId: 'n' })
+    expect(parseNetlifyDomainsEnv({ NETLIFY_API_TOKEN: 't', NETLIFY_SITE_ID: 's', SITE_ID: 'n' })).toEqual({ token: 't', siteId: 's' })
+    expect(parseNetlifyDomainsEnv({ SITE_ID: 'n' })).toBeNull()
+  })
+})
+
+describe('segredos ausentes', () => {
+  it('o erro diz qual variável falta', () => {
+    expect(() => parseSupabaseSecretKey({})).toThrow(/SUPABASE_SECRET_KEY/)
+    expect(() => parseCronSecret({})).toThrow(/CRON_SECRET/)
+    expect(() => parseRateLimitSalt({})).toThrow(/RATE_LIMIT_SALT/)
   })
 })

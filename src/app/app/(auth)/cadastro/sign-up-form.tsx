@@ -7,6 +7,7 @@ import { Turnstile } from '@/components/auth/turnstile'
 import { Field } from '@/components/ui/field'
 import { FormMessage } from '@/components/ui/form-message'
 import { Input } from '@/components/ui/input'
+import { MaskedInput } from '@/components/ui/masked-input'
 import { SubmitButton } from '@/components/ui/submit-button'
 import { signUpAction } from '@/features/auth/actions'
 import { initialFormState } from '@/lib/forms/form-state'
@@ -25,7 +26,7 @@ export function SignUpForm({ perfil }: { perfil: string | null }) {
           <Input id="name" name="name" autoComplete="name" defaultValue={state.values?.name} invalid={!!errors.name} />
         </Field>
         <Field label="E-mail" htmlFor="email" error={errors.email}>
-          <Input id="email" name="email" type="email" autoComplete="email" inputMode="email" defaultValue={state.values?.email} invalid={!!errors.email} />
+          <MaskedInput mask="email" id="email" name="email" defaultValue={state.values?.email} invalid={!!errors.email} />
         </Field>
         <Field label="Senha" htmlFor="password" error={errors.password} hint="Mínimo de 8 caracteres.">
           <PasswordInput id="password" name="password" autoComplete="new-password" invalid={!!errors.password} />

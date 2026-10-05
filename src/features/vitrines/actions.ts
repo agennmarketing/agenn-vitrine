@@ -4,7 +4,7 @@ import * as Sentry from '@sentry/nextjs'
 import { redirect } from 'next/navigation'
 import { requireActionUser } from '@/lib/auth/action-user'
 import { fieldErrorsFromZod, readFormFields, type FormState } from '@/lib/forms/form-state'
-import { scheduleDomainSync } from '@/lib/hosts/sync-domains'
+import { syncDomainsSafely } from '@/lib/hosts/sync-domains'
 import { removeStoredFiles } from '@/lib/media/remove-media'
 import { storagePathList } from '@/lib/media/urls'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
@@ -66,7 +66,7 @@ export async function createVitrineAction(_prev: FormState, formData: FormData):
 
   // Limpa um eventual "Vitrine não encontrada" em cache para este endereço.
   revalidateVitrine(input.subdomain)
-  scheduleDomainSync()
+  await syncDomainsSafely(input.subdomain)
   // ?criada=1: a lista de itens comemora a vitrine nova e aponta o próximo passo.
   redirect(`/painel/vitrines/${vitrineId}/itens?criada=1`)
 }
@@ -140,7 +140,7 @@ export async function updateSettingsAction(vitrineId: string, _prev: FormState, 
   const contactError = servicos ? await savePrimaryPhone(supabase, vitrine, parsed.data.whatsappPhone!) : null
   // O resto já foi salvo: a vitrine se atualiza mesmo se o número falhar.
   revalidateVitrine(vitrine.subdomain, parsed.data.subdomain)
-  if (changingSubdomain) scheduleDomainSync()
+  if (changingSubdomain) await syncDomainsSafely(parsed.data.subdomain)
   if (contactError) return { error: mapDbError(contactError), values: fields }
   return { success: 'Configurações salvas.', values: { ...fields, subdomain: parsed.data.subdomain } }
 }
@@ -167,7 +167,7 @@ export async function deleteVitrineAction(vitrineId: string, _prev: FormState, f
   if (error) return { error: mapDbError(error) }
   await removeStoredFiles(paths)
   revalidateVitrine(vitrine.subdomain)
-  scheduleDomainSync()
+  await syncDomainsSafely()
   redirect('/painel')
 }
 

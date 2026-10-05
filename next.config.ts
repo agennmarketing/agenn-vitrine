@@ -43,6 +43,16 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     '/v/[subdomain]/og': ['./assets/fonts/*.ttf', './node_modules/sharp/**', './node_modules/@img/**'],
   },
+  experimental: {
+    // O Next confere o `_rsc` de cada pedido RSC e, se não bater, redireciona para a URL
+    // com o valor certo. Quando o valor esperado é vazio (é o caso da busca interna que o
+    // Next faz depois de um redirect() numa server action), a Netlify descarta o `?_rsc`
+    // vazio e o redirecionamento volta para si mesmo até estourar: criar a vitrine levava
+    // ~17 s. A conferência protege CDNs que ignoram o Vary; o runtime Next da Netlify
+    // cuida do cache das respostas RSC, e o painel é dinâmico (não vai para cache).
+    // Ver node_modules/next/dist/docs/01-app/02-guides/cdn-caching.md.
+    validateRSCRequestHeaders: false,
+  },
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }]
   },

@@ -8,6 +8,7 @@ import { ConfigBlock, SaveBar } from '@/components/ui/config-section'
 import { Field } from '@/components/ui/field'
 import { FormMessage } from '@/components/ui/form-message'
 import { Input, Textarea } from '@/components/ui/input'
+import { MaskedInput } from '@/components/ui/masked-input'
 import { Spinner } from '@/components/ui/submit-button'
 import { UnsavedChangesGuard } from '@/components/ui/unsaved-changes'
 import { updateSettingsAction } from '@/features/vitrines/actions'
@@ -100,12 +101,10 @@ export function SettingsForm({
               error={errors.whatsappPhone}
               hint="Recebe os avisos dos clientes depois que eles agendam."
             >
-              <Input
+              <MaskedInput
+                mask="phone"
                 id="whatsappPhone"
                 name="whatsappPhone"
-                type="tel"
-                inputMode="tel"
-                autoComplete="tel"
                 placeholder="(11) 98765-4321"
                 defaultValue={values.whatsappPhone}
                 invalid={!!errors.whatsappPhone}

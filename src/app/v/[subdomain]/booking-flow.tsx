@@ -10,6 +10,7 @@ import {
   type BookingContactInput,
 } from '@/lib/booking/booking-request'
 import { bookingDateChip, bookingDateLabel } from '@/lib/booking/format'
+import { maskChange } from '@/lib/forms/mask-field'
 import { buildBookingMessage, buildWhatsAppUrl } from '@/lib/whatsapp/messages'
 import { brandButtonClass, fieldClass, WhatsAppIcon } from './vitrine-ui'
 
@@ -406,6 +407,10 @@ export function BookingFlow({
             <Field label="WhatsApp" htmlFor={`${id}-whatsapp`} error={errors.whatsapp}>
               <input
                 {...field('whatsapp')}
+                onChange={(event) => {
+                  const whatsapp = maskChange(event, 'phone')
+                  setContact((current) => ({ ...current, whatsapp }))
+                }}
                 className={fieldClass}
                 type="tel"
                 inputMode="tel"
