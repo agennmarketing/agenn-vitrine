@@ -7,6 +7,7 @@ import {
   parseNetlifyDomainsEnv,
   parseOrderRateLimit,
   parseRateLimitSalt,
+  parseSupabaseSecretKey,
 } from './server-env-schema'
 
 describe('parseMediaStorageEnv', () => {
@@ -104,5 +105,13 @@ describe('parseNetlifyDomainsEnv', () => {
     expect(parseNetlifyDomainsEnv({ NETLIFY_API_TOKEN: 't', SITE_ID: 'n' })).toEqual({ token: 't', siteId: 'n' })
     expect(parseNetlifyDomainsEnv({ NETLIFY_API_TOKEN: 't', NETLIFY_SITE_ID: 's', SITE_ID: 'n' })).toEqual({ token: 't', siteId: 's' })
     expect(parseNetlifyDomainsEnv({ SITE_ID: 'n' })).toBeNull()
+  })
+})
+
+describe('segredos ausentes', () => {
+  it('o erro diz qual variável falta', () => {
+    expect(() => parseSupabaseSecretKey({})).toThrow(/SUPABASE_SECRET_KEY/)
+    expect(() => parseCronSecret({})).toThrow(/CRON_SECRET/)
+    expect(() => parseRateLimitSalt({})).toThrow(/RATE_LIMIT_SALT/)
   })
 })

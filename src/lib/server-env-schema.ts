@@ -29,12 +29,13 @@ export function parseMediaStorageEnv(source: Source): MediaStorageEnv {
   return { driver: mediaStorageSchema.parse(source).MEDIA_STORAGE_DRIVER }
 }
 
+// Variável ausente cai na mesma mensagem da vazia: o log diz qual falta.
 export function parseRateLimitSalt(source: Source): string {
-  return z.string().min(16, 'RATE_LIMIT_SALT precisa de pelo menos 16 caracteres.').parse(source.RATE_LIMIT_SALT)
+  return z.string().min(16, 'RATE_LIMIT_SALT precisa de pelo menos 16 caracteres.').parse(source.RATE_LIMIT_SALT ?? '')
 }
 
 export function parseSupabaseSecretKey(source: Source): string {
-  return z.string().min(1, 'SUPABASE_SECRET_KEY não configurada.').parse(source.SUPABASE_SECRET_KEY)
+  return z.string().min(1, 'SUPABASE_SECRET_KEY não configurada.').parse(source.SUPABASE_SECRET_KEY ?? '')
 }
 
 export function parseOrderRateLimit(source: Source): number {
@@ -42,7 +43,7 @@ export function parseOrderRateLimit(source: Source): number {
 }
 
 export function parseCronSecret(source: Source): string {
-  return z.string().min(16, 'CRON_SECRET precisa de pelo menos 16 caracteres.').parse(source.CRON_SECRET)
+  return z.string().min(16, 'CRON_SECRET precisa de pelo menos 16 caracteres.').parse(source.CRON_SECRET ?? '')
 }
 
 const emailSchema = z
