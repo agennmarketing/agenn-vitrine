@@ -99,4 +99,10 @@ describe('parseNetlifyDomainsEnv', () => {
     expect(() => parseNetlifyDomainsEnv({ NETLIFY_API_TOKEN: 't' })).toThrow(/juntas/)
     expect(() => parseNetlifyDomainsEnv({ NETLIFY_SITE_ID: 's' })).toThrow(/juntas/)
   })
+
+  it('sem NETLIFY_SITE_ID usa o SITE_ID que a própria Netlify define', () => {
+    expect(parseNetlifyDomainsEnv({ NETLIFY_API_TOKEN: 't', SITE_ID: 'n' })).toEqual({ token: 't', siteId: 'n' })
+    expect(parseNetlifyDomainsEnv({ NETLIFY_API_TOKEN: 't', NETLIFY_SITE_ID: 's', SITE_ID: 'n' })).toEqual({ token: 't', siteId: 's' })
+    expect(parseNetlifyDomainsEnv({ SITE_ID: 'n' })).toBeNull()
+  })
 })

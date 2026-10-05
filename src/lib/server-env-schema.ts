@@ -131,7 +131,9 @@ const netlifyDomainsSchema = z
 export type NetlifyDomainsEnv = { token: string; siteId: string } | null
 
 export function parseNetlifyDomainsEnv(source: Source): NetlifyDomainsEnv {
-  const value = netlifyDomainsSchema.parse(source)
+  // Na Netlify o SITE_ID já vem preenchido: com o token, basta ele.
+  const siteId = source.NETLIFY_SITE_ID || (source.NETLIFY_API_TOKEN ? source.SITE_ID : undefined)
+  const value = netlifyDomainsSchema.parse({ ...source, NETLIFY_SITE_ID: siteId })
   if (!value.NETLIFY_API_TOKEN) return null
   return { token: value.NETLIFY_API_TOKEN, siteId: value.NETLIFY_SITE_ID }
 }
