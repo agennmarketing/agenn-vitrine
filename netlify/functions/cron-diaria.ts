@@ -26,7 +26,10 @@ export default async function cronDiaria() {
     // Aparece no log da função na Netlify. As falhas de dentro da tarefa o próprio
     // app já manda para o Sentry.
     console.error('[cron-diaria] falhou', response.status, await response.text().catch(() => ''))
+    return
   }
+  // Resumo no log (inclui `domains`: os subdomínios cadastrados ou removidos na Netlify).
+  console.info('[cron-diaria] ok', await response.text().catch(() => ''))
 }
 
 // Mesmo horário do vercel.json: 07:00 UTC, que é 04:00 em Brasília.
