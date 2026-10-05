@@ -13,7 +13,12 @@ const inProduction = (value: { APP_ENV?: string; VERCEL_ENV?: string }) =>
 const mediaStorageSchema = z
   .object({
     // "bunny" era o driver antigo: quem ainda tem a variável assim passa a gravar no Supabase.
-    MEDIA_STORAGE_DRIVER: z.preprocess((value) => (value === 'bunny' ? 'supabase' : value), z.enum(['supabase', 'fake']).default('supabase')),
+    // Vazia (contexto da hospedagem sem valor) vale o padrão; espaço e maiúscula não quebram.
+    MEDIA_STORAGE_DRIVER: z.preprocess((value) => {
+      const driver = typeof value === 'string' ? value.trim().toLowerCase() : value
+      if (driver === '') return undefined
+      return driver === 'bunny' ? 'supabase' : driver
+    }, z.enum(['supabase', 'fake']).default('supabase')),
     APP_ENV: z.string().optional(),
     VERCEL_ENV: z.string().optional(),
   })

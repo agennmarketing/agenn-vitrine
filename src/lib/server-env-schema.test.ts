@@ -14,6 +14,8 @@ describe('parseMediaStorageEnv', () => {
   it('supabase é o padrão e o antigo bunny vira supabase', () => {
     expect(parseMediaStorageEnv({})).toEqual({ driver: 'supabase' })
     expect(parseMediaStorageEnv({ MEDIA_STORAGE_DRIVER: 'bunny' })).toEqual({ driver: 'supabase' })
+    expect(parseMediaStorageEnv({ MEDIA_STORAGE_DRIVER: '' })).toEqual({ driver: 'supabase' })
+    expect(parseMediaStorageEnv({ MEDIA_STORAGE_DRIVER: ' Supabase ' })).toEqual({ driver: 'supabase' })
   })
 
   it('fake só fora de produção', () => {
