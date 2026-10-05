@@ -11,7 +11,7 @@ export const COMPANY = {
 }
 
 // Mudou o texto? Mude a data. É ela que aparece como "Última atualização".
-export const LEGAL_VERSION = '2026-10-01'
+export const LEGAL_VERSION = '2026-10-05'
 
 const [ano, mes, dia] = LEGAL_VERSION.split('-')
 export const LEGAL_VERSION_LABEL = `${dia}/${mes}/${ano}`

@@ -16,9 +16,10 @@ export const PRIVACY: LegalSection[] = [
       'Da pessoa que cria a conta: nome, e-mail e senha (guardada apenas de forma criptografada pelo Supabase). Se você entra com o Google, recebemos nome e e-mail da sua conta Google.',
       'Do uso do serviço: vitrines, itens, fotos, vídeos, textos e configurações que você cria, além de registros técnicos como data de acesso e erros.',
       'De pagamento: a assinatura é processada pela Stripe. Guardamos apenas identificadores da assinatura e do cliente, o status, o intervalo e a data de renovação. Não guardamos número de cartão.',
-      'Do visitante da vitrine que faz um pedido: não guardamos nome, telefone, endereço nem forma de pagamento. Esses dados são digitados no navegador do visitante e seguem direto na mensagem do WhatsApp para você. O que fica salvo é o resumo do pedido (itens, quantidades e preços do momento), sem dados pessoais.',
+      'Do cliente que faz um pedido pelo WhatsApp: não guardamos nome, telefone, endereço nem forma de pagamento. Esses dados são digitados no navegador do cliente e seguem direto na mensagem do WhatsApp para você. O que fica salvo no nosso servidor é o resumo do pedido com o código que aparece na mensagem (itens, quantidades e preços do momento), sem dados pessoais.',
       'Do cliente que agenda um horário na vitrine: guardamos nome, telefone, observação (se escrita), o serviço, o profissional e o horário escolhidos, para que o agendamento apareça na sua agenda. Esses dados ficam visíveis apenas para você, dono da vitrine. Em relação a eles, você é o controlador e nós tratamos os dados em seu nome.',
-      'Para limitar abuso, guardamos o endereço IP do visitante apenas em forma de código embaralhado (hash), que não permite voltar ao IP original, por até 2 dias.',
+      'De qualquer visitante da vitrine ou do site: como em todo site, a hospedagem registra dados técnicos de acesso, como endereço IP, navegador e página visitada, para entregar as páginas e proteger contra abuso. Quando o visitante assiste a um vídeo, o player da Mux coleta dados técnicos da reprodução (como navegador, aparelho, localização aproximada e qualidade do vídeo) para medir a entrega, sem usar cookies.',
+      'Para limitar abuso, guardamos o endereço IP do visitante que faz pedido, agenda ou assiste a vídeos apenas em forma de código embaralhado (hash), que não permite voltar ao IP original, por até 2 dias.',
     ],
   },
   {
@@ -33,13 +34,13 @@ export const PRIVACY: LegalSection[] = [
     title: '4. Cookies e dados guardados no aparelho',
     paragraphs: [
       'Usamos cookies necessários para manter você conectado ao painel. Não usamos cookies de publicidade.',
-      'Na vitrine, a sacola do visitante fica guardada apenas no navegador dele (armazenamento local), nunca no nosso servidor, e some quando ele limpa os dados do navegador.',
+      'Na vitrine, a sacola do visitante fica guardada apenas no navegador dele (armazenamento local), nunca no nosso servidor, e some quando ele limpa os dados do navegador. O player de vídeo da vitrine não grava cookies.',
     ],
   },
   {
     title: '5. Com quem compartilhamos',
     paragraphs: [
-      'Usamos empresas que nos ajudam a operar o serviço, cada uma com acesso apenas ao necessário: Netlify (hospedagem do site), Supabase (banco de dados, autenticação e armazenamento de imagens), Mux (armazenamento e entrega de vídeos), Stripe (pagamentos), Resend (envio de e-mails), Cloudflare (proteção contra robôs e DNS) e Google (apenas se você escolher entrar com o Google).',
+      'Usamos empresas que nos ajudam a operar o serviço, cada uma com acesso apenas ao necessário: Netlify (hospedagem do site), Supabase (banco de dados, autenticação e armazenamento de imagens), Mux (armazenamento, entrega e medição de vídeos), Stripe (pagamentos), Resend (envio de e-mails), Cloudflare (proteção contra robôs e DNS), Sentry (registro de erros, sem dados de identificação) e Google (apenas se você escolher entrar com o Google).',
       'Parte desses serviços fica fora do Brasil, então pode haver transferência internacional de dados, feita com as garantias previstas na LGPD.',
       'Não vendemos seus dados nem os de seus clientes.',
     ],
@@ -48,8 +49,9 @@ export const PRIVACY: LegalSection[] = [
     title: '6. Por quanto tempo guardamos',
     paragraphs: [
       'Dados da conta e conteúdo publicado: enquanto a conta existir.',
-      'Resumos de pedido do simulador: 90 dias, depois são apagados automaticamente.',
-      'Agendamentos: enquanto a conta existir, para formar o histórico da sua agenda.',
+      'Resumos de pedido (os que têm código na mensagem do WhatsApp): 90 dias, depois são apagados automaticamente.',
+      'Agendamentos, com nome e telefone do cliente: enquanto a conta existir, para formar o histórico da sua agenda. São apagados junto com a vitrine ou a conta.',
+      'IP embaralhado (hash): até 2 dias. Registros técnicos da hospedagem e da medição de vídeo: pelo prazo curto definido por cada fornecedor.',
       'Conta com o teste grátis encerrado ou a assinatura cancelada: os dados continuam guardados até você excluir a conta.',
       'Registros fiscais e de cobrança: pelo prazo exigido pela legislação, mesmo após a exclusão da conta.',
     ],
