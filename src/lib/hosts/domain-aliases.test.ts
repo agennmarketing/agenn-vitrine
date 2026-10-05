@@ -75,7 +75,7 @@ describe('syncNetlifyDomainAliases', () => {
 
   it('falha da API vira erro', async () => {
     const fetch = vi.fn(async () => new Response('nope', { status: 401 }))
-    await expect(syncNetlifyDomainAliases({ ...base, subdomains: [], fetch })).rejects.toThrow(/401/)
+    await expect(syncNetlifyDomainAliases({ ...base, subdomains: [], fetch })).rejects.toThrow(/401 nope/)
   })
 
   it('certificado que não sai na hora não desfaz o cadastro', async () => {

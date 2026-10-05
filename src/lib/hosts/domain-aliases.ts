@@ -37,7 +37,11 @@ async function netlify(fetch: Fetch, token: string, path: string, init: RequestI
     ...init,
     headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
   })
-  if (!response.ok) throw new Error(`Netlify ${init.method ?? 'GET'} ${path}: ${response.status}`)
+  if (!response.ok) {
+    // O corpo traz o motivo (ex.: 422 com o domínio recusado): vai junto para o log.
+    const detail = (await response.text().catch(() => '')).slice(0, 500)
+    throw new Error(`Netlify ${init.method ?? 'GET'} ${path}: ${response.status}${detail ? ` ${detail}` : ''}`)
+  }
   return response
 }
 
