@@ -12,28 +12,21 @@ const inProduction = (value: { APP_ENV?: string; VERCEL_ENV?: string }) =>
 
 const mediaStorageSchema = z
   .object({
-    MEDIA_STORAGE_DRIVER: z.enum(['bunny', 'fake']).default('bunny'),
-    BUNNY_STORAGE_ZONE: z.string().default(''),
-    BUNNY_STORAGE_PASSWORD: z.string().default(''),
-    BUNNY_STORAGE_HOST: z.string().default('br.storage.bunnycdn.com'),
+    // "bunny" era o driver antigo: quem ainda tem a variável assim passa a gravar no Supabase.
+    MEDIA_STORAGE_DRIVER: z.preprocess((value) => (value === 'bunny' ? 'supabase' : value), z.enum(['supabase', 'fake']).default('supabase')),
     APP_ENV: z.string().optional(),
     VERCEL_ENV: z.string().optional(),
   })
   .superRefine((value, ctx) => {
-    if (value.MEDIA_STORAGE_DRIVER === 'bunny' && (!value.BUNNY_STORAGE_ZONE || !value.BUNNY_STORAGE_PASSWORD)) {
-      ctx.addIssue({ code: 'custom', message: 'BUNNY_STORAGE_ZONE e BUNNY_STORAGE_PASSWORD são obrigatórias com o driver bunny.' })
-    }
     if (value.MEDIA_STORAGE_DRIVER === 'fake' && inProduction(value)) {
       ctx.addIssue({ code: 'custom', message: 'MEDIA_STORAGE_DRIVER=fake não pode ser usado em produção.' })
     }
   })
 
-export type MediaStorageEnv = { driver: 'fake' } | { driver: 'bunny'; zone: string; password: string; host: string }
+export type MediaStorageEnv = { driver: 'fake' | 'supabase' }
 
 export function parseMediaStorageEnv(source: Source): MediaStorageEnv {
-  const value = mediaStorageSchema.parse(source)
-  if (value.MEDIA_STORAGE_DRIVER === 'fake') return { driver: 'fake' }
-  return { driver: 'bunny', zone: value.BUNNY_STORAGE_ZONE, password: value.BUNNY_STORAGE_PASSWORD, host: value.BUNNY_STORAGE_HOST }
+  return { driver: mediaStorageSchema.parse(source).MEDIA_STORAGE_DRIVER }
 }
 
 export function parseRateLimitSalt(source: Source): string {
@@ -46,35 +39,6 @@ export function parseSupabaseSecretKey(source: Source): string {
 
 export function parseOrderRateLimit(source: Source): number {
   return z.coerce.number().int().min(1).default(20).parse(source.ORDER_RATE_LIMIT_PER_HOUR ?? undefined)
-}
-
-const videoServiceSchema = z
-  .object({
-    VIDEO_DRIVER: z.enum(['mux', 'fake']).default('mux'),
-    MUX_TOKEN_ID: z.string().default(''),
-    MUX_TOKEN_SECRET: z.string().default(''),
-    APP_ENV: z.string().optional(),
-    VERCEL_ENV: z.string().optional(),
-  })
-  .superRefine((value, ctx) => {
-    if (value.VIDEO_DRIVER === 'mux' && (!value.MUX_TOKEN_ID || !value.MUX_TOKEN_SECRET)) {
-      ctx.addIssue({ code: 'custom', message: 'MUX_TOKEN_ID e MUX_TOKEN_SECRET são obrigatórias com o driver mux.' })
-    }
-    if (value.VIDEO_DRIVER === 'fake' && inProduction(value)) {
-      ctx.addIssue({ code: 'custom', message: 'VIDEO_DRIVER=fake não pode ser usado em produção.' })
-    }
-  })
-
-export type VideoServiceEnv = { driver: 'fake' } | { driver: 'mux'; tokenId: string; tokenSecret: string }
-
-export function parseVideoServiceEnv(source: Source): VideoServiceEnv {
-  const value = videoServiceSchema.parse(source)
-  if (value.VIDEO_DRIVER === 'fake') return { driver: 'fake' }
-  return { driver: 'mux', tokenId: value.MUX_TOKEN_ID, tokenSecret: value.MUX_TOKEN_SECRET }
-}
-
-export function parseWebhookSecret(source: Source): string {
-  return z.string().min(8, 'MUX_WEBHOOK_SECRET não configurada.').parse(source.MUX_WEBHOOK_SECRET)
 }
 
 export function parseCronSecret(source: Source): string {
@@ -149,4 +113,25 @@ export function parseBillingEnv(source: Source): BillingEnv {
     webhookSecret: value.STRIPE_WEBHOOK_SECRET,
     priceMonth: value.STRIPE_PRICE_MONTH,
   }
+}
+
+// Cadastro automático dos subdomínios das vitrines como alias na Netlify.
+// Sem as duas variáveis (local, CI) a sincronização não roda; com só uma, é erro de configuração.
+const netlifyDomainsSchema = z
+  .object({
+    NETLIFY_API_TOKEN: z.string().default(''),
+    NETLIFY_SITE_ID: z.string().default(''),
+  })
+  .superRefine((value, ctx) => {
+    if (Boolean(value.NETLIFY_API_TOKEN) !== Boolean(value.NETLIFY_SITE_ID)) {
+      ctx.addIssue({ code: 'custom', message: 'NETLIFY_API_TOKEN e NETLIFY_SITE_ID vão juntas.' })
+    }
+  })
+
+export type NetlifyDomainsEnv = { token: string; siteId: string } | null
+
+export function parseNetlifyDomainsEnv(source: Source): NetlifyDomainsEnv {
+  const value = netlifyDomainsSchema.parse(source)
+  if (!value.NETLIFY_API_TOKEN) return null
+  return { token: value.NETLIFY_API_TOKEN, siteId: value.NETLIFY_SITE_ID }
 }

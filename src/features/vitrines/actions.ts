@@ -4,7 +4,8 @@ import * as Sentry from '@sentry/nextjs'
 import { redirect } from 'next/navigation'
 import { requireActionUser } from '@/lib/auth/action-user'
 import { fieldErrorsFromZod, readFormFields, type FormState } from '@/lib/forms/form-state'
-import { removeStoredFiles, removeVideoAssets } from '@/lib/media/remove-media'
+import { scheduleDomainSync } from '@/lib/hosts/sync-domains'
+import { removeStoredFiles } from '@/lib/media/remove-media'
 import { storagePathList } from '@/lib/media/urls'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { revalidateVitrine } from '@/lib/vitrines/cache'
@@ -17,11 +18,12 @@ import {
   vitrineSettingsSchema,
 } from '@/lib/vitrines/schemas'
 import { SEGMENT_COPY } from '@/lib/vitrines/service-segments'
-import { DEFAULT_BUTTON_TEXT, SAMPLE_CATEGORIES } from '@/lib/vitrines/vitrine-types'
+import { AFFILIATE_BUTTON_TEXT, DEFAULT_BUTTON_TEXT, isAffiliateVitrine, SAMPLE_CATEGORIES } from '@/lib/vitrines/vitrine-types'
 
 export async function createVitrineAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const fields = readFormFields(formData, [
     'type',
+    'productMode',
     'serviceSegment',
     'name',
     'subdomain',
@@ -42,9 +44,10 @@ export async function createVitrineAction(_prev: FormState, formData: FormData):
     p_subdomain: input.subdomain,
     p_name: input.name,
     p_theme: input.theme,
-    p_default_button_text: DEFAULT_BUTTON_TEXT[input.type],
+    p_default_button_text: input.productMode === 'afiliado' ? AFFILIATE_BUTTON_TEXT : DEFAULT_BUTTON_TEXT[input.type],
     p_whatsapp_label: input.whatsappLabel,
-    p_whatsapp_phone: input.whatsappPhone,
+    // Nulo no afiliado (o banco aceita); o gerador de tipos não marca parâmetro que aceita nulo.
+    p_whatsapp_phone: input.whatsappPhone as string,
     // Serviços: as categorias de exemplo seguem o segmento, que só muda textos.
     // Produtos: as categorias de exemplo do tipo.
     p_categories: input.serviceSegment
@@ -54,6 +57,7 @@ export async function createVitrineAction(_prev: FormState, formData: FormData):
     p_instagram: input.instagram ?? undefined,
     p_address: input.address ?? undefined,
     p_business_hours: input.businessHours ?? undefined,
+    p_product_mode: input.productMode ?? undefined,
   })
   if (error) {
     if (error.code === '23505') return { fieldErrors: { subdomain: SUBDOMAIN_TAKEN_MESSAGE }, values: fields }
@@ -62,6 +66,7 @@ export async function createVitrineAction(_prev: FormState, formData: FormData):
 
   // Limpa um eventual "Vitrine não encontrada" em cache para este endereço.
   revalidateVitrine(input.subdomain)
+  scheduleDomainSync()
   // ?criada=1: a lista de itens comemora a vitrine nova e aponta o próximo passo.
   redirect(`/painel/vitrines/${vitrineId}/itens?criada=1`)
 }
@@ -70,19 +75,45 @@ async function loadOwnedVitrine(vitrineId: string) {
   const session = await requireActionUser()
   const { data: vitrine } = await session.supabase
     .from('vitrines')
-    .select('id, subdomain')
+    .select('id, subdomain, type, product_mode, primary_whatsapp_id')
     .eq('id', vitrineId)
     .maybeSingle()
   if (!vitrine) redirect('/painel')
   return { ...session, vitrine }
 }
 
+type OwnedVitrine = Awaited<ReturnType<typeof loadOwnedVitrine>>
+
+// Troca o número do contato principal; uma vitrine sem principal ganha um.
+async function savePrimaryPhone(supabase: OwnedVitrine['supabase'], vitrine: OwnedVitrine['vitrine'], phone: string) {
+  if (vitrine.primary_whatsapp_id) {
+    const { error } = await supabase
+      .from('whatsapp_contacts')
+      .update({ phone_e164: phone })
+      .eq('id', vitrine.primary_whatsapp_id)
+      .eq('vitrine_id', vitrine.id)
+    return error
+  }
+  const { data: contact, error } = await supabase
+    .from('whatsapp_contacts')
+    .insert({ vitrine_id: vitrine.id, label: 'Principal', phone_e164: phone })
+    .select('id')
+    .single()
+  if (error) return error
+  return (await supabase.from('vitrines').update({ primary_whatsapp_id: contact.id }).eq('id', vitrine.id)).error
+}
+
 export async function updateSettingsAction(vitrineId: string, _prev: FormState, formData: FormData): Promise<FormState> {
-  const fields = readFormFields(formData, ['name', 'description', 'subdomain'])
+  const fields = readFormFields(formData, ['name', 'description', 'subdomain', 'instagram', 'address', 'whatsappPhone'])
   const parsed = vitrineSettingsSchema.safeParse(fields)
   if (!parsed.success) return { fieldErrors: fieldErrorsFromZod(parsed.error), values: fields }
 
   const { supabase, vitrine } = await loadOwnedVitrine(vitrineId)
+  // Serviços não têm a aba WhatsApp: o número principal se troca aqui e é obrigatório.
+  const servicos = vitrine.type === 'servicos'
+  if (servicos && parsed.data.whatsappPhone === null) {
+    return { fieldErrors: { whatsappPhone: 'Informe um WhatsApp válido com DDD.' }, values: fields }
+  }
   const changingSubdomain = parsed.data.subdomain !== vitrine.subdomain
   if (changingSubdomain && formData.get('confirmSubdomainChange') !== 'on') {
     return {
@@ -93,13 +124,24 @@ export async function updateSettingsAction(vitrineId: string, _prev: FormState, 
 
   const { error } = await supabase
     .from('vitrines')
-    .update({ name: parsed.data.name, description: parsed.data.description, subdomain: parsed.data.subdomain })
+    .update({
+      name: parsed.data.name,
+      description: parsed.data.description,
+      subdomain: parsed.data.subdomain,
+      instagram: parsed.data.instagram,
+      // Afiliado não atende em endereço nenhum (o assistente também não pergunta).
+      address: isAffiliateVitrine(vitrine) ? null : parsed.data.address,
+    })
     .eq('id', vitrineId)
   if (error) {
     if (error.code === '23505') return { fieldErrors: { subdomain: SUBDOMAIN_TAKEN_MESSAGE }, values: fields }
     return { error: mapDbError(error), values: fields }
   }
+  const contactError = servicos ? await savePrimaryPhone(supabase, vitrine, parsed.data.whatsappPhone!) : null
+  // O resto já foi salvo: a vitrine se atualiza mesmo se o número falhar.
   revalidateVitrine(vitrine.subdomain, parsed.data.subdomain)
+  if (changingSubdomain) scheduleDomainSync()
+  if (contactError) return { error: mapDbError(contactError), values: fields }
   return { success: 'Configurações salvas.', values: { ...fields, subdomain: parsed.data.subdomain } }
 }
 
@@ -109,24 +151,23 @@ export async function deleteVitrineAction(vitrineId: string, _prev: FormState, f
     return { fieldErrors: { confirm: 'Digite o endereço da vitrine para confirmar.' } }
   }
   let paths: string[]
-  let videos: { mux_upload_id: string | null; mux_asset_id: string | null }[]
   try {
     const admin = createSupabaseAdminClient()
     const { data: mediaRows, error: mediaError } = await admin
       .from('media')
-      .select('storage_paths, mux_upload_id, mux_asset_id')
+      .select('storage_paths')
       .eq('vitrine_id', vitrineId)
     if (mediaError) throw mediaError
     paths = (mediaRows ?? []).flatMap((row) => storagePathList(row.storage_paths))
-    videos = (mediaRows ?? []).filter((row) => row.mux_upload_id || row.mux_asset_id)
   } catch (error) {
     Sentry.captureException(error)
     return { error: 'Não foi possível excluir agora. Tente novamente.' }
   }
   const { error } = await supabase.from('vitrines').delete().eq('id', vitrineId)
   if (error) return { error: mapDbError(error) }
-  await Promise.all([removeStoredFiles(paths), removeVideoAssets(videos)])
+  await removeStoredFiles(paths)
   revalidateVitrine(vitrine.subdomain)
+  scheduleDomainSync()
   redirect('/painel')
 }
 

@@ -133,7 +133,7 @@ export async function POST(request: Request) {
   try {
     // Mídia que ocupa o mesmo espaço (capa, posição da galeria, logo ou banner) é substituída.
     if (itemId || professionalId || role === 'logo' || role === 'banner') {
-      let previousQuery = admin.from('media').select('id, storage_paths, mux_upload_id, mux_asset_id').eq('vitrine_id', vitrineId).eq('role', role)
+      let previousQuery = admin.from('media').select('id, storage_paths').eq('vitrine_id', vitrineId).eq('role', role)
       if (itemId) previousQuery = previousQuery.eq('item_id', itemId)
       if (professionalId) previousQuery = previousQuery.eq('professional_id', professionalId)
       if (role === 'gallery') previousQuery = previousQuery.eq('position', position!)

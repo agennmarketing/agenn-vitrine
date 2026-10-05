@@ -21,6 +21,7 @@ describe('createVitrineSchema', () => {
   it('normaliza subdomínio, telefone e Instagram', () => {
     expect(createVitrineSchema.parse(servico)).toEqual({
       type: 'servicos',
+      productMode: null,
       serviceSegment: 'nail',
       name: 'Studio Ana',
       subdomain: 'studio-ana',
@@ -44,6 +45,22 @@ describe('createVitrineSchema', () => {
     })
     expect(parsed.serviceSegment).toBeNull()
     expect(parsed.businessHours).toBeNull()
+    expect(parsed.productMode).toBe('proprios')
+  })
+
+  it('produtos próprios exigem WhatsApp; afiliado não guarda WhatsApp nem endereço', () => {
+    const produtos = { ...servico, type: 'produtos', serviceSegment: '', businessHours: '[]' }
+    const semWhatsApp = createVitrineSchema.safeParse({ ...produtos, productMode: 'proprios', whatsappPhone: '' })
+    expect(semWhatsApp.error?.issues.map((issue) => issue.path[0])).toEqual(['whatsappPhone'])
+
+    const afiliado = createVitrineSchema.parse({ ...produtos, productMode: 'afiliado', whatsappPhone: '', address: 'Rua A, 1' })
+    expect(afiliado).toMatchObject({ productMode: 'afiliado', whatsappPhone: null, address: null })
+  })
+
+  it('serviços não têm modo de produto e continuam exigindo WhatsApp', () => {
+    const parsed = createVitrineSchema.safeParse({ ...servico, productMode: 'afiliado', whatsappPhone: '' })
+    expect(parsed.error?.issues.map((issue) => issue.path[0])).toEqual(['whatsappPhone'])
+    expect(createVitrineSchema.parse({ ...servico, productMode: 'afiliado' }).productMode).toBeNull()
   })
 
   it('serviços exigem segmento e pelo menos um dia de atendimento', () => {
@@ -82,11 +99,37 @@ describe('createVitrineSchema', () => {
 })
 
 describe('vitrineSettingsSchema', () => {
+  const settings = { name: 'X', description: '', subdomain: 'studio', instagram: '', address: '', whatsappPhone: '' }
+
   it('formato do subdomínio', () => {
-    const result = vitrineSettingsSchema.safeParse({ name: 'X', description: '', subdomain: '-ab' })
+    const result = vitrineSettingsSchema.safeParse({ ...settings, subdomain: '-ab' })
     expect(result.error!.issues[0].message).toBe(
       'Use de 3 a 30 caracteres: letras minúsculas, números e hífen, sem começar ou terminar com hífen.',
     )
+  })
+
+  it('normaliza o contato e guarda nulo no que ficou vazio', () => {
+    expect(
+      vitrineSettingsSchema.parse({
+        ...settings,
+        instagram: '@Studio.Ana',
+        address: ' Rua A, 10 ',
+        whatsappPhone: '(11) 98765-4321',
+      }),
+    ).toMatchObject({ instagram: 'studio.ana', address: 'Rua A, 10', whatsappPhone: '+5511987654321' })
+    expect(vitrineSettingsSchema.parse({ ...settings, address: '   ' })).toMatchObject({
+      instagram: null,
+      address: null,
+      whatsappPhone: null,
+    })
+  })
+
+  it('recusa WhatsApp e Instagram inválidos', () => {
+    const result = vitrineSettingsSchema.safeParse({ ...settings, whatsappPhone: '123', instagram: 'não vale' })
+    expect(result.error!.issues.map((issue) => [issue.path[0], issue.message])).toEqual([
+      ['instagram', 'Informe um Instagram válido. Ex.: @seuestudio'],
+      ['whatsappPhone', 'Informe um WhatsApp válido com DDD.'],
+    ])
   })
 })
 
@@ -109,13 +152,7 @@ describe('itemSchema', () => {
     variations: '[]',
     coverMediaId: uuid,
     galleryMediaIds: '[]',
-    videoMediaId: '',
   }
-
-  it('vídeo do item é opcional', () => {
-    expect(itemSchema.parse(valid).videoMediaId).toBeNull()
-    expect(itemSchema.parse({ ...valid, videoMediaId: uuid }).videoMediaId).toBe(uuid)
-  })
 
   it('converte os campos do formulário', () => {
     const parsed = itemSchema.parse(valid)

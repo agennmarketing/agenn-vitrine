@@ -17,6 +17,31 @@ export const WIZARD_TYPE_COPY = {
   },
 } as const satisfies Record<(typeof WIZARD_VITRINE_TYPES)[number], { title: string; description: string }>
 
+/*
+ * Vitrine de produtos: produtos próprios (sacola e pedido no WhatsApp) ou afiliado (cada
+ * produto leva direto ao link de afiliado, sem sacola e sem WhatsApp). Escolhido no
+ * assistente e fixo depois. No banco, nulo numa vitrine de produtos vale como 'proprios'.
+ */
+export const PRODUCT_MODES = ['proprios', 'afiliado'] as const
+export type ProductMode = (typeof PRODUCT_MODES)[number]
+
+export const PRODUCT_MODE_COPY = {
+  proprios: {
+    title: 'Produtos próprios',
+    description: 'O cliente monta a sacola e o pedido chega no seu WhatsApp.',
+  },
+  afiliado: {
+    title: 'Sou afiliado',
+    description: 'Cada produto leva direto ao seu link de afiliado. Sem sacola e sem WhatsApp.',
+  },
+} as const satisfies Record<ProductMode, { title: string; description: string }>
+
+export const AFFILIATE_BUTTON_TEXT = 'Comprar agora'
+
+export function isAffiliateVitrine(vitrine: { type: string; product_mode?: string | null }): boolean {
+  return vitrine.type === 'produtos' && vitrine.product_mode === 'afiliado'
+}
+
 export const VITRINE_TYPE_LABEL: Record<VitrineType, string> = {
   produtos: 'Produtos',
   servicos: 'Serviços',

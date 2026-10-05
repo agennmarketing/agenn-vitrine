@@ -1018,6 +1018,7 @@ export type Database = {
           owner_id: string
           position: number
           primary_whatsapp_id: string | null
+          product_mode: string | null
           service_segment: string | null
           show_media: boolean
           show_prices: boolean
@@ -1048,6 +1049,7 @@ export type Database = {
           owner_id?: string
           position?: number
           primary_whatsapp_id?: string | null
+          product_mode?: string | null
           service_segment?: string | null
           show_media?: boolean
           show_prices?: boolean
@@ -1078,6 +1080,7 @@ export type Database = {
           owner_id?: string
           position?: number
           primary_whatsapp_id?: string | null
+          product_mode?: string | null
           service_segment?: string | null
           show_media?: boolean
           show_prices?: boolean
@@ -1194,6 +1197,7 @@ export type Database = {
           p_default_button_text: string
           p_instagram?: string
           p_name: string
+          p_product_mode?: string
           p_service_segment?: string
           p_subdomain: string
           p_theme: string

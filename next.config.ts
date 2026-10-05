@@ -38,6 +38,11 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: ['localhost', '*.localhost'],
+  // O card de prévia lê as fontes do disco e carrega o `sharp` fora do bundle
+  // (ver app/v/[subdomain]/og/route.tsx): os dois precisam ir junto no deploy.
+  outputFileTracingIncludes: {
+    '/v/[subdomain]/og': ['./assets/fonts/*.ttf', './node_modules/sharp/**', './node_modules/@img/**'],
+  },
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }]
   },

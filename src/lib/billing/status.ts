@@ -6,7 +6,7 @@ export const GRACE_DAYS = 7
 export const TRIAL_DAYS = 7
 export const PLAN_NAME = 'Plano Essencial'
 /** Referência para textos; o valor cobrado vem do preço do Stripe. */
-export const PLAN_PRICE_CENTS = 6990
+export const PLAN_PRICE_CENTS = 2990
 const DAY_MS = 86_400_000
 
 export const NO_ACCESS_MESSAGE = 'Seu acesso está pausado. Assine o Plano Essencial para continuar usando o Vitrimove.'

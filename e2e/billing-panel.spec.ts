@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 import { createConfirmedUser, seedVitrine, setPlan, setTrialEndsAt, signIn } from './helpers'
 
 // Os rótulos vêm do Intl (R$ + espaço não separável), por isso casamos por regex.
-const ASSINAR = /Assinar por R\$.?69,90 por mês/
+const ASSINAR = /Assinar por R\$.?29,90 por mês/
 const DAY_MS = 86_400_000
 
 test('conta nova está no teste grátis e assina o Plano Essencial', async ({ page }) => {
@@ -60,7 +60,7 @@ test('teste vencido: o painel vira a tela de assinatura, mas Conta continua aber
 
   await page.goto('/painel/plano')
   await expect(page.getByRole('heading', { name: 'Seu teste terminou' })).toBeVisible()
-  await expect(page.getByRole('button', { name: /Assinar por R\$.?69,90\/mês/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: /Assinar por R\$.?29,90\/mês/ })).toBeVisible()
 
   await page.goto('/painel/conta')
   await expect(page.getByRole('heading', { name: 'Seu teste grátis terminou' })).toHaveCount(0)

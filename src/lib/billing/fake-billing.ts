@@ -9,13 +9,13 @@ import { createStripeClient, parseStripeEvent } from './stripe-events'
 import type { BillingInterval, BillingPrice, BillingSubscription } from './types'
 
 // Só CI e desenvolvimento: clientes, assinaturas e sessões viram arquivos JSON no
-// diretório temporário, como o driver falso de vídeo da Fase 3.
+// diretório temporário, como o driver falso de imagens.
 const ROOT = path.join(os.tmpdir(), 'agenn-vitrine-billing')
 const ID = /^[a-z]+_fake_[0-9a-f-]{36}$/
 
 export const FAKE_PRICE_MONTH = 'price_fake_mes'
 
-const FAKE_PRICES: BillingPrice[] = [{ id: FAKE_PRICE_MONTH, interval: 'month', amountCents: 6990 }]
+const FAKE_PRICES: BillingPrice[] = [{ id: FAKE_PRICE_MONTH, interval: 'month', amountCents: 2990 }]
 
 export type FakeCheckoutSession = {
   id: string

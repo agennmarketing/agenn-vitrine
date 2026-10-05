@@ -24,7 +24,7 @@ export async function getItemForEdit(vitrineId: string, itemId: string) {
   const { supabase } = await getPanelSession()
   const { data: item } = await supabase
     .from('items')
-    .select('*, item_variations(id, name, price_cents, promo_price_cents, sold_out, position), media(id, role, position, storage_paths, status, thumbnail_url)')
+    .select('*, item_variations(id, name, price_cents, promo_price_cents, sold_out, position), media(id, role, position, storage_paths)')
     .eq('id', itemId)
     .eq('vitrine_id', vitrineId)
     .is('deleted_at', null)
@@ -44,9 +44,5 @@ export async function getItemForEdit(vitrineId: string, itemId: string) {
       { id: string; url: string } | null,
       { id: string; url: string } | null,
     ],
-    video: (() => {
-      const row = media.find((m) => m.role === 'video')
-      return row ? { id: row.id, status: row.status as 'processing' | 'ready' | 'failed', thumbnailUrl: row.thumbnail_url } : null
-    })(),
   }
 }

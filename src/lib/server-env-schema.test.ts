@@ -4,21 +4,15 @@ import {
   parseCronSecret,
   parseEmailEnv,
   parseMediaStorageEnv,
+  parseNetlifyDomainsEnv,
   parseOrderRateLimit,
   parseRateLimitSalt,
-  parseVideoServiceEnv,
-  parseWebhookSecret,
 } from './server-env-schema'
 
 describe('parseMediaStorageEnv', () => {
-  it('bunny é o padrão e exige zona e senha', () => {
-    expect(() => parseMediaStorageEnv({})).toThrow(/BUNNY_STORAGE_ZONE/)
-    expect(parseMediaStorageEnv({ BUNNY_STORAGE_ZONE: 'z', BUNNY_STORAGE_PASSWORD: 'p' })).toEqual({
-      driver: 'bunny',
-      zone: 'z',
-      password: 'p',
-      host: 'br.storage.bunnycdn.com',
-    })
+  it('supabase é o padrão e o antigo bunny vira supabase', () => {
+    expect(parseMediaStorageEnv({})).toEqual({ driver: 'supabase' })
+    expect(parseMediaStorageEnv({ MEDIA_STORAGE_DRIVER: 'bunny' })).toEqual({ driver: 'supabase' })
   })
 
   it('fake só fora de produção', () => {
@@ -37,25 +31,7 @@ it('limite de pedidos por hora', () => {
   expect(parseOrderRateLimit({ ORDER_RATE_LIMIT_PER_HOUR: '1000' })).toBe(1000)
 })
 
-describe('parseVideoServiceEnv', () => {
-  it('mux exige os dois tokens', () => {
-    expect(() => parseVideoServiceEnv({})).toThrow(/MUX_TOKEN_ID/)
-    expect(parseVideoServiceEnv({ MUX_TOKEN_ID: 'id', MUX_TOKEN_SECRET: 's' })).toEqual({
-      driver: 'mux',
-      tokenId: 'id',
-      tokenSecret: 's',
-    })
-  })
-
-  it('fake só fora de produção', () => {
-    expect(parseVideoServiceEnv({ VIDEO_DRIVER: 'fake' })).toEqual({ driver: 'fake' })
-    expect(() => parseVideoServiceEnv({ VIDEO_DRIVER: 'fake', VERCEL_ENV: 'production' })).toThrow(/produção/)
-  })
-})
-
-it('segredos do webhook e do cron', () => {
-  expect(() => parseWebhookSecret({})).toThrow()
-  expect(parseWebhookSecret({ MUX_WEBHOOK_SECRET: 'ci-webhook-secret' })).toBe('ci-webhook-secret')
+it('segredo do cron', () => {
   expect(() => parseCronSecret({ CRON_SECRET: 'curto' })).toThrow()
   expect(parseCronSecret({ CRON_SECRET: 'ci-cron-secret-somente-para-testes' })).toBe('ci-cron-secret-somente-para-testes')
 })
@@ -110,5 +86,17 @@ describe('parseBillingEnv', () => {
     expect(() =>
       parseBillingEnv({ BILLING_DRIVER: 'fake', STRIPE_WEBHOOK_SECRET: 'whsec_de_teste', VERCEL_ENV: 'production' }),
     ).toThrow()
+  })
+})
+
+describe('parseNetlifyDomainsEnv', () => {
+  it('sem as variáveis a sincronização fica desligada', () => {
+    expect(parseNetlifyDomainsEnv({})).toBeNull()
+  })
+
+  it('token e site vão juntos', () => {
+    expect(parseNetlifyDomainsEnv({ NETLIFY_API_TOKEN: 't', NETLIFY_SITE_ID: 's' })).toEqual({ token: 't', siteId: 's' })
+    expect(() => parseNetlifyDomainsEnv({ NETLIFY_API_TOKEN: 't' })).toThrow(/juntas/)
+    expect(() => parseNetlifyDomainsEnv({ NETLIFY_SITE_ID: 's' })).toThrow(/juntas/)
   })
 })

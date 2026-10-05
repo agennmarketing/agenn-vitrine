@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isReservedSubdomain, isValidSubdomainFormat, validateSubdomain } from './subdomain'
+import { isReservedSubdomain, isValidSubdomainFormat, sanitizeSubdomainInput, validateSubdomain } from './subdomain'
 
 describe('validateSubdomain', () => {
   it('aceita e normaliza um subdomínio válido', () => {
@@ -37,5 +37,22 @@ describe('helpers', () => {
   it('isReservedSubdomain', () => {
     expect(isReservedSubdomain('api')).toBe(true)
     expect(isReservedSubdomain('burgerdoze')).toBe(false)
+  })
+})
+
+describe('sanitizeSubdomainInput', () => {
+  it('bloqueia espaço, símbolo e maiúscula na digitação', () => {
+    expect(sanitizeSubdomainInput('promocoesdacamila d FF')).toBe('promocoesdacamiladff')
+    expect(sanitizeSubdomainInput('Ateliê da Ana!@#')).toBe('ateliedaana')
+    expect(sanitizeSubdomainInput('barbearia_do.ze')).toBe('barbeariadoze')
+  })
+
+  it('não deixa começar com hífen, mas deixa no meio e no fim', () => {
+    expect(sanitizeSubdomainInput('--loja')).toBe('loja')
+    expect(sanitizeSubdomainInput('loja-da-')).toBe('loja-da-')
+  })
+
+  it('corta no tamanho máximo', () => {
+    expect(sanitizeSubdomainInput('a'.repeat(40))).toHaveLength(30)
   })
 })

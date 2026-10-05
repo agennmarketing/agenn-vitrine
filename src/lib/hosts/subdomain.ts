@@ -35,3 +35,19 @@ export function validateSubdomain(input: string): SubdomainValidation {
   if (isReservedSubdomain(value)) return { ok: false, reason: 'reserved' }
   return { ok: true, value }
 }
+
+/*
+ * Filtro da digitação do endereço: o que não pode entrar não chega a aparecer no campo.
+ * Maiúscula vira minúscula e acento sai da letra (Á → a); espaço, símbolo e hífen no
+ * começo são descartados. O hífen no fim fica, porque a pessoa pode estar no meio da palavra:
+ * esse caso a validação continua avisando.
+ */
+export function sanitizeSubdomainInput(input: string): string {
+  return input
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, '')
+    .replace(/^-+/, '')
+    .slice(0, SUBDOMAIN_MAX_LENGTH)
+}

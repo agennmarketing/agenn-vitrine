@@ -1,4 +1,3 @@
-import { createHmac } from 'node:crypto'
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
@@ -73,8 +72,8 @@ export async function signIn(page: Page, email: string, password: string) {
   await page.getByLabel('E-mail').fill(email)
   await page.getByLabel('Senha', { exact: true }).fill(password)
   await page.getByRole('button', { name: 'Entrar', exact: true }).click()
-  // Quem já tem vitrine cai direto no editor dela; quem não tem fica no convite para criar.
-  await expect(page).toHaveURL(/\/painel(\/vitrines\/[0-9a-f-]+\/itens)?$/)
+  // Quem já tem vitrine cai direto no editor dela; quem não tem cai direto no assistente.
+  await expect(page).toHaveURL(/\/painel\/vitrines\/(nova|[0-9a-f-]+\/itens)$/)
 }
 export function uniqueSubdomain(prefix: string) {
   return `${prefix}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`.slice(0, 30)
@@ -218,67 +217,6 @@ export async function uploadImage(page: Page, label: string, image: Buffer) {
   await expect(page.getByRole('img', { name: label, exact: true })).toBeVisible()
 }
 
-export function videoFixture(name: 'horizontal-3s' | 'vertical-3s' | 'longo-61s') {
-  return path.join('e2e', 'fixtures', `${name}.webm`)
-}
-
-export function signMuxWebhook(body: string, timestamp = Math.floor(Date.now() / 1000)) {
-  const secret = process.env.MUX_WEBHOOK_SECRET ?? 'ci-webhook-secret'
-  return `t=${timestamp},v1=${createHmac('sha256', secret).update(`${timestamp}.${body}`).digest('hex')}`
-}
-
-export async function sendMuxWebhook(request: APIRequestContext, uploadId: string, type = 'video.asset.ready') {
-  // No driver fake um único id faz as vezes de envio, asset e playback.
-  const body = JSON.stringify({ type, object: { type: 'asset', id: uploadId }, data: { id: uploadId, upload_id: uploadId } })
-  return request.post(`${APP_URL}/api/webhooks/mux`, {
-    data: body,
-    headers: { 'content-type': 'application/json', 'mux-signature': signMuxWebhook(body) },
-  })
-}
-
-export async function seedVideo(
-  vitrine: SeededVitrine,
-  ownerId: string,
-  itemId: string | null,
-  options: { status?: 'processing' | 'ready' | 'failed'; role?: 'video' | 'banner' } = {},
-) {
-  const admin = createAdminClient()
-  const guid = crypto.randomUUID()
-  const { data } = await admin
-    .from('media')
-    .insert({
-      owner_id: ownerId,
-      vitrine_id: vitrine.id,
-      item_id: itemId,
-      role: options.role ?? 'video',
-      kind: 'video',
-      status: options.status ?? 'ready',
-      mux_upload_id: guid,
-      mux_asset_id: guid,
-      mux_playback_id: guid,
-      thumbnail_url: `/api/dev-video/${guid}/thumbnail.jpg`,
-      duration_seconds: 3,
-      aspect: '9:16',
-      width: 360,
-      height: 640,
-    })
-    .select('id')
-    .single()
-    .throwOnError()
-  return { id: data.id as string, guid }
-}
-
-export async function mediaOfItem(itemId: string, role: 'video' | 'cover' = 'video') {
-  const { data } = await createAdminClient()
-    .from('media')
-    .select('id, status, mux_upload_id, mux_asset_id')
-    .eq('item_id', itemId)
-    .eq('role', role)
-    .maybeSingle()
-    .throwOnError()
-  return data as { id: string; status: string; mux_upload_id: string | null; mux_asset_id: string | null } | null
-}
-
 export async function readFakeEmails(to: string) {
   const dir = path.join(os.tmpdir(), 'agenn-vitrine-email')
   const files = await readdir(dir).catch(() => [] as string[])
@@ -355,7 +293,7 @@ export async function setVitrineStatus(vitrineId: string, status: 'active' | 'fr
 export async function vitrineBySubdomain(subdomain: string) {
   const { data } = await createAdminClient()
     .from('vitrines')
-    .select('type, service_segment, instagram, address, business_hours, theme, cart_enabled')
+    .select('type, product_mode, service_segment, instagram, address, business_hours, theme, cart_enabled, primary_whatsapp_id')
     .eq('subdomain', subdomain)
     .single()
     .throwOnError()

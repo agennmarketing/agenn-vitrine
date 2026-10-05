@@ -131,7 +131,7 @@ async function linkAvatar(userId: string, vitrineId: string, professionalId: str
   if (!pending) return
   const { data: previous } = await admin
     .from('media')
-    .select('id, storage_paths, mux_upload_id, mux_asset_id')
+    .select('id, storage_paths')
     .eq('professional_id', professionalId)
     .eq('role', 'avatar')
   await deleteMediaRows(admin, previous ?? [])
@@ -145,7 +145,7 @@ export async function deleteProfessionalAction(vitrineId: string, professionalId
   const admin = createSupabaseAdminClient()
   const { data: media } = await admin
     .from('media')
-    .select('id, storage_paths, mux_upload_id, mux_asset_id')
+    .select('id, storage_paths')
     .eq('professional_id', professionalId)
 
   const { error } = await supabase.from('professionals').delete().eq('id', professionalId).eq('vitrine_id', vitrineId)

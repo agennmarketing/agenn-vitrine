@@ -8,7 +8,7 @@ export const TERMS: LegalSection[] = [
     title: '1. Quem somos',
     paragraphs: [
       `O ${COMPANY.tradeName} é um serviço de ${COMPANY.legalName}, inscrita no CNPJ ${COMPANY.cnpj}, com endereço em ${COMPANY.address}.`,
-      `O serviço permite criar vitrines e catálogos na internet, com fotos e vídeos, receber agendamentos e receber pedidos e orçamentos pelo WhatsApp. Ao criar uma conta, você concorda com estes Termos de uso. Dúvidas: ${COMPANY.contactEmail}.`,
+      `O serviço permite criar vitrines e catálogos na internet, com fotos, receber agendamentos e receber pedidos e orçamentos pelo WhatsApp. Ao criar uma conta, você concorda com estes Termos de uso. Dúvidas: ${COMPANY.contactEmail}.`,
     ],
   },
   {
@@ -24,7 +24,7 @@ export const TERMS: LegalSection[] = [
     paragraphs: [
       'Existe um único plano, o Plano Essencial. Os limites dele estão descritos no painel e podem mudar; mudanças que reduzam limites de um plano já contratado são avisadas com antecedência.',
       'Toda conta nova começa com um teste grátis de 7 dias, com todas as funções do Plano Essencial. Não pedimos cartão para começar o teste, e ele não vira cobrança sozinho.',
-      'O Plano Essencial custa R$ 69,90 por mês, com renovação automática ao fim de cada mês, até que você cancele. O pagamento é feito com cartão de crédito, processado pela Stripe; não temos acesso ao número do seu cartão.',
+      'O Plano Essencial custa R$ 29,90 por mês, com renovação automática ao fim de cada mês, até que você cancele. O pagamento é feito com cartão de crédito, processado pela Stripe; não temos acesso ao número do seu cartão.',
       'Reajustes de preço são avisados por e-mail com pelo menos 30 dias de antecedência e valem a partir da renovação seguinte.',
       'Se a cobrança falhar, tentamos novamente por até 7 dias. Nesse período a assinatura continua valendo. Sem sucesso, a assinatura é cancelada e o acesso fica pausado, como descrito a seguir.',
     ],
@@ -35,37 +35,39 @@ export const TERMS: LegalSection[] = [
       'Você pode cancelar quando quiser pelo painel, em Plano e assinatura → Gerenciar assinatura. O cancelamento vale no fim do período já pago, e não há cobrança depois disso.',
       'Fora do prazo de arrependimento, não há devolução proporcional do período já pago.',
       'Se a contratação foi feita pela internet, você pode desistir em até 7 dias corridos, contados da contratação, com devolução integral do valor pago (art. 49 do Código de Defesa do Consumidor). Basta pedir por ' +
-        COMPANY.contactEmail +
-        '.',
+      COMPANY.contactEmail +
+      '.',
     ],
   },
   {
     title: '5. O que acontece quando o teste ou a assinatura acaba',
     paragraphs: [
       'Se o teste grátis terminar sem assinatura, ou se a assinatura for cancelada, o acesso fica pausado: o painel mostra só a tela de assinatura, a vitrine sai do ar e deixa de receber agendamentos.',
-      'Nada é apagado. Sua vitrine, seus serviços, fotos, vídeos e sua agenda continuam guardados, e tudo volta a funcionar assim que você assinar o Plano Essencial. Para apagar seus dados, use Conta → Excluir conta.',
+      'Nada é apagado. Sua vitrine, seus serviços, fotos e sua agenda continuam guardados, e tudo volta a funcionar assim que você assinar o Plano Essencial. Para apagar seus dados, use Conta → Excluir conta.',
     ],
   },
   {
     title: '6. Seu conteúdo',
     paragraphs: [
       'O conteúdo que você publica é seu. Você nos concede apenas a autorização necessária para hospedar, converter e exibir esse conteúdo na sua vitrine enquanto sua conta existir.',
-      'Você é o único responsável pelo que publica: preços, descrições, fotos, vídeos, disponibilidade e pelo cumprimento do que oferece. Garante também que tem os direitos sobre as imagens e vídeos que envia.',
+      'Você é o único responsável pelo que publica: preços, descrições, fotos, disponibilidade e pelo cumprimento do que oferece. Garante também que tem os direitos sobre as imagens que envia.',
       'Não é permitido publicar conteúdo ilegal, enganoso, que viole direitos de terceiros, nem produtos e serviços proibidos por lei ou pelas regras dos serviços que usamos, incluindo armas, drogas, medicamentos controlados, conteúdo adulto e jogos de azar.',
     ],
   },
   {
     title: '7. Uso do serviço',
     paragraphs: [
-      'Cada conta tem uma franquia mensal de entrega de vídeo. Ao ultrapassá-la, os vídeos deixam de tocar e a vitrine passa a mostrar apenas as fotos até o mês virar; nada é apagado.',
       'Não é permitido tentar burlar limites do plano, acessar dados de outras contas, sobrecarregar o serviço ou usá-lo para enviar mensagens não solicitadas.',
     ],
   },
   {
-    title: '8. Pedidos são entre você e seu cliente',
+    title: '8. Pedidos e agendamentos são entre você e seu cliente',
     paragraphs: [
       `O ${COMPANY.tradeName} monta a mensagem e abre o WhatsApp. A negociação, o pagamento, a entrega e o atendimento acontecem diretamente entre você e seu cliente: não somos parte do negócio, não processamos pagamentos de pedidos e não intermediamos entregas.`,
       'O código de pedido serve apenas para você conferir, no painel, o que foi enviado.',
+      'Nos agendamentos, o horário fica reservado na sua agenda, mas o atendimento, os atrasos, as faltas, as remarcações e os cancelamentos são combinados entre você e seu cliente.',
+      'Na vitrine de afiliado, o botão de compra leva o cliente ao site da loja parceira. A venda, o pagamento, a entrega e a sua comissão são tratados entre você, a loja e o cliente, pelas regras daquela loja.',
+      'Os dados que seus clientes informam ao agendar (nome, telefone e observação) ficam guardados para você. Em relação a eles, você é o controlador, conforme a LGPD: use esses dados apenas para atender o cliente e não os compartilhe sem base legal. Nós os tratamos em seu nome, como descrito na Política de privacidade.',
     ],
   },
   {

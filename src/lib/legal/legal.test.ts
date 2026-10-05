@@ -33,7 +33,7 @@ describe('termos de uso', () => {
   it('explica o teste grátis e o que acontece quando ele acaba', () => {
     const texto = TERMS.flatMap((section) => section.paragraphs).join(' ')
     expect(texto).toContain('teste grátis de 7 dias')
-    expect(texto).toContain('R$ 69,90 por mês')
+    expect(texto).toContain('R$ 29,90 por mês')
     expect(texto).toContain('Nada é apagado')
   })
 })
@@ -41,7 +41,7 @@ describe('termos de uso', () => {
 describe('política de privacidade', () => {
   it('lista os operadores e os direitos da LGPD', () => {
     const texto = PRIVACY.flatMap((section) => section.paragraphs).join(' ')
-    for (const parceiro of ['Supabase', 'Netlify', 'Bunny', 'Mux', 'Stripe', 'Resend', 'Cloudflare']) {
+    for (const parceiro of ['Supabase', 'Netlify', 'Stripe', 'Resend', 'Cloudflare']) {
       expect(texto).toContain(parceiro)
     }
     expect(texto).toContain('LGPD')

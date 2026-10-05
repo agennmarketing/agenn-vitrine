@@ -8,6 +8,7 @@ import { isRecentEmailLinkSession } from '@/lib/auth/session'
 import { fieldErrorsFromZod, type FormState, readFormFields } from '@/lib/forms/form-state'
 import { safeNextPath } from '@/lib/hosts/urls'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { validPerfil } from '@/lib/vitrines/wizard-preset'
 
 function readCaptcha(formData: FormData): string | undefined {
   const token = formData.get('captchaToken')
@@ -20,11 +21,13 @@ export async function signUpAction(_prev: FormState, formData: FormData): Promis
   const parsed = signUpSchema.safeParse(fields)
   if (!parsed.success) return { fieldErrors: fieldErrorsFromZod(parsed.error), values: keep }
 
+  // O perfil fica na conta: a confirmação do e-mail pode abrir em outro aparelho, sem o ?perfil=.
+  const perfil = validPerfil(formData.get('perfil'))
   const supabase = await createSupabaseServerClient()
   const { error } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
-    options: { data: { name: parsed.data.name }, captchaToken: readCaptcha(formData) },
+    options: { data: { name: parsed.data.name, ...(perfil ? { perfil } : {}) }, captchaToken: readCaptcha(formData) },
   })
   if (error) return { error: mapAuthError(error.code), values: keep }
 

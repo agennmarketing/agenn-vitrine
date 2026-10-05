@@ -1,9 +1,9 @@
 import { expect, test } from '@playwright/test'
 import { createConfirmedUser, signIn, uniqueEmail, waitForAuthLink } from './helpers'
 
-test('cadastro com confirmação de e-mail leva ao painel', async ({ page }) => {
+test('cadastro vindo da página de manicure cai no assistente com o ramo escolhido', async ({ page }) => {
   const email = uniqueEmail('cadastro')
-  await page.goto('/cadastro')
+  await page.goto('/cadastro?perfil=manicure')
   await page.getByLabel('Nome').fill('Maria Teste')
   await page.getByLabel('E-mail').fill(email)
   await page.getByLabel('Senha', { exact: true }).fill('senhaForte123')
@@ -12,9 +12,12 @@ test('cadastro com confirmação de e-mail leva ao painel', async ({ page }) => 
   await expect(page).toHaveURL(/\/confirmar-email\?email=/)
   await expect(page.getByRole('heading', { name: 'Confirme seu e-mail' })).toBeVisible()
 
+  // O link de confirmação não carrega o ?perfil=: ele vem da conta.
   await page.goto(await waitForAuthLink(email, 'email'))
-  await expect(page).toHaveURL(/\/painel$/)
-  await expect(page.getByRole('heading', { name: 'Minha vitrine' })).toBeVisible()
+  await expect(page).toHaveURL(/\/painel\/vitrines\/nova$/)
+  await expect(page.getByLabel('Serviços e Agendamentos')).toBeChecked()
+  await page.getByRole('button', { name: 'Continuar' }).click()
+  await expect(page.getByLabel('Nail Designer / Manicure')).toBeChecked()
   // O nome fica na barra lateral (computador) e na página Conta (celular também).
   await page.goto('/painel/conta')
   await expect(page.getByRole('main').getByText('Maria Teste')).toBeVisible()
@@ -53,7 +56,8 @@ test('login volta para o destino pedido', async ({ page }) => {
   await page.getByLabel('E-mail').fill(user.email)
   await page.getByLabel('Senha', { exact: true }).fill(user.password)
   await page.getByRole('button', { name: 'Entrar', exact: true }).click()
-  await expect(page).toHaveURL(/\/painel$/)
+  // Volta para /painel, que sem vitrine segue direto para o assistente.
+  await expect(page).toHaveURL(/\/painel\/vitrines\/nova$/)
 })
 
 test('sessão de login com senha não abre a tela de nova senha sem a senha atual', async ({ page }) => {
@@ -77,7 +81,7 @@ test('recuperação de senha por e-mail', async ({ page }) => {
   await page.getByLabel('Nova senha', { exact: true }).fill('novaSenha456')
   await page.getByLabel('Confirmar nova senha').fill('novaSenha456')
   await page.getByRole('button', { name: 'Salvar nova senha' }).click()
-  await expect(page).toHaveURL(/\/painel$/)
+  await expect(page).toHaveURL(/\/painel\/vitrines\/nova$/)
 
   await page.goto('/painel/conta')
   await page.getByRole('button', { name: 'Sair', exact: true }).click()

@@ -48,9 +48,6 @@ test-results
 banco de imagens/
 .superpowers/
 
-# vídeos de teste gerados no CI
-e2e/fixtures/*.webm
-
 # impeccable: capturas locais de revisão
 .impeccable/review/
 .impeccable/mocks/
@@ -59,3 +56,6 @@ e2e/fixtures/*.webm
 
 # netlify (build local da CLI)
 .netlify/
+
+.vercel
+.env*.local

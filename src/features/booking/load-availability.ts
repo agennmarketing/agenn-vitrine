@@ -10,7 +10,7 @@ import {
 import { env } from '@/lib/env'
 import { parseHost } from '@/lib/hosts/parse-host'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
-import type { BusinessHours } from '@/lib/vitrines/service-segments'
+import { readBusinessHours } from '@/lib/vitrines/business-hours'
 
 export const jsonError = (status: number, error: string) => NextResponse.json({ error }, { status })
 
@@ -32,14 +32,6 @@ export type BookableService = {
   availability: AvailabilityInput
   /** Profissionais ativos que fazem este serviço, cada um com a própria agenda. */
   professionals: BookableProfessional[]
-}
-
-function readHours(value: unknown): BusinessHours {
-  if (!Array.isArray(value)) return []
-  return value.filter(
-    (entry): entry is BusinessHours[number] =>
-      typeof entry?.day === 'number' && typeof entry?.open === 'string' && typeof entry?.close === 'string',
-  )
 }
 
 /*
@@ -72,7 +64,7 @@ export async function loadBookableService(subdomain: string, itemId: string, now
   if (!item || item.sold_out) return null
 
   const rules: BookingRules = {
-    hours: readHours(vitrine.business_hours),
+    hours: readBusinessHours(vitrine.business_hours),
     bufferMinutes: vitrine.booking_buffer_minutes,
     minNoticeMinutes: vitrine.booking_min_notice_minutes,
     maxDaysAhead: vitrine.booking_max_days_ahead,
@@ -132,7 +124,7 @@ export async function loadBookableService(subdomain: string, itemId: string, now
     availability: { ...shared, busy: busyRows.map(interval) },
     professionals: (professionalRows.data ?? []).map((professional) => {
       // Sem horário próprio, o profissional atende nos horários da vitrine.
-      const ownHours = readHours(professional.business_hours)
+      const ownHours = readBusinessHours(professional.business_hours)
       return {
         id: professional.id,
         name: professional.name,

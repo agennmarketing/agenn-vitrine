@@ -10,11 +10,12 @@ import { revalidateVitrine } from '@/lib/vitrines/cache'
 import { mapDbError } from '@/lib/vitrines/db-errors'
 import { isSameIdSet, moveInList, REORDER_STALE_MESSAGE } from '@/lib/vitrines/reorder'
 import { itemSchema, type ItemInput } from '@/lib/vitrines/schemas'
+import { isAffiliateVitrine } from '@/lib/vitrines/vitrine-types'
 
 const ITEM_FIELDS = [
   'name', 'description', 'categoryId', 'code', 'priceType', 'price', 'promoPrice', 'durationMinutes', 'tags',
   'soldOut', 'saleMode', 'externalUrl', 'whatsappId', 'buttonText', 'customMessage', 'notice', 'variations',
-  'coverMediaId', 'galleryMediaIds', 'videoMediaId',
+  'coverMediaId', 'galleryMediaIds',
 ] as const
 
 export async function saveItemAction(
@@ -30,8 +31,13 @@ export async function saveItemAction(
   const keepValues = { values: fields }
 
   const { supabase, user } = await requireActionUser()
-  const { data: vitrine } = await supabase.from('vitrines').select('id, type, subdomain').eq('id', vitrineId).maybeSingle()
+  const { data: vitrine } = await supabase.from('vitrines').select('id, type, subdomain, product_mode').eq('id', vitrineId).maybeSingle()
   if (!vitrine) redirect('/painel')
+  // Afiliado: todo produto leva ao link de afiliado, nunca à sacola nem ao WhatsApp.
+  const affiliate = isAffiliateVitrine(vitrine)
+  if (affiliate && input.externalUrl === null) {
+    return { fieldErrors: { externalUrl: 'Informe o link de afiliado do produto.' }, ...keepValues }
+  }
   // Serviços viram agendamento: sem duração não dá para reservar o horário.
   const servico = vitrine.type === 'servicos'
   if (servico && input.durationMinutes === null) {
@@ -63,11 +69,11 @@ export async function saveItemAction(
     tags: input.tags,
     sold_out: input.soldOut,
     // Forma de venda é coisa de vitrine com sacola; serviço sempre vende agendando.
-    sale_mode: servico ? 'whatsapp' : input.saleMode,
+    sale_mode: affiliate ? 'link' : servico ? 'whatsapp' : input.saleMode,
     external_url: servico ? null : input.externalUrl,
-    whatsapp_id: input.whatsappId,
+    whatsapp_id: affiliate ? null : input.whatsappId,
     button_text: input.buttonText,
-    custom_message: input.customMessage,
+    custom_message: affiliate ? null : input.customMessage,
     notice: servico ? input.notice : null,
   }
 
@@ -146,7 +152,6 @@ async function linkPendingMedia(
   const wanted = [
     { id: args.input.coverMediaId, role: 'cover' as const, position: 0 },
     ...args.input.galleryMediaIds.map((id, index) => ({ id, role: 'gallery' as const, position: index + 1 })),
-    ...(args.input.videoMediaId ? [{ id: args.input.videoMediaId, role: 'video' as const, position: 0 }] : []),
   ]
   for (const slot of wanted) {
     const { data: pending } = await admin
@@ -159,7 +164,7 @@ async function linkPendingMedia(
       .is('item_id', null)
       .maybeSingle()
     if (!pending) continue
-    let occupied = admin.from('media').select('id, storage_paths, mux_upload_id, mux_asset_id').eq('item_id', args.itemId).eq('role', slot.role)
+    let occupied = admin.from('media').select('id, storage_paths').eq('item_id', args.itemId).eq('role', slot.role)
     if (slot.role === 'gallery') occupied = occupied.eq('position', slot.position)
     const { data: previous } = await occupied
     await deleteMediaRows(admin, previous ?? [])
@@ -245,7 +250,7 @@ export async function deleteItemAction(vitrineId: string, itemId: string): Promi
   const { error } = await supabase.from('items').update({ deleted_at: new Date().toISOString() }).eq('id', itemId)
   if (error) return { error: mapDbError(error) }
   const admin = createSupabaseAdminClient()
-  const { data: media } = await admin.from('media').select('id, storage_paths, mux_upload_id, mux_asset_id').eq('item_id', itemId).eq('owner_id', user.id)
+  const { data: media } = await admin.from('media').select('id, storage_paths').eq('item_id', itemId).eq('owner_id', user.id)
   await deleteMediaRows(admin, media ?? [])
   revalidateVitrine(subdomain)
   return { success: 'Item excluído.' }

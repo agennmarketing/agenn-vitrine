@@ -1,0 +1,532 @@
+/*
+ * Página de vendas (vitrimove.site): limpa e direta. Fundo claro, roxo só nas ações, Nunito pesada
+ * e o Vitri no figurino do negócio de quem está lendo. Cada perfil tem a sua página.
+ */
+
+/* ---------- Tipografia ---------- */
+
+.display {
+  font-size: clamp(2.5rem, 1.7rem + 3.6vw, 4.5rem);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+  color: var(--color-ink);
+}
+
+.h2 {
+  font-size: clamp(1.875rem, 1.4rem + 2vw, 3rem);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+/* ---------- "O que você faz?" ---------- */
+
+.chooserVitri {
+  width: 8.5rem;
+  height: auto;
+  animation: vm-wave 2.8s ease-in-out infinite alternate;
+  transform-origin: 50% 90%;
+}
+@media (min-width: 640px) {
+  .chooserVitri {
+    width: 10rem;
+  }
+}
+@keyframes vm-wave {
+  from {
+    rotate: -4deg;
+  }
+  to {
+    rotate: 4deg;
+  }
+}
+
+.choice {
+  display: flex;
+  min-height: 4.5rem;
+  align-items: center;
+  gap: 0.875rem;
+  border: 2px solid var(--color-line-strong);
+  border-radius: 1rem;
+  background: var(--color-surface);
+  padding: 0.75rem 1rem 0.75rem 0.75rem;
+  font-size: 1.125rem;
+  font-weight: 900;
+  letter-spacing: -0.015em;
+  color: var(--color-ink);
+  box-shadow: 0 4px 0 var(--color-line-strong);
+  transition:
+    translate 120ms var(--ease-out-quint),
+    box-shadow 120ms var(--ease-out-quint),
+    border-color 150ms var(--ease-out-quint),
+    background-color 150ms var(--ease-out-quint);
+}
+.choice:hover {
+  border-color: var(--color-go);
+  background: var(--color-go-soft);
+  box-shadow: 0 4px 0 var(--color-go);
+}
+.choice:active {
+  translate: 0 4px;
+  box-shadow: 0 0 0 var(--color-go);
+}
+.choiceIcon {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 0.875rem;
+  background: var(--color-go-soft);
+  color: var(--color-go-strong);
+}
+.choice:hover .choiceIcon {
+  background: var(--color-go);
+  color: #fff;
+}
+
+/* ---------- Topo do perfil ---------- */
+
+.forBadge {
+  display: inline-flex;
+  min-height: 2rem;
+  align-items: center;
+  border-radius: 9999px;
+  background: var(--color-go-soft);
+  padding: 0 0.875rem;
+  color: var(--color-go-strong);
+}
+
+.stage {
+  position: relative;
+  display: flex;
+  min-height: 34rem;
+  justify-content: flex-end;
+  border-radius: 2rem;
+  background: var(--color-go-soft);
+  padding: 2rem 1.25rem 0;
+  overflow: hidden;
+}
+.stagePhone {
+  width: 15rem;
+  margin-right: 0.5rem;
+  rotate: 3deg;
+  translate: 0 0.5rem;
+}
+.stageVitri {
+  position: absolute;
+  z-index: 1;
+  left: 0.5rem;
+  bottom: 1rem;
+  width: min(52%, 17rem);
+  height: auto;
+  filter: drop-shadow(0 16px 18px rgb(29 17 71 / 0.22));
+}
+.stageCaption {
+  position: absolute;
+  z-index: 2;
+  left: 1.25rem;
+  top: 1.1rem;
+  border-radius: 9999px;
+  background: var(--color-surface);
+  padding: 0.3rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  color: var(--color-ink-muted);
+}
+@media (min-width: 640px) {
+  .stage {
+    min-height: 38rem;
+    padding: 2.5rem 2.5rem 0;
+  }
+  .stagePhone {
+    width: 17rem;
+    margin-right: 1.5rem;
+  }
+}
+
+/* ---------- Dores ---------- */
+
+.pain {
+  display: grid;
+  gap: 1rem;
+  border-bottom: 2px solid var(--color-line);
+  padding: 1.75rem 0;
+}
+.pain:first-child {
+  border-top: 2px solid var(--color-line);
+}
+@media (min-width: 768px) {
+  .pain {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 3rem;
+  }
+}
+/* A pergunta de sempre, como mensagem recebida. */
+.ask {
+  width: fit-content;
+  max-width: 100%;
+  border: 2px solid var(--color-line);
+  border-radius: 1.25rem 1.25rem 1.25rem 0.35rem;
+  background: var(--color-surface);
+  padding: 0.85rem 1.15rem;
+  font-size: clamp(1.125rem, 1rem + 0.6vw, 1.375rem);
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  color: var(--color-ink);
+}
+.check {
+  display: grid;
+  width: 1.75rem;
+  height: 1.75rem;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 9999px;
+  background: var(--color-go);
+  color: #fff;
+}
+
+/* ---------- Como funciona ---------- */
+
+.node {
+  display: grid;
+  width: 3.25rem;
+  height: 3.25rem;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 9999px;
+  background: var(--color-go);
+  color: #fff;
+  font-size: 1.375rem;
+  font-weight: 900;
+  box-shadow: 0 4px 0 var(--color-go-lip);
+}
+
+/* ---------- Preço ---------- */
+
+.priceCard {
+  border: 2px solid var(--color-line);
+  border-radius: 1.5rem;
+  background: var(--color-surface);
+  padding: 1.75rem;
+}
+.trialBadge {
+  display: inline-flex;
+  min-height: 1.75rem;
+  align-items: center;
+  border-radius: 9999px;
+  background: var(--color-sun);
+  padding: 0 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 900;
+  color: var(--color-sun-ink);
+}
+
+/* ---------- Perguntas ---------- */
+
+.faq {
+  border-bottom: 2px solid var(--color-line);
+}
+.faq summary {
+  display: flex;
+  min-height: 4rem;
+  cursor: pointer;
+  list-style: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 0;
+  font-size: 1.125rem;
+  font-weight: 900;
+  letter-spacing: -0.015em;
+}
+.faq summary::-webkit-details-marker {
+  display: none;
+}
+.faq summary:hover {
+  color: var(--color-go-strong);
+}
+.faqChevron {
+  width: 1.375rem;
+  height: 1.375rem;
+  flex-shrink: 0;
+  color: var(--color-go-strong);
+  transition: rotate 250ms var(--ease-out-back);
+}
+.faq[open] .faqChevron {
+  rotate: 180deg;
+}
+.faq p {
+  max-width: 62ch;
+  padding: 0 2.5rem 1.25rem 0;
+  font-weight: 600;
+  line-height: 1.65;
+  color: var(--color-ink-muted);
+}
+
+/* ---------- Fechamento ---------- */
+
+.closing {
+  display: flex;
+  max-width: 72rem;
+  margin: 0 auto;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  border-radius: 2rem;
+  background: var(--color-go);
+  padding: 2.5rem 1.5rem;
+}
+.closing :focus-visible {
+  outline-color: var(--color-sun);
+}
+.closingVitri {
+  width: 9rem;
+  height: auto;
+  filter: drop-shadow(0 14px 16px rgb(24 8 74 / 0.35));
+}
+@media (min-width: 640px) {
+  .closing {
+    flex-direction: row;
+    gap: 2.5rem;
+    padding: 3rem 3.5rem;
+  }
+  .closingVitri {
+    width: 12rem;
+  }
+}
+.ctaLight {
+  display: inline-flex;
+  min-height: 3.5rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 1rem;
+  background: #fff;
+  padding: 0 1.5rem;
+  font-size: 1.0625rem;
+  font-weight: 900;
+  color: var(--color-go-strong);
+  box-shadow: 0 4px 0 #3a1a9e;
+  transition:
+    translate 120ms var(--ease-out-quint),
+    box-shadow 120ms var(--ease-out-quint),
+    background-color 150ms var(--ease-out-quint);
+}
+.ctaLight:hover {
+  background: #f4f0ff;
+}
+.ctaLight:active {
+  translate: 0 4px;
+  box-shadow: 0 0 0 #3a1a9e;
+}
+
+/* ---------- Celular de exemplo ---------- */
+
+.phone {
+  aspect-ratio: 9 / 18.6;
+  width: 100%;
+  border-radius: 2.5rem;
+  background: #140b33;
+  padding: 0.5rem;
+  box-shadow:
+    0 34px 60px -22px rgb(16 6 52 / 0.75),
+    0 4px 10px rgb(16 6 52 / 0.25),
+    inset 0 0 0 1.5px rgb(255 255 255 / 0.12);
+}
+.phoneScreen {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 2rem;
+  background: #f7f7f5;
+  color: #17181b;
+}
+.phoneBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.6rem 0.9rem 0.35rem 1.1rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+.phoneUrl {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-radius: 9999px;
+  background: #ecece8;
+  padding: 0.15rem 0.55rem;
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: #5c5d66;
+}
+.demoBanner {
+  height: 4.25rem;
+  margin: 0.25rem 0.5rem 0;
+  border-radius: 1.1rem;
+  background:
+    radial-gradient(120% 140% at 85% 0%, color-mix(in oklab, var(--m) 55%, white) 0, transparent 55%),
+    var(--m);
+}
+.demoAvatar {
+  display: grid;
+  width: 3.25rem;
+  height: 3.25rem;
+  margin-top: -1.625rem;
+  place-items: center;
+  border-radius: 9999px;
+  border: 3px solid #f7f7f5;
+  background: var(--m);
+  color: #fff;
+  font-size: 0.9375rem;
+  font-weight: 800;
+}
+.demoRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border-radius: 0.8rem;
+  background: #fff;
+  padding: 0.5rem 0.7rem;
+  box-shadow: inset 0 0 0 1px #e6e6e2;
+}
+.demoRowPicked {
+  box-shadow: inset 0 0 0 2px var(--m);
+}
+.demoSheet {
+  position: absolute;
+  inset: auto 0.35rem 0.35rem;
+  border-radius: 1.5rem;
+  background: #fff;
+  padding: 0.85rem 0.8rem 0.8rem;
+  box-shadow: 0 -12px 30px -12px rgb(0 0 0 / 0.3);
+}
+.demoPro {
+  display: inline-flex;
+  height: 1.75rem;
+  align-items: center;
+  border-radius: 9999px;
+  padding: 0 0.7rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1.5px #cdcdc7;
+}
+.demoProPicked {
+  background: color-mix(in oklab, var(--m) 12%, white);
+  color: var(--m);
+  box-shadow: inset 0 0 0 2px var(--m);
+}
+.demoSlot {
+  display: grid;
+  height: 1.9rem;
+  place-items: center;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1.5px #cdcdc7;
+}
+.demoSlotBusy {
+  background: #f1f1ee;
+  color: #a1a1aa;
+  text-decoration: line-through;
+  box-shadow: none;
+}
+.demoSlotPicked {
+  background: var(--m);
+  color: #fff;
+  box-shadow: none;
+}
+.demoButton {
+  display: grid;
+  height: 2.5rem;
+  margin-top: 0.65rem;
+  place-items: center;
+  border-radius: 9999px;
+  background: var(--m);
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+.demoTile,
+.demoTileSmall {
+  position: relative;
+  display: grid;
+  place-items: center;
+  background: color-mix(in oklab, var(--m) 13%, white);
+  color: var(--m);
+}
+.demoTile {
+  aspect-ratio: 1;
+  border-radius: 0.9rem;
+}
+.demoTileSmall {
+  width: 4rem;
+  height: 4rem;
+  flex-shrink: 0;
+  border-radius: 0.75rem;
+}
+.demoPlus {
+  position: absolute;
+  right: 0.35rem;
+  bottom: 0.35rem;
+  display: grid;
+  width: 1.6rem;
+  height: 1.6rem;
+  place-items: center;
+  border-radius: 9999px;
+  background: var(--m);
+  color: #fff;
+}
+.demoBag {
+  position: absolute;
+  inset: auto 0.55rem 0.6rem;
+  display: flex;
+  height: 2.9rem;
+  align-items: center;
+  gap: 0.55rem;
+  border-radius: 9999px;
+  background: var(--m);
+  padding: 0 1rem 0 0.45rem;
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  box-shadow: 0 12px 24px -10px rgb(0 0 0 / 0.45);
+}
+.demoBagCount {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border-radius: 9999px;
+  background: rgb(255 255 255 / 0.22);
+}
+.demoAffiliate {
+  display: flex;
+  gap: 0.65rem;
+  border-radius: 0.9rem;
+  background: #fff;
+  padding: 0.5rem;
+  box-shadow: inset 0 0 0 1px #e6e6e2;
+}
+.demoBuy {
+  display: inline-flex;
+  height: 1.6rem;
+  margin-top: 0.3rem;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 9999px;
+  background: var(--m);
+  padding: 0 0.65rem;
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+

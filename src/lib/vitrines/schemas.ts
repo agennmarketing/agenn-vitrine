@@ -5,7 +5,7 @@ import { validateSubdomain } from '@/lib/hosts/subdomain'
 import { parseBRLToCents } from '@/lib/money/money'
 import { normalizePhone } from '@/lib/whatsapp/phone'
 import { isServiceSegment } from './service-segments'
-import { WIZARD_VITRINE_TYPES } from './vitrine-types'
+import { WIZARD_VITRINE_TYPES, type ProductMode } from './vitrine-types'
 
 const SUBDOMAIN_MESSAGES = {
   length: 'Use de 3 a 30 caracteres: letras minúsculas, números e hífen, sem começar ou terminar com hífen.',
@@ -82,25 +82,45 @@ export const businessHours = businessHoursDays.superRefine((days, ctx) => {
   if (days.length === 0) ctx.addIssue({ code: 'custom', message: 'Marque pelo menos um dia de atendimento.' })
 })
 
+// WhatsApp do assistente: vazio passa (o afiliado não tem); a obrigatoriedade fica no superRefine.
+const optionalPhone = z.string().transform((value, ctx) => {
+  if (!value.trim()) return null
+  const normalized = normalizePhone(value)
+  if (!normalized) {
+    ctx.addIssue({ code: 'custom', message: 'Informe um WhatsApp válido com DDD.' })
+    return z.NEVER
+  }
+  return normalized
+})
+
 /*
  * O assistente cria dois tipos de vitrine. Segmento do negócio e horários de
  * atendimento são do fluxo de serviços; a vitrine de produtos não os pergunta e
- * guarda nulo nos dois.
+ * guarda nulo nos dois. A de produtos escolhe o modo de venda: produtos próprios
+ * (sacola e WhatsApp) ou afiliado (sem WhatsApp e sem endereço de atendimento).
  */
 export const createVitrineSchema = z
   .object({
     type: z.enum(WIZARD_VITRINE_TYPES, 'Escolha o tipo da vitrine.'),
+    productMode: z
+      .string()
+      .default('')
+      .transform((value): ProductMode => (value === 'afiliado' ? 'afiliado' : 'proprios')),
     serviceSegment: z.string().trim(),
     name: vitrineName,
     subdomain: subdomainField,
     whatsappLabel: contactLabel,
-    whatsappPhone: phone,
+    whatsappPhone: optionalPhone,
     instagram,
     address: optionalText(200),
     businessHours: businessHoursDays,
     theme,
   })
   .superRefine((data, ctx) => {
+    const affiliate = data.type === 'produtos' && data.productMode === 'afiliado'
+    if (!affiliate && data.whatsappPhone === null) {
+      ctx.addIssue({ code: 'custom', path: ['whatsappPhone'], message: 'Informe um WhatsApp válido com DDD.' })
+    }
     if (data.type !== 'servicos') return
     if (!isServiceSegment(data.serviceSegment)) {
       ctx.addIssue({ code: 'custom', path: ['serviceSegment'], message: 'Escolha o tipo do seu negócio.' })
@@ -109,16 +129,30 @@ export const createVitrineSchema = z
       ctx.addIssue({ code: 'custom', path: ['businessHours'], message: 'Marque pelo menos um dia de atendimento.' })
     }
   })
-  .transform((data) => ({
-    ...data,
-    serviceSegment: isServiceSegment(data.serviceSegment) ? data.serviceSegment : null,
-    businessHours: data.type === 'servicos' ? data.businessHours : null,
-  }))
+  .transform((data) => {
+    const affiliate = data.type === 'produtos' && data.productMode === 'afiliado'
+    return {
+      ...data,
+      productMode: data.type === 'produtos' ? data.productMode : null,
+      serviceSegment: isServiceSegment(data.serviceSegment) ? data.serviceSegment : null,
+      whatsappPhone: affiliate ? null : data.whatsappPhone,
+      address: affiliate ? null : data.address,
+      businessHours: data.type === 'servicos' ? data.businessHours : null,
+    }
+  })
 
+/*
+ * Configurações da vitrine. O bloco de contato repete os campos do assistente; o
+ * WhatsApp só vem da vitrine de serviços (as outras têm a aba própria), e a action
+ * é quem exige o número nela.
+ */
 export const vitrineSettingsSchema = z.object({
   name: vitrineName,
   description: z.string().trim().max(300, 'Use até 300 caracteres.'),
   subdomain: subdomainField,
+  instagram,
+  address: optionalText(200),
+  whatsappPhone: optionalPhone,
 })
 
 export const appearanceSchema = z.object({
@@ -236,10 +270,6 @@ export const itemSchema = z
     variations: jsonArray(variationInput, 20),
     coverMediaId: z.uuid('Envie a imagem de capa.'),
     galleryMediaIds: jsonArray(z.uuid(), 2),
-    videoMediaId: z
-      .union([z.uuid(), z.literal('')])
-      .default('')
-      .transform((value) => value || null),
   })
   .superRefine((data, ctx) => {
     if (data.saleMode === 'link' && data.externalUrl === null) {
@@ -294,7 +324,6 @@ export const itemSchema = z
       })),
       coverMediaId: data.coverMediaId,
       galleryMediaIds: data.galleryMediaIds,
-      videoMediaId: data.videoMediaId,
     }
   })
 
