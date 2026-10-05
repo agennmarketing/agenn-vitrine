@@ -8,7 +8,8 @@ import { NETLIFY_MAX_ALIASES, syncNetlifyDomainAliases } from './domain-aliases'
 const inProduction = () => (process.env.APP_ENV ?? process.env.VERCEL_ENV) === 'production'
 
 // null = sincronização desligada (sem NETLIFY_API_TOKEN).
-export async function syncDomainAliases(): Promise<{ added: string[]; removed: string[]; skipped: string[] } | null> {
+// `first`: a vitrine que acabou de ser criada ou mudou de endereço entra antes de todas.
+export async function syncDomainAliases(first?: string): Promise<{ added: string[]; removed: string[]; skipped: string[] } | null> {
   const netlify = getNetlifyDomainsEnv()
   if (!netlify) {
     // Em produção isso deixa as vitrines novas sem endereço: avisa no log das funções.
@@ -26,6 +27,7 @@ export async function syncDomainAliases(): Promise<{ added: string[]; removed: s
     ...netlify,
     rootDomain: env.NEXT_PUBLIC_ROOT_DOMAIN,
     subdomains: (data ?? []).map((row) => row.subdomain),
+    first,
   })
   if (result.added.length || result.removed.length) console.info('[subdominios] Netlify atualizada', { added: result.added, removed: result.removed })
   if (result.skipped.length) {
@@ -39,9 +41,9 @@ export async function syncDomainAliases(): Promise<{ added: string[]; removed: s
  * antes de terminar): são três chamadas rápidas à Netlify. Uma falha não atrapalha
  * quem está salvando; vai para o log e o Sentry, e a tarefa diária corrige depois.
  */
-export async function syncDomainsSafely(): Promise<void> {
+export async function syncDomainsSafely(first?: string): Promise<void> {
   try {
-    await syncDomainAliases()
+    await syncDomainAliases(first)
   } catch (error) {
     console.error('[subdominios] falha ao sincronizar com a Netlify', error)
     Sentry.captureException(error)

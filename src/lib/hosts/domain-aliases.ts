@@ -20,19 +20,24 @@ export const NETLIFY_MAX_ALIASES = 100
 export type DomainAliasPlan = { aliases: string[]; added: string[]; removed: string[]; skipped: string[]; changed: boolean }
 
 /*
- * `subdomains` vem em ordem de prioridade: se não couberem todas, entram as primeiras
- * e o resto vai em `skipped`, em vez de a Netlify recusar tudo.
+ * Se não couberem todas, entram nesta ordem: `first` (a vitrine que acabou de ser salva),
+ * as que já têm endereço na Netlify (ninguém perde o seu) e o resto na ordem de
+ * `subdomains`. O que sobra vai em `skipped`, em vez de a Netlify recusar tudo.
  */
-export function planDomainAliases(input: { rootDomain: string; current: string[]; subdomains: string[] }): DomainAliasPlan {
+export function planDomainAliases(input: { rootDomain: string; current: string[]; subdomains: string[]; first?: string }): DomainAliasPlan {
   const { rootDomain, current } = input
   const kept = current.filter((alias) => vitrineLabel(alias, rootDomain) === null)
-  const valid = [
+  const ordered = [...(input.first ? [input.first] : []), ...input.subdomains]
+  const listed = [
     ...new Set(
-      input.subdomains
+      ordered
         .filter((sub) => isValidSubdomainFormat(sub) && !isReservedSubdomain(sub))
         .map((sub) => `${sub}.${rootDomain}`),
     ),
   ].filter((alias) => !kept.includes(alias))
+  const firstAlias = input.first ? `${input.first}.${rootDomain}` : null
+  const rank = (alias: string) => (alias === firstAlias ? 0 : current.includes(alias) ? 1 : 2)
+  const valid = [...listed].sort((a, b) => rank(a) - rank(b))
   const room = Math.max(0, NETLIFY_MAX_ALIASES - kept.length)
   const wanted = valid.slice(0, room)
   const skipped = valid.slice(room)
@@ -68,6 +73,7 @@ export async function syncNetlifyDomainAliases(input: {
   siteId: string
   rootDomain: string
   subdomains: string[]
+  first?: string
   fetch?: Fetch
 }): Promise<{ added: string[]; removed: string[]; skipped: string[] }> {
   const fetch = input.fetch ?? globalThis.fetch
@@ -77,6 +83,7 @@ export async function syncNetlifyDomainAliases(input: {
     rootDomain: input.rootDomain,
     current: site.domain_aliases ?? [],
     subdomains: input.subdomains,
+    first: input.first,
   })
   if (!plan.changed) return { added: [], removed: [], skipped: plan.skipped }
 

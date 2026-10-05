@@ -66,7 +66,7 @@ export async function createVitrineAction(_prev: FormState, formData: FormData):
 
   // Limpa um eventual "Vitrine não encontrada" em cache para este endereço.
   revalidateVitrine(input.subdomain)
-  await syncDomainsSafely()
+  await syncDomainsSafely(input.subdomain)
   // ?criada=1: a lista de itens comemora a vitrine nova e aponta o próximo passo.
   redirect(`/painel/vitrines/${vitrineId}/itens?criada=1`)
 }
@@ -140,7 +140,7 @@ export async function updateSettingsAction(vitrineId: string, _prev: FormState, 
   const contactError = servicos ? await savePrimaryPhone(supabase, vitrine, parsed.data.whatsappPhone!) : null
   // O resto já foi salvo: a vitrine se atualiza mesmo se o número falhar.
   revalidateVitrine(vitrine.subdomain, parsed.data.subdomain)
-  if (changingSubdomain) await syncDomainsSafely()
+  if (changingSubdomain) await syncDomainsSafely(parsed.data.subdomain)
   if (contactError) return { error: mapDbError(contactError), values: fields }
   return { success: 'Configurações salvas.', values: { ...fields, subdomain: parsed.data.subdomain } }
 }

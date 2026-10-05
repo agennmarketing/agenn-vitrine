@@ -27,6 +27,17 @@ describe('planDomainAliases', () => {
     expect(plan.skipped).toHaveLength(21)
   })
 
+  it('no limite, a vitrine recém-salva entra e quem já tem endereço não perde', () => {
+    const subdomains = Array.from({ length: 120 }, (_, i) => `loja${i}`)
+    const current = ['vitrimove.site', 'loja110.vitrimove.site']
+    const plan = planDomainAliases({ rootDomain: ROOT, current, subdomains, first: 'loja119' })
+    expect(plan.aliases).toHaveLength(100)
+    expect(plan.aliases).toContain('loja119.vitrimove.site')
+    expect(plan.aliases).toContain('loja110.vitrimove.site')
+    expect(plan.aliases).not.toContain('loja97.vitrimove.site')
+    expect(plan.removed).toEqual([])
+  })
+
   it('não mexe em domínio de fora nem em subdomínio reservado', () => {
     const plan = planDomainAliases({
       rootDomain: ROOT,
