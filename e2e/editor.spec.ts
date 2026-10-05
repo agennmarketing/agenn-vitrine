@@ -35,7 +35,7 @@ test('serviços: contato nas configurações aparece na vitrine', async ({ page 
 
   await page.goto(`/painel/vitrines/${vitrine.id}/configuracoes`)
   const whatsapp = page.getByLabel('WhatsApp')
-  await expect(whatsapp).toHaveValue('+55 11 98765 4321')
+  await expect(whatsapp).toHaveValue('(11) 98765-4321')
   await whatsapp.fill('')
   await page.getByRole('button', { name: 'Salvar configurações' }).click()
   await expect(page.getByText('Informe um WhatsApp válido com DDD.')).toBeVisible()

@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { FormMessage } from '@/components/ui/form-message'
 import { Input, Select, Textarea } from '@/components/ui/input'
+import { MaskedInput } from '@/components/ui/masked-input'
 import { ProgressBar } from '@/components/ui/progress'
 import { DragHandle, SortableItem, SortableList } from '@/components/ui/sortable-list'
 import { Spinner } from '@/components/ui/submit-button'
@@ -122,7 +123,7 @@ function MoneyInput(props: ComponentProps<typeof Input>) {
       <span aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-base font-extrabold text-ink-muted">
         R$
       </span>
-      <Input inputMode="decimal" {...props} className={`pl-11 numeric ${props.className ?? ''}`} />
+      <MaskedInput mask="money" {...props} className={`pl-11 numeric ${props.className ?? ''}`} />
     </div>
   )
 }

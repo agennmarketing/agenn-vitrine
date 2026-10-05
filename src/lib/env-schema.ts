@@ -23,6 +23,14 @@ export const envSchema = z.object({
     .default('')
     .transform((value) => value.trim().replace(/\/+$/, '')),
 })
+  // As imagens moram no bucket público `media` do Supabase. Sem URL base (ou com a do Bunny,
+  // que foi aposentado) a vitrine montaria links quebrados: usa a URL pública do próprio projeto.
+  .transform((value) => {
+    const media = value.NEXT_PUBLIC_MEDIA_BASE_URL
+    if (media && !/\.b-cdn\.net$/i.test(new URL(media, 'http://local').hostname)) return value
+    const supabase = value.NEXT_PUBLIC_SUPABASE_URL.replace(/\/+$/, '')
+    return { ...value, NEXT_PUBLIC_MEDIA_BASE_URL: `${supabase}/storage/v1/object/public/media` }
+  })
 
 export type Env = z.infer<typeof envSchema>
 

@@ -4,6 +4,7 @@ import { Bike, CircleAlert, Info, Pencil, ShoppingBag, Store, Trash2 } from 'luc
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import type { PublicItem, PublicVitrine } from '@/features/public/build-catalog'
 import { removeLine, setLineQty, type CartLine } from '@/lib/cart/cart'
+import { maskChange } from '@/lib/forms/mask-field'
 import {
   CASH_OPTION,
   EMPTY_CHECKOUT_INPUT,
@@ -270,7 +271,7 @@ export default function CartSheet({
                     autoComplete="tel"
                     placeholder="(11) 98765-4321"
                     aria-invalid={invalid('phone')}
-                    onChange={(e) => set('phone')(e.target.value)}
+                    onChange={(e) => set('phone')(maskChange(e, 'phone'))}
                   />
                 </CheckoutField>
               ) : null}
@@ -349,7 +350,7 @@ export default function CartSheet({
                     placeholder="50,00"
                     value={input.changeFor}
                     aria-invalid={invalid('changeFor')}
-                    onChange={(e) => set('changeFor')(e.target.value)}
+                    onChange={(e) => set('changeFor')(maskChange(e, 'money'))}
                   />
                 </CheckoutField>
               ) : null}

@@ -1,7 +1,6 @@
 'use client'
 
-import { ArrowLeft, ArrowRight, Brush, CalendarClock, Eye, Hand, Link2, Moon, Scissors, ShoppingBag, Sparkles, Store, Sun, X } from 'lucide-react'
-import Link from 'next/link'
+import { ArrowLeft, ArrowRight, Brush, CalendarClock, Eye, Hand, Link2, Moon, Scissors, ShoppingBag, Sparkles, Store, Sun } from 'lucide-react'
 import { useActionState, useEffect, useRef, useState } from 'react'
 import { BusinessHoursEditor } from '@/components/ui/business-hours-editor'
 import { Button } from '@/components/ui/button'
@@ -9,6 +8,7 @@ import { ChoiceCard } from '@/components/ui/choice-card'
 import { Field } from '@/components/ui/field'
 import { FormMessage } from '@/components/ui/form-message'
 import { Input } from '@/components/ui/input'
+import { MaskedInput } from '@/components/ui/masked-input'
 import { ProgressBar } from '@/components/ui/progress'
 import { Spinner } from '@/components/ui/submit-button'
 import { createVitrineAction } from '@/features/vitrines/actions'
@@ -173,14 +173,6 @@ export function VitrineWizard({ rootDomain, preset }: { rootDomain: string; pres
     // data-focus-mode: o layout do painel esconde cabeçalho e navegação enquanto a trilha está aberta.
     <div data-focus-mode="" className="mx-auto flex w-full max-w-xl flex-col gap-7 pt-2 sm:pt-6">
       <div className="flex items-center gap-3">
-        {/* Sem vitrine, o painel volta para cá: a saída leva à Conta (plano, sair, excluir conta). */}
-        <Link
-          href="/painel/conta"
-          aria-label="Sair do assistente e ir para a conta"
-          className="-ml-2 flex size-10 shrink-0 items-center justify-center rounded-full text-ink-muted hover:bg-subtle hover:text-ink"
-        >
-          <X aria-hidden="true" className="size-6" strokeWidth={3} />
-        </Link>
         <ProgressBar value={step + 1} max={steps.length} label="Progresso da nova vitrine" />
         <p className="numeric shrink-0 text-sm font-extrabold text-go-strong">
           Passo {step + 1} de {steps.length}
@@ -296,12 +288,10 @@ export function VitrineWizard({ rootDomain, preset }: { rootDomain: string; pres
           <legend className="sr-only">Contato</legend>
           <div hidden={affiliate}>
             <Field label="WhatsApp" htmlFor="whatsappPhone" error={errors.whatsappPhone}>
-              <Input
+              <MaskedInput
+                mask="phone"
                 id="whatsappPhone"
                 name="whatsappPhone"
-                type="tel"
-                inputMode="tel"
-                autoComplete="tel"
                 placeholder="(11) 98765-4321"
                 defaultValue={values.whatsappPhone}
                 invalid={!!errors.whatsappPhone}
