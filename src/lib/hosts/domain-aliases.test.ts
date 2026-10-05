@@ -16,6 +16,17 @@ describe('planDomainAliases', () => {
     expect(plan.removed).toEqual(['antiga.vitrimove.site'])
   })
 
+  it('respeita o limite de 100 aliases da Netlify: entram as primeiras da lista', () => {
+    const subdomains = Array.from({ length: 120 }, (_, i) => `loja${i}`)
+    const plan = planDomainAliases({ rootDomain: ROOT, current: ['vitrimove.site'], subdomains })
+    expect(plan.aliases).toHaveLength(100)
+    expect(plan.aliases).toContain('vitrimove.site')
+    expect(plan.aliases).toContain('loja0.vitrimove.site')
+    expect(plan.aliases).toContain('loja98.vitrimove.site')
+    expect(plan.aliases).not.toContain('loja99.vitrimove.site')
+    expect(plan.skipped).toHaveLength(21)
+  })
+
   it('não mexe em domínio de fora nem em subdomínio reservado', () => {
     const plan = planDomainAliases({
       rootDomain: ROOT,
@@ -54,7 +65,7 @@ describe('syncNetlifyDomainAliases', () => {
     const fetch = netlifyFetch(['www.vitrimove.site'])
     const result = await syncNetlifyDomainAliases({ ...base, subdomains: ['ananails'], fetch })
 
-    expect(result).toEqual({ added: ['ananails.vitrimove.site'], removed: [] })
+    expect(result).toEqual({ added: ['ananails.vitrimove.site'], removed: [], skipped: [] })
     expect(fetch).toHaveBeenCalledTimes(3)
     const [patchUrl, patchInit] = fetch.mock.calls[1]
     expect(patchUrl).toBe('https://api.netlify.com/api/v1/sites/site-1')
@@ -69,7 +80,7 @@ describe('syncNetlifyDomainAliases', () => {
   it('só lê quando já está tudo cadastrado', async () => {
     const fetch = netlifyFetch(['ananails.vitrimove.site'])
     const result = await syncNetlifyDomainAliases({ ...base, subdomains: ['ananails'], fetch })
-    expect(result).toEqual({ added: [], removed: [] })
+    expect(result).toEqual({ added: [], removed: [], skipped: [] })
     expect(fetch).toHaveBeenCalledTimes(1)
   })
 

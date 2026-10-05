@@ -3,26 +3,34 @@ import * as Sentry from '@sentry/nextjs'
 import { env } from '@/lib/env'
 import { getNetlifyDomainsEnv } from '@/lib/server-env'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
-import { syncNetlifyDomainAliases } from './domain-aliases'
+import { NETLIFY_MAX_ALIASES, syncNetlifyDomainAliases } from './domain-aliases'
 
 const inProduction = () => (process.env.APP_ENV ?? process.env.VERCEL_ENV) === 'production'
 
 // null = sincronização desligada (sem NETLIFY_API_TOKEN).
-export async function syncDomainAliases(): Promise<{ added: string[]; removed: string[] } | null> {
+export async function syncDomainAliases(): Promise<{ added: string[]; removed: string[]; skipped: string[] } | null> {
   const netlify = getNetlifyDomainsEnv()
   if (!netlify) {
     // Em produção isso deixa as vitrines novas sem endereço: avisa no log das funções.
     if (inProduction()) console.warn('[subdominios] NETLIFY_API_TOKEN ausente: as vitrines não são cadastradas na Netlify.')
     return null
   }
-  const { data, error } = await createSupabaseAdminClient().from('vitrines').select('subdomain')
+  // Prioridade se passar do limite da Netlify: ativas antes das congeladas ('active' < 'frozen'), as mais novas primeiro.
+  const { data, error } = await createSupabaseAdminClient()
+    .from('vitrines')
+    .select('subdomain')
+    .order('status')
+    .order('created_at', { ascending: false })
   if (error) throw error
   const result = await syncNetlifyDomainAliases({
     ...netlify,
     rootDomain: env.NEXT_PUBLIC_ROOT_DOMAIN,
     subdomains: (data ?? []).map((row) => row.subdomain),
   })
-  if (result.added.length || result.removed.length) console.info('[subdominios] Netlify atualizada', result)
+  if (result.added.length || result.removed.length) console.info('[subdominios] Netlify atualizada', { added: result.added, removed: result.removed })
+  if (result.skipped.length) {
+    console.warn(`[subdominios] limite de ${NETLIFY_MAX_ALIASES} aliases da Netlify: ${result.skipped.length} vitrine(s) sem endereço`, result.skipped.slice(0, 20))
+  }
   return result
 }
 

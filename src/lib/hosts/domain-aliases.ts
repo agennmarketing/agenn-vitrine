@@ -14,20 +14,32 @@ function vitrineLabel(alias: string, rootDomain: string): string | null {
   return isValidSubdomainFormat(label) && !isReservedSubdomain(label) ? label : null
 }
 
-export type DomainAliasPlan = { aliases: string[]; added: string[]; removed: string[]; changed: boolean }
+// A Netlify recusa a lista inteira se passar disso (422 "Only 100 domain aliases allowed").
+export const NETLIFY_MAX_ALIASES = 100
 
+export type DomainAliasPlan = { aliases: string[]; added: string[]; removed: string[]; skipped: string[]; changed: boolean }
+
+/*
+ * `subdomains` vem em ordem de prioridade: se não couberem todas, entram as primeiras
+ * e o resto vai em `skipped`, em vez de a Netlify recusar tudo.
+ */
 export function planDomainAliases(input: { rootDomain: string; current: string[]; subdomains: string[] }): DomainAliasPlan {
   const { rootDomain, current } = input
-  const wanted = new Set(
-    input.subdomains
-      .filter((sub) => isValidSubdomainFormat(sub) && !isReservedSubdomain(sub))
-      .map((sub) => `${sub}.${rootDomain}`),
-  )
   const kept = current.filter((alias) => vitrineLabel(alias, rootDomain) === null)
-  const aliases = [...new Set([...kept, ...wanted])].sort()
-  const added = [...wanted].filter((alias) => !current.includes(alias)).sort()
+  const valid = [
+    ...new Set(
+      input.subdomains
+        .filter((sub) => isValidSubdomainFormat(sub) && !isReservedSubdomain(sub))
+        .map((sub) => `${sub}.${rootDomain}`),
+    ),
+  ].filter((alias) => !kept.includes(alias))
+  const room = Math.max(0, NETLIFY_MAX_ALIASES - kept.length)
+  const wanted = valid.slice(0, room)
+  const skipped = valid.slice(room)
+  const aliases = [...kept, ...wanted].sort()
+  const added = wanted.filter((alias) => !current.includes(alias)).sort()
   const removed = current.filter((alias) => !aliases.includes(alias)).sort()
-  return { aliases, added, removed, changed: added.length > 0 || removed.length > 0 }
+  return { aliases, added, removed, skipped, changed: added.length > 0 || removed.length > 0 }
 }
 
 type Fetch = (url: string, init?: RequestInit) => Promise<Response>
@@ -57,7 +69,7 @@ export async function syncNetlifyDomainAliases(input: {
   rootDomain: string
   subdomains: string[]
   fetch?: Fetch
-}): Promise<{ added: string[]; removed: string[] }> {
+}): Promise<{ added: string[]; removed: string[]; skipped: string[] }> {
   const fetch = input.fetch ?? globalThis.fetch
   const sitePath = `/sites/${encodeURIComponent(input.siteId)}`
   const site = (await (await netlify(fetch, input.token, sitePath)).json()) as { domain_aliases?: string[] | null }
@@ -66,9 +78,9 @@ export async function syncNetlifyDomainAliases(input: {
     current: site.domain_aliases ?? [],
     subdomains: input.subdomains,
   })
-  if (!plan.changed) return { added: [], removed: [] }
+  if (!plan.changed) return { added: [], removed: [], skipped: plan.skipped }
 
   await netlify(fetch, input.token, sitePath, { method: 'PATCH', body: JSON.stringify({ domain_aliases: plan.aliases }) })
   await netlify(fetch, input.token, `${sitePath}/ssl`, { method: 'POST' }).catch(() => undefined)
-  return { added: plan.added, removed: plan.removed }
+  return { added: plan.added, removed: plan.removed, skipped: plan.skipped }
 }
